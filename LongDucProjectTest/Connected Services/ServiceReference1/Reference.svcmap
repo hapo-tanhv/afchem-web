@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ReferenceGroup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="5406ec22-be35-4854-9ad7-085746dc8de6" xmlns="urn:schemas-microsoft-com:xml-wcfservicemap">
+  <ClientOptions>
+    <GenerateAsynchronousMethods>false</GenerateAsynchronousMethods>
+    <GenerateTaskBasedAsynchronousMethod>true</GenerateTaskBasedAsynchronousMethod>
+    <EnableDataBinding>true</EnableDataBinding>
+    <ExcludedTypes />
+    <ImportXmlTypes>false</ImportXmlTypes>
+    <GenerateInternalTypes>false</GenerateInternalTypes>
+    <GenerateMessageContracts>false</GenerateMessageContracts>
+    <NamespaceMappings />
+    <CollectionMappings />
+    <GenerateSerializableTypes>true</GenerateSerializableTypes>
+    <Serializer>Auto</Serializer>
+    <UseSerializerForFaults>true</UseSerializerForFaults>
+    <ReferenceAllAssemblies>true</ReferenceAllAssemblies>
+    <ReferencedAssemblies />
+    <ReferencedDataContractTypes />
+    <ServiceContractMappings />
+  </ClientOptions>
+  <MetadataSources>
+    <MetadataSource Address="http://localhost:8011/ATSCADAService" Protocol="http" SourceId="1" />
+  </MetadataSources>
+  <Metadata>
+    <MetadataFile FileName="ATSCADAService.xsd" MetadataType="Schema" ID="5c48fa9f-17d2-4a46-9658-bbda924555ee" SourceId="1" SourceUrl="http://localhost:8011/ATSCADAService?xsd=xsd2" />
+    <MetadataFile FileName="ATSCADAService1.xsd" MetadataType="Schema" ID="a9097b98-cc9c-4fd8-9a11-2b15b46dee53" SourceId="1" SourceUrl="http://localhost:8011/ATSCADAService?xsd=xsd3" />
+    <MetadataFile FileName="ATSCADAService2.xsd" MetadataType="Schema" ID="af01f524-efad-4b9f-8e8a-a672494f8290" SourceId="1" SourceUrl="http://localhost:8011/ATSCADAService?xsd=xsd0" />
+    <MetadataFile FileName="ATSCADAService3.xsd" MetadataType="Schema" ID="5b196d94-fcc1-4473-aa19-f841157fb091" SourceId="1" SourceUrl="http://localhost:8011/ATSCADAService?xsd=xsd1" />
+    <MetadataFile FileName="ATSCADAService.wsdl" MetadataType="Wsdl" ID="485774b2-1474-4444-9b6a-befa9ae27d93" SourceId="1" SourceUrl="http://localhost:8011/ATSCADAService" />
+  </Metadata>
+  <Extensions>
+    <ExtensionFile FileName="configuration91.svcinfo" Name="configuration91.svcinfo" />
+    <ExtensionFile FileName="configuration.svcinfo" Name="configuration.svcinfo" />
+  </Extensions>
+</ReferenceGroup>

@@ -1,0 +1,97 @@
+﻿/*body {
+}
+@media(min-width:1024px) {
+    h3 {
+        font-size: 1.7vw !important;
+    }
+
+    #Common {
+        margin-top: 0%;
+        max-width: 30vw;
+        min-height: 1.5vw;
+    }
+
+    #Electrical {
+        margin-top: -75px;
+        margin-left: 32vw;
+        max-width: 20vw;
+        min-height: 1.5vw;
+    }
+
+    #CO2 {
+        margin-top: -75px;
+        margin-left: 54vw;
+        max-width: 34vw;
+        min-height: 1.5vw;
+    }
+}
+
+@media(min-width:740px)and (max-width:1024px) {
+    h3 {
+        font-size: 1.8vw !important;
+        color: red;
+    }
+
+    p {
+        font-size: 1.5vw !important;
+    }
+
+    #Electrical {
+        margin-top: -6.2vw;
+        margin-left: 45vw;
+    }
+
+    #CO2 {
+        margin-top: -6.2vw;
+        margin-left: 100vw;
+    }
+}
+
+@media(max-width:740px) {
+    h3 {
+        font-size: 2.8vw !important;
+    }
+
+    #Electrical {
+        margin-top: 1vw;
+        margin-left: 0vw;
+    }
+
+    #CO2 {
+        margin-top: 1vw;
+        margin-left: 0vw;
+    }
+}
+
+
+.card-header1 {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+    .card-header1 > div {
+        border: 1px solid gray;
+        text-align: center;
+        margin: 10px;
+        flex: 1 0 30%;
+        padding-bottom: 20px;
+        overflow: auto;
+        flex-shrink: 0;
+    }
+
+@media (max-width: 768px) {
+    .card-header1 {
+        flex-direction: column;
+        align-items: center;
+    }
+
+        .card-header1 > div {
+            flex-basis: 100%;
+        }
+
+    .button-wrap {
+        flex-wrap: wrap;
+    }
+}*/

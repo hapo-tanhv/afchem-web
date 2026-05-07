@@ -1,0 +1,427 @@
+﻿@{
+    ViewBag.Title = "SOLAR SCADA SYSTEM - OVERVIEW SIGNAGE";
+
+    ViewBag.ButtonHome = "";
+    ViewBag.ButtonOverview = "";
+    ViewBag.ButtonOverviewSignage = "active";
+    ViewBag.ButtonAlarm = "";
+    ViewBag.ButtonEvent = "";
+    ViewBag.ButtonReport = "";
+    ViewBag.ButtonProject = "";
+    ViewBag.MenuOpenProject = "";
+    ViewBag.DisplayProject = "none";
+
+    ViewBag.Buttontotal = ""; // active
+    ViewBag.MenuOpentotal = ""; // menu-open
+    ViewBag.Displaytotal = "none"; // block/none
+    ViewBag.ButtontotalInfor = "";
+    ViewBag.ButtontotalEvent = "";
+    ViewBag.ButtontotalAlarm = "";
+    ViewBag.ButtontotalWeather = "";
+    ViewBag.ButtonSignage1 = "";
+
+    ViewBag.ButtonProject2 = "";
+    ViewBag.MenuOpenProject2 = "";
+    ViewBag.DisplayProject2 = "none"; // block/none
+    ViewBag.ButtonProject2Infor = "";
+    ViewBag.ButtonProject2Event = "";
+    ViewBag.ButtonProject2Alarm = "";
+    ViewBag.ButtonProject2Weather = "";
+    ViewBag.ButtonSignage2 = "";
+
+    ViewBag.ButtonProject3 = "";
+    ViewBag.MenuOpenProject3 = "";
+    ViewBag.DisplayProject3 = "none"; // block/none
+    ViewBag.ButtonProject3Infor = "";
+    ViewBag.ButtonProject3Event = "";
+    ViewBag.ButtonProject3Alarm = "";
+    ViewBag.ButtonProject3Weather = "";
+    ViewBag.ButtonSignage3 = "";
+
+    ViewBag.ButtonProject4 = "";
+    ViewBag.MenuOpenProject4 = "";
+    ViewBag.DisplayProject4 = "none"; // block/none
+    ViewBag.ButtonProject4Infor = "";
+    ViewBag.ButtonProject4Event = "";
+    ViewBag.ButtonProject4Alarm = "";
+    ViewBag.ButtonProject4Weather = "";
+    ViewBag.ButtonSignage4 = "";
+
+    ViewBag.ButtonProject5 = "";
+    ViewBag.MenuOpenProject5 = "";
+    ViewBag.DisplayProject5 = "none"; // block/none
+    ViewBag.ButtonProject5Infor = "";
+    ViewBag.ButtonProject5Event = "";
+    ViewBag.ButtonProject5Alarm = "";
+    ViewBag.ButtonProject5Weather = "";
+    ViewBag.ButtonSignage5 = "";
+
+    ViewBag.ButtonProject6 = "";
+    ViewBag.MenuOpenProject6 = "";
+    ViewBag.DisplayProject6 = "none"; // block/none
+    ViewBag.ButtonProject6Infor = "";
+    ViewBag.ButtonProject6Event = "";
+    ViewBag.ButtonProject6Alarm = "";
+    ViewBag.ButtonProject6Weather = "";
+    ViewBag.ButtonSignage6 = "";
+
+    ViewBag.ButtonProject7 = "";
+    ViewBag.MenuOpenProject7 = "";
+    ViewBag.DisplayProject7 = "none"; // block/none
+    ViewBag.ButtonProject7Infor = "";
+    ViewBag.ButtonProject7Event = "";
+    ViewBag.ButtonProject7Alarm = "";
+    ViewBag.ButtonProject7Weather = "";
+    ViewBag.ButtonSignage7 = "";
+
+    Layout = "~/Views/Shared/_LayoutSignageAdmin.cshtml";
+
+}
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+
+
+
+<body onload="LoadProject('total')" id="load">
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Small boxes (Stat box) -->
+            <div class="row">
+                <div class="col-lg-12 col-12">
+                    <!-- small box -->
+                    <div class="small-box1 bg-info3">
+                        <p class="small-box-footer" style="text-align:center;color:white">
+                            Project Information
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3" style="margin:0px">
+                        <div class=inner>
+                            <h3>
+                                <text id="PowerGeneration" style="color: #2d8cf0;">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">kW</sup>
+
+                            </h3>
+                            <p>Solar Power Generation</p>
+
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-solar-panel" style="color: #2d8cf0; font-size: 1.5vw; top: 3px; right: 3px"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-2 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3" style="margin-top:0px">
+                        <div class="inner">
+                            <h3>
+                                <text id="SelfConsumption" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px; color: #2d8cf0">kW</sup>
+                            </h3>
+
+                            <p>Self Consumption Power</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-industry" style="color: #2d8cf0; font-size: 1.5vw;top: 3px; right: 3px"></i>
+
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3" style="margin:0px">
+                        <div class=inner>
+                            <h3>
+                                <text id="DailyEnergy" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">kWh</sup>
+                            </h3>
+                            <p>Daily Solar Energy</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-industry" style="color: #2d8cf0; font-size: 1.5vw;top: 3px; right: 3px"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-2 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3" style="margin:0px">
+                        <div class="inner">
+                            <h3>
+                                <text id="MonthlyEnergy" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">kWh</sup>
+                            </h3>
+
+                            <p>Monthly Solar Energy</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-industry" style="color: #2d8cf0; font-size: 1.5vw;top: 3px; right: 3px"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3" style="margin:0px">
+                        <div class=inner>
+                            <h3>
+                                <text id="DailyCO2" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">t-CO2 *</sup>
+                            </h3>
+                            <p>Daily CO2 Emission Reduction</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-leaf" style="color: #2d8cf0; font-size: 1.5vw;top: 3px; right: 3px"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-2 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3" style="margin:0px">
+                        <div class=inner>
+                            <h3>
+                                <text id="MonthlyCO2" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">t-CO2 *</sup>
+                            </h3>
+                            <p>Monthly CO2 Emission Reduction</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-leaf" style="color: #2d8cf0; font-size: 1.5vw;top: 3px; right: 3px"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Small boxes (Stat box) -->
+            <div class="row">
+                <!-- ./col -->
+                <div class="col-lg-2 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3" style="margin:0px">
+                        <div class="inner">
+                            <h3>
+                                <text id="SurplusPower" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">kW</sup>
+                            </h3>
+                            <p>Excess Power</p>
+                        </div>
+                        <div class="icon">
+                            <img src="https://img.icons8.com/ios-filled/50/2d8cf0/telephone-pole.png" alt="telephone-pole" style="float: right; font-size: 1.5vw; margin-top: -110px; right: 3px ">
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-2 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3" style="margin:0px">
+                        <div class="inner">
+                            <h3>
+                                <text id="PurchasedPower" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">kW</sup>
+                            </h3>
+
+                            <p>Purchased Power from Grid</p>
+                        </div>
+                        <div class="icon">
+                            <img src="https://img.icons8.com/ios-filled/50/2d8cf0/telephone-pole.png" alt="telephone-pole" style="float: right; font-size: 1.5vw; margin-top: -110px; right: 3px ">
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-2 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3" style="margin:0px">
+                        <div class="inner">
+                            <h3>
+                                <text id="YearlyEnergy" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">kWh</sup>
+                            </h3>
+                            <p>Yearly Solar Energy</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-industry" style="color: #2d8cf0; font-size: 1.5vw;top: 3px; right: 3px"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-2 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3" style="margin:0px">
+                        <div class="inner">
+                            <h3>
+                                <text id="TotalEnergy" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;color: #2d8cf0">kWh</sup>
+                            </h3>
+
+                            <p>Total Solar Energy</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-industry" style="color: #2d8cf0; font-size: 1.5vw;top: 3px; right: 3px"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-2 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3" style="margin:0px">
+                        <div class=inner>
+                            <h3>
+                                <text id="YearlyCO2" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">t-CO2 *</sup>
+                            </h3>
+                            <p>Yearly CO2 Emission Reduction</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-leaf" style="color: #2d8cf0; font-size: 1.5vw;top: 3px; right: 3px"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-2 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3" style="margin:0px">
+                        <div class=inner>
+                            <h3>
+                                <text id="TotalCO2" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">t-CO2 *</sup>
+                            </h3>
+                            <p>Total CO2 Emission Reduction</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-leaf" style="color: #2d8cf0; font-size: 1.5vw;top: 3px; right: 3px"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-6" style="float: right; margin-left: auto; font-size: 0.8vw;margin-top:8px">
+                    <p>
+                        * Calculated based on: 0.333tCO2/MWh
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ./col -->
+    <section class="content" style="margin-bottom: 5px">
+        <div class="container-fluid" style="margin-top:0px">
+            <div class="row">
+                <div class="col-md-7">
+                    <!-- Solar and Grid CHART -->
+                    <div class="card card-primary" style="margin:0px">
+                        <div class="card-header">
+                            <div class="time">
+                                <input onchange="SubmitTotalChart('total')" type="number" id="selectimeTotal" value="2022-08-21" style="width: 150px; font-weight: Bold;font-size:20px; border: none;">
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart">
+                                <div>
+                                    <figure class="highcharts-figure">
+                                        <div id="container" style="min-height: 400px; padding: 0; height: 500px; max-height: 712px; max-width: 100%; margin-top: 10px; border: none"></div>
+                                    </figure>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <!-- MONTHLY Self CHART -->
+                    <div class="card card-primary" style="margin-bottom:5px">
+                        <div>
+                            <div class="time" style="display: flex; align-items: center">
+                                <input onchange="SubmitMonthlyChart('total')" type="month" id="selecttimeMonthly" value="2022-08" style="font-weight: bold; width: 100px; font-size: 18px; border: none; margin-left: 15px; margin-bottom: 10px;">
+                                <div style="flex: 1; text-align: center; margin-top: -10px;">
+                                    <text style="font-size: 18px; font-weight: bold; color: black; margin-right: 135px;">Daily Solar Energy (kWh)</text>
+                                </div>
+                            </div>
+                            <div>
+                                <hr style="border: none; border-top: 1px solid #ccc; width: 100%; position: absolute; margin-top: -5px;">
+                            </div>
+                        </div>
+                        <div style="color:white">
+                            <div class="chart">
+                                <div>
+                                    <figure class="highcharts-figure">
+                                        <div id="container_monthlyself" style="min-height: 100px; height: 158px; max-height: 250px; max-width: 100%"></div>
+                                    </figure>
+                                </div>
+                                <div id="time" style="position:absolute;left:400px;top:0px">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- YEARLY Self CHART -->
+                    <div class="card card-primary" style="margin-bottom:5px">
+                        <div>
+                            <div class="time" style="display: flex; align-items: center">
+                                <input onchange="SubmitYearlyChart('total')" type="date" id="selecttimeYearly" value="2022" style="width: 100px; font-weight: bold; font-size: 18px; border: none; margin-left: 15px; margin-bottom: 10px;">
+                                <div style="flex: 1; text-align: center; margin-top: -10px;">
+                                    <text style="font-size: 18px; font-weight: bold; color: black; margin-right: 130px;">Monthly Solar Energy (kWh)</text>
+                                </div>
+                            </div>
+                            <div style="width: 100%">
+                                <hr style="border: none; border-top: 1px solid #ccc; width: 100%; position: absolute; margin-top: -5px;">
+                            </div>
+                        </div>
+                        <div style="color:white">
+                            <div class="chart">
+                                <div>
+                                    <figure class="highcharts-figure" style="margin:2px">
+                                        <div id="container_yearlyself" style="min-height: 100px; height: 158px; max-height: 250px; max-width: 100%"></div>
+                                    </figure>
+                                </div>
+                                <div id="time" style="position:absolute;left:400px;top:0px">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                    <!-- 10 years Self CHART -->
+                    <div class="card card-primary" style="margin-bottom:5px">
+                        <div>
+                            <div class="time" style="display: flex; align-items: center">
+                                <div style="flex: 1; text-align: center; margin-top: 0px; margin-bottom: 10px; ">
+                                    <text style="font-size: 18px; font-weight: bold; color: black;">Yearly Solar Energy (kWh)</text>
+                                </div>
+                            </div>
+                            <div style="width: 100%">
+                                <hr style="border: none; border-top: 1px solid #ccc; width: 100%; position: absolute; margin-top: -5px; ">
+                            </div>
+                        </div>
+                        <div style="color:white">
+                            <div class="chart">
+                                <div>
+                                    <figure class="highcharts-figure" style="margin:2px">
+                                        <div id="container_tenyear" style="min-height: 100px; height: 158px; max-height: 250px; max-width: 100%"></div>
+                                    </figure>
+                                </div>
+                                <div id="time" style="position:absolute;left:400px;top:0px">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+
+<atscada-task at-interval="1000"></atscada-task>
+
+
+
+<script type="module" src="~/JavaScript/Core/Component/Task/atscada-task-element.js"></script>
+<script src="~/JavaScript/RealTime/Signage/OverviewSignage.js"></script>
+<link href="~/Css/project.css" rel="stylesheet" />
+<script src="~/JavaScript/Common/LayoutSignage.js"></script>
+<script src="~/JavaScript/Common/SignageOverview.js"></script>

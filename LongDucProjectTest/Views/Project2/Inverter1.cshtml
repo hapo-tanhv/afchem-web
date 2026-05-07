@@ -1,0 +1,566 @@
+﻿@{
+    ViewBag.Title = "SOLAR SCADA SYSTEM - RENTAL FACTORY 3 - INVERTER1";
+    ViewBag.ButtonHome = "";
+    ViewBag.ButtonOverview = "";
+    ViewBag.ButtonAlarm = "";
+    ViewBag.ButtonEvent = "";
+    ViewBag.ButtonReport = "";
+    ViewBag.ButtonProject = "active";
+    ViewBag.MenuOpenProject = "menu-open";
+    ViewBag.DisplayProject = "block";
+
+    ViewBag.ButtonProject1 = "";
+    ViewBag.MenuOpenProject1 = "";
+    ViewBag.DisplayProject1 = "none";
+    ViewBag.ButtonProject1Infor = "";
+    ViewBag.ButtonProject1Event = "";
+    ViewBag.ButtonProject1Alarm = "";
+    ViewBag.ButtonProject1Weather = "";
+    ViewBag.ButtonSignage1 = "";
+
+    ViewBag.ButtonProject2 = "active";
+    ViewBag.MenuOpenProject2 = "menu-open";
+    ViewBag.DisplayProject2 = "block";
+    ViewBag.ButtonProject2Infor = "active";
+    ViewBag.ButtonProject2Event = "";
+    ViewBag.ButtonProject2Alarm = "";
+    ViewBag.ButtonProject2Weather = "";
+    ViewBag.ButtonSignage2 = "";
+
+    ViewBag.ButtonProject3 = "";
+    ViewBag.MenuOpenProject3 = "";
+    ViewBag.DisplayProject3 = "none"; // block/none
+    ViewBag.ButtonProject3Infor = "";
+    ViewBag.ButtonProject3Event = "";
+    ViewBag.ButtonProject3Alarm = "";
+    ViewBag.ButtonProject3Weather = "";
+    ViewBag.ButtonSignage3 = "";
+
+    ViewBag.ButtonProject4 = "";
+    ViewBag.MenuOpenProject4 = "";
+    ViewBag.DisplayProject4 = "none"; // block/none
+    ViewBag.ButtonProject4Infor = "";
+    ViewBag.ButtonProject4Event = "";
+    ViewBag.ButtonProject4Alarm = "";
+    ViewBag.ButtonProject4Weather = "";
+    ViewBag.ButtonSignage4 = "";
+
+    ViewBag.ButtonProject5 = "";
+    ViewBag.MenuOpenProject5 = "";
+    ViewBag.DisplayProject5 = "none"; // block/none
+    ViewBag.ButtonProject5Infor = "";
+    ViewBag.ButtonProject5Event = "";
+    ViewBag.ButtonProject5Alarm = "";
+    ViewBag.ButtonProject5Weather = "";
+    ViewBag.ButtonSignage5 = "";
+
+    ViewBag.ButtonProject6 = "";
+    ViewBag.MenuOpenProject6 = "";
+    ViewBag.DisplayProject6 = "none"; // block/none
+    ViewBag.ButtonProject6Infor = "";
+    ViewBag.ButtonProject6Event = "";
+    ViewBag.ButtonProject6Alarm = "";
+    ViewBag.ButtonProject6Weather = "";
+    ViewBag.ButtonSignage6 = "";
+
+    ViewBag.ButtonProject7 = "";
+    ViewBag.MenuOpenProject7 = "";
+    ViewBag.DisplayProject7 = "none"; // block/none
+    ViewBag.ButtonProject7Infor = "";
+    ViewBag.ButtonProject7Event = "";
+    ViewBag.ButtonProject7Alarm = "";
+    ViewBag.ButtonProject7Weather = "";
+    ViewBag.ButtonSignage7 = "";
+
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+
+
+<!-- Main content -->
+<body onload="LoadInverter('project2','INV1')" id="load">
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Small boxes (Stat box) -->
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="DailyEnergy" style="color: #2d8cf0; ">---</text>
+                                <sup style="top: 0px; color: #2d8cf0">kWh</sup>
+                            </h3>
+
+                            <p>Daily Energy</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-solar-panel" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="TotalEnergy" style="color: #2d8cf0; ">---</text>
+                                <sup style="top: 0px; color: #2d8cf0">kWh</sup>
+                            </h3>
+
+                            <p>Total Energy</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-solar-panel" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="OutputActivePower" style="color: #2d8cf0; ">---</text>
+                                <sup style="top: 0px; color: #2d8cf0">kW</sup>
+                            </h3>
+
+                            <p>Active Power</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-solar-panel" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="OutputReactivePower" style="color: #2d8cf0; ">---</text>
+                                <sup style=" top: 0px; color: #2d8cf0">kVAr</sup>
+                            </h3>
+
+                            <p>Reactive Power</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-stream" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Small boxes (Stat box) -->
+            <div class="row">
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="DCPower" style="color: #2d8cf0; ">---</text>
+                                <sup style="top: 0px; color: #2d8cf0">kWp</sup>
+                            </h3>
+
+                            <p>DC Power</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-solar-panel" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="PowerFactor" style="color: #2d8cf0; ">---</text>
+                                <sup style=" top: 0px; color: #2d8cf0"></sup>
+                            </h3>
+
+                            <p>Power Factor</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-solar-panel" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="GridFrequency" style="color: #2d8cf0; ">---</text>
+                                <sup style="top: 0px; color: #2d8cf0">Hz</sup>
+                            </h3>
+
+                            <p>Frequency</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-wave-square" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="InverterTemperature" style="color: #2d8cf0; ">---</text>
+                                <sup style="top: 0px; color: #2d8cf0">℃</sup>
+                            </h3>
+
+                            <p>Temperature</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-temperature-high" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Small boxes (Stat box) -->
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="GridVoltageA" style="color: #2d8cf0; ">---</text>
+                                <sup style=" top: 0px; color: #2d8cf0">V</sup>
+                            </h3>
+
+                            <p>Phase A Voltage</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="GridVoltageB" style="color: #2d8cf0; ">---</text>
+                                <sup style="top: 0px; color: #2d8cf0">V</sup>
+                            </h3>
+
+                            <p>Phase B Voltage</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="GridVoltageC" style="color: #2d8cf0; ">---</text>
+                                <sup style="top: 0px; color: #2d8cf0">V</sup>
+                            </h3>
+
+                            <p>Phase C Voltage</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="GridCurrentA" style="color: #2d8cf0; ">---</text>
+                                <sup style=" top: 0px; color: #2d8cf0">A</sup>
+                            </h3>
+
+                            <p>Phase A Current</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Small boxes (Stat box) -->
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="GridCurrentB" style="color: #2d8cf0; ">---</text>
+                                <sup style=" top: 0px; color: #2d8cf0">A</sup>
+                            </h3>
+
+                            <p>Phase B Current</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="GridCurrentC" style="color: #2d8cf0; ">---</text>
+                                <sup style=" top: 0px; color: #2d8cf0">A</sup>
+                            </h3>
+
+                            <p>Phase C Current</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="GridVoltageAB" style="color: #2d8cf0; ">---</text>
+                                <sup style=" top: 0px; color: #2d8cf0">V</sup>
+                            </h3>
+
+                            <p>A-B Line Voltage</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="GridVoltageBC" style="color: #2d8cf0; ">---</text>
+                                <sup style=" top: 0px; color: #2d8cf0">V</sup>
+                            </h3>
+
+                            <p>B-C Line Voltage</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Small boxes (Stat box) -->
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="GridVoltageCA" style="color: #2d8cf0; ">---</text>
+                                <sup style=" top: 0px; color: #2d8cf0">V</sup>
+                            </h3>
+
+                            <p>A-C Line Voltage</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- /.card -->
+    <!-- ./col -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <!-- ENERGY CHART -->
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <div id="time">
+                                <input onchange="SubmitEnergy('project2','INV1')" type="date" id="selectimeEnergy" value="2022-08-21" style="width:150px">
+                                <button onclick="day('project2','INV1')" id="day" class="buttonChart"> Day</button>
+                                <button onclick="month('project2','INV1')" id="month" class="buttonChart"> Month</button>
+                                <button onclick="year('project2','INV1')" id="year" class="buttonChart"> Year</button>
+                                <button onclick="ExportExcelColumn('project2','INV1')" id="ExportExcelColumn" style="width:100px" class="buttonChart"> Report Excel</button>
+                                <button onclick="ExportCSVEnergy('project2','INV1')" id="ExportCSVColumn" class="buttonChart" style="width:100px"> Report CSV</button>
+                            </div>
+
+                        </div>
+                        <div class="card-body">
+                            <div class="chart">
+                                <div>
+                                    <figure class="highcharts-figure">
+                                        <div id="container" style="min-height: 250px; height: 400px; max-height: 400px; max-width: 100%"></div>
+                                    </figure>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <!-- POWER CHART -->
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <input onchange="SubmitPower('project2','INV1')" type="date" id="selecttimePower" value="2022-08-21" style="width:150px">
+                            <button onclick="ExportExcelLine('project2','INV1')" id="ExportExcelLine" style="width:100px" class="buttonChart"> Report Excel</button>
+                            <button onclick="ExportCSVPower('project2','INV1')" id="ExportCSVLine" style="width:100px" class="buttonChart"> Report CSV</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart">
+                                <div>
+                                    <figure class="highcharts-figure">
+                                        <div id="container_line" style="min-height: 250px; height: 400px; max-height: 400px; max-width: 100%"></div>
+                                    </figure>
+                                </div>
+                                <div id="time" style="position:absolute;left:400px;top:0px">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="card">
+        <div class="card-header">
+            <h5>Inverter1 PV Details</h5>
+        </div>
+        <!-- /.card-header -->
+        <div class="card-body">
+            <table id="example1" class="table table-bordered table-striped">
+                <thead class="text-center">
+                    <tr>
+                        <th>DC</th>
+                        <th>Voltage(V)</th>
+                        <th>Current(A)</th>
+
+                    </tr>
+                </thead>
+                <tbody class="text-center">
+                    <tr>
+                        <td>MPPT 1</td>
+                        <td id="MPPT1Voltage">-</td>
+                        <td id="MPPT1Current">-</td>
+
+                    </tr>
+                    <tr>
+                        <td>MPPT 2</td>
+                        <td id="MPPT2Voltage">-</td>
+                        <td id="MPPT2Current">-</td>
+
+                    </tr>
+                    <tr>
+                        <td>MPPT 3</td>
+                        <td id="MPPT3Voltage">-</td>
+                        <td id="MPPT3Current">-</td>
+
+                    </tr>
+                    <tr>
+                        <td>MPPT 4</td>
+                        <td id="MPPT4Voltage">-</td>
+                        <td id="MPPT4Current">-</td>
+
+                    </tr>
+                    <tr>
+                        <td>MPPT 5</td>
+                        <td id="MPPT5Voltage">-</td>
+                        <td id="MPPT5Current">-</td>
+
+                    </tr>
+                    <tr>
+                        <td>MPPT 6</td>
+                        <td id="MPPT6Voltage">-</td>
+                        <td id="MPPT6Current">-</td>
+
+                    </tr>
+                    <tr>
+                        <td>MPPT 7</td>
+                        <td id="MPPT7Voltage">-</td>
+                        <td id="MPPT7Current">-</td>
+
+                    </tr>
+                    <tr>
+                        <td>MPPT 8</td>
+                        <td id="MPPT8Voltage">-</td>
+                        <td id="MPPT8Current">-</td>
+
+                    </tr>
+                    <tr>
+                        <td>MPPT 9</td>
+                        <td id="MPPT9Voltage">-</td>
+                        <td id="MPPT9Current">-</td>
+
+                    </tr>
+                    <tr>
+                        <td>MPPT 10</td>
+                        <td id="MPPT10Voltage">-</td>
+                        <td id="MPPT10Current">-</td>
+
+                    </tr>
+                    <tr>
+                        <td>MPPT 11</td>
+                        <td id="MPPT11Voltage">-</td>
+                        <td id="MPPT11Current">-</td>
+
+                    </tr>
+                    <tr>
+                        <td>MPPT 12</td>
+                        <td id="MPPT12Voltage">-</td>
+                        <td id="MPPT12Current">-</td>
+
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- /.card-body -->
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 style="margin-right: 20px; ">Inverter1 common report</h5>
+            <text style="font-size: 16px;">From</text>
+            <input style="margin: 0 5px;" type="date" id="TimeCommonStart" value="2022-08-22">
+            <text style="font-size: 16px;">To</text>
+            <input style="margin: 0 5px;" type="date" id="TimeCommonEnd" value="2022-08-22">
+            <button onclick="ElectricalExportExcel('project2','INV1')" id="Excel" style="width:100px" margin:5px" class="buttonChart"> Report Excel</button>
+            <button onclick="ElectricalExportCSV('project2','INV1')" id="CSV" margin:5px" style="width:100px" class="buttonChart"> Report CSV</button>
+        </div>
+        <!-- /.card-body -->
+    </div>
+
+</body>
+<atscada-task at-interval="1000"></atscada-task>
+<script type="module" src="~/JavaScript/Core/Component/Task/atscada-task-element.js"></script>
+<script src="~/JavaScript/Common/inverter.js"></script>
+<script src="~/JavaScript/RealTime/Project2/Inverter1.js"></script>
+<link href="~/Css/Overview.css" rel="stylesheet" />

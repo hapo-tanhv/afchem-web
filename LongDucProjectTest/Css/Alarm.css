@@ -1,0 +1,26 @@
+﻿body {
+}
+@media(min-width:1024px) {
+    tr {
+        font-size: 1vw !important;
+    }
+    
+}
+
+@media(min-width:740px)and (max-width:1024px) {
+    tr {
+        font-size: 1.2vw !important;
+        /*color: red;*/
+    }
+
+    
+}
+
+@media(max-width:740px) {
+    tr {
+        font-size: 1.8vw !important;
+    }
+    header {
+        font-size: 1.5vw !important;
+    }
+}

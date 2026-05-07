@@ -1,0 +1,62 @@
+﻿.hidden {
+    display: none;
+}
+
+.inner {
+    height: 75px;
+}
+
+    .inner p {
+        font-size: 18px;
+        margin-top: -5px;
+    }
+
+    .inner h3 {
+        margin-top: -5px;
+    }
+
+        .inner h3::first-line {
+            font-size: 30px;
+        }
+
+.icon {
+    font-size: 2.2vw;
+}
+
+.card-header {
+    height: 40px;
+}
+
+.time {
+    margin-top: -8px;
+}
+
+.col-lg-2 col-6 {
+    padding: 0 !important;
+}
+
+@media(min-width:1024px) {
+    .inner p {
+        font-size: 16px;
+        margin-top: -5px;
+    }
+
+    .icon i {
+        top: 5px !important;
+        color: red;
+    }
+}
+
+@media(min-width:740px)and (max-width:1024px) {
+    .inner p {
+        font-size: 14px;
+        margin-top: -5px;
+    }
+}
+
+@media(max-width:740px) {
+    .inner p {
+        font-size: 10px;
+        margin-top: -5px;
+    }
+}

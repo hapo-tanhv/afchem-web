@@ -1,0 +1,596 @@
+﻿@{
+    ViewBag.Title = "SOLAR SCADA SYSTEM - SETTSU CARTON";
+    ViewBag.ButtonHome = "";
+    ViewBag.ButtonOverview = "";
+    ViewBag.ButtonAlarm = "";
+    ViewBag.ButtonEvent = "";
+    ViewBag.ButtonReport = "";
+    ViewBag.ButtonProject = "active";
+    ViewBag.MenuOpenProject = "menu-open";
+    ViewBag.DisplayProject = "block";
+
+    ViewBag.ButtonProject1 = "";
+    ViewBag.MenuOpenProject1 = "";
+    ViewBag.DisplayProject1 = "none";
+    ViewBag.ButtonProject1Infor = "";
+    ViewBag.ButtonProject1Event = "";
+    ViewBag.ButtonProject1Alarm = "";
+    ViewBag.ButtonProject1Weather = "";
+    ViewBag.ButtonSignage1 = "";
+
+    ViewBag.ButtonProject2 = "";
+    ViewBag.MenuOpenProject2 = "";
+    ViewBag.DisplayProject2 = "none"; // block/none
+    ViewBag.ButtonProject2Infor = "";
+    ViewBag.ButtonProject2Event = "";
+    ViewBag.ButtonProject2Alarm = "";
+    ViewBag.ButtonProject2Weather = "";
+    ViewBag.ButtonSignage2 = "";
+
+    ViewBag.ButtonProject3 = "";
+    ViewBag.MenuOpenProject3 = "";
+    ViewBag.DisplayProject3 = "none"; // block/none
+    ViewBag.ButtonProject3Infor = "";
+    ViewBag.ButtonProject3Event = "";
+    ViewBag.ButtonProject3Alarm = "";
+    ViewBag.ButtonProject3Weather = "";
+    ViewBag.ButtonSignage3 = "";
+
+    ViewBag.ButtonProject4 = "";
+    ViewBag.MenuOpenProject4 = "";
+    ViewBag.DisplayProject4 = "none"; // block/none
+    ViewBag.ButtonProject4Infor = "";
+    ViewBag.ButtonProject4Event = "";
+    ViewBag.ButtonProject4Alarm = "";
+    ViewBag.ButtonProject4Weather = "";
+    ViewBag.ButtonSignage4 = "";
+
+    ViewBag.ButtonProject5 = "";
+    ViewBag.MenuOpenProject5 = "";
+    ViewBag.DisplayProject5 = "none"; // block/none
+    ViewBag.ButtonProject5Infor = "";
+    ViewBag.ButtonProject5Event = "";
+    ViewBag.ButtonProject5Alarm = "";
+    ViewBag.ButtonProject5Weather = "";
+    ViewBag.ButtonSignage5 = "";
+
+    ViewBag.ButtonProject6 = "active";
+    ViewBag.MenuOpenProject6 = "menu-open";
+    ViewBag.DisplayProject6 = "block";
+    ViewBag.ButtonProject6Infor = "active";
+    ViewBag.ButtonProject6Event = "";
+    ViewBag.ButtonProject6Alarm = "";
+    ViewBag.ButtonProject6Weather = "";
+    ViewBag.ButtonSignage6 = "";
+
+    ViewBag.ButtonProject7 = "";
+    ViewBag.MenuOpenProject7 = "";
+    ViewBag.DisplayProject7 = "none"; // block/none
+    ViewBag.ButtonProject7Infor = "";
+    ViewBag.ButtonProject7Event = "";
+    ViewBag.ButtonProject7Alarm = "";
+    ViewBag.ButtonProject7Weather = "";
+    ViewBag.ButtonSignage7 = "";
+
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+
+
+<body onload="LoadProject('project6')" id="load">
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Small boxes (Stat box) -->
+            <div class="row">
+                <div class="col-lg-12 col-12">
+                    <!-- small box -->
+                    <div class="small-box1 bg-info3">
+                        <p class="small-box-footer" style="text-align:center;color:white">
+                            Project Information
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class=inner>
+                            <h3>
+                                <text id="DailyEnergy" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">kWh</sup>
+                            </h3>
+                            <p>Daily Energy</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-solar-panel" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="MonthlyEnergy" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">kWh</sup>
+                            </h3>
+
+                            <p>Monthly Energy</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-solar-panel" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="YearlyEnergy" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">kWh</sup>
+                            </h3>
+                            <p>Yearly Energy</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-solar-panel" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="TotalEnergy" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">kWh</sup>
+                            </h3>
+                            <p>Total Energy</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-solar-panel" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+            </div>
+            <!-- Small boxes (Stat box) -->
+            <div class="row">
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="PurchaseEnergy" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">kW</sup>
+                            </h3>
+                            <p>Purchased Power</p>
+                        </div>
+                        <div class="icon">
+                            <img src="https://img.icons8.com/ios-filled/50/2d8cf0/telephone-pole.png" alt="telephone-pole" style="float: right; margin-top: -85px; margin-right: 20px">
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="ExcessEnergy" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">kW</sup>
+                            </h3>
+
+                            <p>Excess Power</p>
+                        </div>
+                        <div class="icon">
+                            <img src="https://img.icons8.com/ios-filled/50/2d8cf0/telephone-pole.png" alt="telephone-pole" style="float: right; margin-top: -85px; margin-right: 20px">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class=inner>
+                            <h3>
+                                <text id="ActivePower" style="color: #2d8cf0; ">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">kW</sup>
+                            </h3>
+
+                            <p>Active Power</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-solar-panel" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="ReactivePower" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px; color: #2d8cf0">kVAr</sup>
+                            </h3>
+
+                            <p>Reactive Power</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-stream" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Small boxes (Stat box) -->
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class=inner>
+                            <h3>
+                                <text id="TotalInverterON" style="color: #2d8cf0; ">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">/9</sup>
+                            </h3>
+
+                            <p>Total Inverter<br>RUNNING</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-play-circle" style="color: #2d8cf0; font-size: 2.5vw "></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="TotalInverterOFF" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px; color: #2d8cf0">/9</sup>
+                            </h3>
+
+                            <p>Total Inverter<br>STOP</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-stop-circle" style="color: #2d8cf0; font-size: 2.5vw "></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="TotalInverterFault" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">/9</sup>
+                            </h3>
+                            <p>Total Inverter<br>FAULT</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-bell" style="color: #2d8cf0; font-size: 2.5vw "></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="TotalInverterStandby" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px;  color: #2d8cf0">/9</sup>
+                            </h3>
+
+                            <p>Total Inverter<br>STANDBY</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fas fa-table" style="color: #2d8cf0; font-size: 2.5vw "></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Small boxes (Stat box) -->
+            <div class="row">
+                <div class="col-lg-12 col-12">
+                    <!-- small box -->
+                    <div class="small-box1 bg-info3">
+                        <p class="small-box-footer" style="text-align:center;color:white">
+                            Inverter Information
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="INV1OutputActivePower" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px; color: #2d8cf0">kW</sup>
+                            </h3>
+                            <p>Inverter1 Active Power</p>
+                        </div>
+                        <a href="~/Project6/Inverter1" class="small-box-footer">Inverter1 More info <i class="fas fa-arrow-circle-right" style="color: #2d8cf0"></i></a>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="INV2OutputActivePower" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px; color: #2d8cf0">kW</sup>
+                            </h3>
+                            <p>Inverter2 Active Power</p>
+                        </div>
+                        <a href="~/Project6/Inverter2" class="small-box-footer">Inverter2 More info <i class="fas fa-arrow-circle-right" style="color: #2d8cf0"></i></a>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="INV3OutputActivePower" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px; color: #2d8cf0">kW</sup>
+                            </h3>
+
+                            <p>Inverter3 Active Power</p>
+                        </div>
+                        <a href="~/Project6/Inverter3" class="small-box-footer">Inverter3 More info <i class="fas fa-arrow-circle-right" style="color: #2d8cf0"></i></a>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="INV4OutputActivePower" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px; color: #2d8cf0">kW</sup>
+                            </h3>
+
+                            <p>Inverter4 Active Power</p>
+                        </div>
+                        <a href="~/Project6/Inverter4" class="small-box-footer">Inverter4 More info <i class="fas fa-arrow-circle-right" style="color: #2d8cf0"></i></a>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Small boxes (Stat box) -->
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="INV5OutputActivePower" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px; color: #2d8cf0">kW</sup>
+                            </h3>
+
+                            <p>Inverter5 Active Power</p>
+                        </div>
+                        <a href="~/Project6/Inverter5" class="small-box-footer">Inverter5 More info <i class="fas fa-arrow-circle-right" style="color: #2d8cf0"></i></a>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="INV6OutputActivePower" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px; color: #2d8cf0">kW</sup>
+                            </h3>
+
+                            <p>Inverter6 Active Power</p>
+                        </div>
+                        <a href="~/Project6/Inverter6" class="small-box-footer">Inverter6 More info <i class="fas fa-arrow-circle-right" style="color: #2d8cf0"></i></a>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="INV7OutputActivePower" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px; color: #2d8cf0">kW</sup>
+                            </h3>
+
+                            <p>Inverter7 Active Power</p>
+                        </div>
+                        <a href="~/Project6/Inverter7" class="small-box-footer">Inverter7 More info <i class="fas fa-arrow-circle-right" style="color: #2d8cf0"></i></a>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+                <!-- ./col -->
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="INV8OutputActivePower" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px; color: #2d8cf0">kW</sup>
+                            </h3>
+
+                            <p>Inverter8 Active Power</p>
+                        </div>
+                        <a href="~/Project6/Inverter8" class="small-box-footer">Inverter8 More info <i class="fas fa-arrow-circle-right" style="color: #2d8cf0"></i></a>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0; font-size: 2.5vw"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="content">
+        <div class="container-fluid">
+            <!-- Small boxes (Stat box) -->
+            <div class="row">
+                <div class="col-lg-3 col-6">
+                    <!-- small box -->
+                    <div class="small-box bg-info3">
+                        <div class="inner">
+                            <h3>
+                                <text id="INV9OutputActivePower" style="color: #2d8cf0">-</text>
+                                <sup style="top: 0px; color: #2d8cf0">kW</sup>
+                            </h3>
+
+                            <p>Inverter9 Active Power</p>
+                        </div>
+                        <a href="~/Project6/Inverter9" class="small-box-footer">Inverter9 More info <i class="fas fa-arrow-circle-right" style="color: #2d8cf0"></i></a>
+                        <div class="icon">
+                            <i class="fas fa-bolt" style="color: #2d8cf0"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ./col -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <!-- ENERGY CHART -->
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <div id="time">
+                                <input onchange="Submit('project6')" type="date" id="selectimeEnergy" value="2022-08-21" style="width:150px">
+                                <button onclick="day('project6')" id="day" class="buttonChart"> Day</button>
+                                <button onclick="month('project6')" id="month" class="buttonChart"> Month</button>
+                                <button onclick="year('project6')" id="year" class="buttonChart"> Year</button>
+                                <button onclick="ExportEnergyProject('Project6')" id="ExportExcelColumn" class="buttonChart" style="width:100px"> Report Excel</button>
+                                <button onclick="ExportCSVEnergyProject('Project6')" id="ExportCSVColumn" class="buttonChart" style="width:100px"> Report CSV</button>
+                            </div>
+
+                        </div>
+                        <div class="card-body">
+                            <div class="chart">
+                                <div>
+                                    <figure class="highcharts-figure">
+                                        <div id="container" style="min-height: 250px; height: 400px; max-height: 400px; max-width: 100%"></div>
+                                    </figure>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <!-- POWER CHART -->
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <input onchange="SubmitPower('project6')" type="date" id="selecttimePower" value="2022-08-21" style="width:150px">
+                            <button onclick="ExportPowerProject('project6')" id="ExportExcelLine" class="buttonChart" style="width:100px"> Report Excel</button>
+                            <button onclick="ExportCSVPowerProject('project6')" id="ExportCSVLine" class="buttonChart" style="width:100px"> Report CSV</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart">
+                                <div>
+                                    <figure class="highcharts-figure">
+                                        <div id="container_line" style="min-height: 250px; height: 400px; max-height: 400px; max-width: 100%"></div>
+                                    </figure>
+                                </div>
+                                <div id="time" style="position:absolute;left:400px;top:0px">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-body -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="content">
+        <div class="container-fluid">
+            <div class="card">
+                <div class="card-header">
+                    <h5 style="margin-right: 20px">Common Report</h5>
+                    <text style="font-size: 16px;">From</text>
+                    <input style="margin: 0 5px;" type="date" id="TimeCommonStart" value="2022-08-22">
+                    <text style="font-size: 16px;">To</text>
+                    <input style="margin: 0 5px;" type="date" id="TimeCommonEnd" value="2022-08-22">
+                    <button onclick="ExportExcelCommon('project6')" id="ExcelCommon" class="buttonChart" style="width: 100px;">Report Excel</button>
+                    <button onclick="ExportCSVCommon('project6')" id="CSVCommon" class="buttonChart" style="width: 100px;">Report CSV</button>
+
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h5 style="margin-right: 20px">Electrical Parameter Report</h5>
+                    <input style="margin: 0 5px;" type="date" id="TimeElectrical" value="2022-08-22">
+                    <button onclick="ExportExcelElectrical('project6')" id="Excel" style="width: 100px;" class="buttonChart">Report Excel</button>
+                    <button onclick="ExportCSVElectrical('project6')" id="CSV" style="width: 100px;" class="buttonChart">Report CSV</button>
+
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h5 style="margin-right: 20px">CO2 Reduction Report</h5>
+                    <input style="margin: 0 5px; width: 110px;" type="date" id="TimeCO2" value="2022-08-22">
+                    <button onclick="CO2day('project6')" id="CO2day" class="buttonChart">Day</button>
+                    <button onclick="CO2month('project6')" id="CO2month" class="buttonChart">Month</button>
+                    <button onclick="CO2year('project6')" id="CO2year" class="buttonChart">Year</button>
+                    <button onclick="ExportExcelCO2('project6')" id="ExcelCO2" style="width: 100px;" class="buttonChart">Report Excel</button>
+                    <button onclick="ExportCSVCO2('project6')" id="CSVCO2" style="width: 100px;" class="buttonChart">Report CSV</button>
+
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+
+
+<atscada-task at-interval="1000"></atscada-task>
+
+
+
+@*<script src="~/JavaScript/Project1/Project1Common.js"></script>*@
+<script type="module" src="~/JavaScript/Core/Component/Task/atscada-task-element.js"></script>
+<script src="~/JavaScript/RealTime/Project6Realtime.js"></script>
+<script src="~/JavaScript/Common/Project.js"></script>
+<link href="~/Css/project.css" rel="stylesheet" />

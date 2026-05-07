@@ -1,0 +1,337 @@
+﻿@{
+    ViewBag.Title = "SOLAR SCADA SYSTEM - HOME";
+
+    ViewBag.ButtonHome = "active";
+    ViewBag.ButtonOverview = "";
+    ViewBag.ButtonAlarm = "";
+    ViewBag.ButtonEvent = "";
+    ViewBag.ButtonReport = "";
+    ViewBag.ButtonProject = "";
+    ViewBag.MenuOpenProject = "";
+    ViewBag.DisplayProject = "none";
+
+    ViewBag.ButtonProject1 = ""; // active
+    ViewBag.MenuOpenProject1 = ""; // menu-open
+    ViewBag.DisplayProject1 = "none"; // block/none
+    ViewBag.ButtonProject1Infor = "";
+    ViewBag.ButtonProject1Event = "";
+    ViewBag.ButtonProject1Alarm = "";
+    ViewBag.ButtonProject1Weather = "";
+    ViewBag.ButtonSignage1 = "";
+
+    ViewBag.ButtonProject2 = "";
+    ViewBag.MenuOpenProject2 = "";
+    ViewBag.DisplayProject2 = "none"; // block/none
+    ViewBag.ButtonProject2Infor = "";
+    ViewBag.ButtonProject2Event = "";
+    ViewBag.ButtonProject2Alarm = "";
+    ViewBag.ButtonProject2Weather = "";
+    ViewBag.ButtonSignage2 = "";
+
+    ViewBag.ButtonProject3 = "";
+    ViewBag.MenuOpenProject3 = "";
+    ViewBag.DisplayProject3 = "none"; // block/none
+    ViewBag.ButtonProject3Infor = "";
+    ViewBag.ButtonProject3Event = "";
+    ViewBag.ButtonProject3Alarm = "";
+    ViewBag.ButtonProject3Weather = "";
+    ViewBag.ButtonSignage3 = "";
+
+    ViewBag.ButtonProject4 = "";
+    ViewBag.MenuOpenProject4 = "";
+    ViewBag.DisplayProject4 = "none"; // block/none
+    ViewBag.ButtonProject4Infor = "";
+    ViewBag.ButtonProject4Event = "";
+    ViewBag.ButtonProject4Alarm = "";
+    ViewBag.ButtonProject4Weather = "";
+    ViewBag.ButtonSignage4 = "";
+
+    ViewBag.ButtonProject5 = "";
+    ViewBag.MenuOpenProject5 = "";
+    ViewBag.DisplayProject5 = "none"; // block/none
+    ViewBag.ButtonProject5Infor = "";
+    ViewBag.ButtonProject5Event = "";
+    ViewBag.ButtonProject5Alarm = "";
+    ViewBag.ButtonProject5Weather = "";
+    ViewBag.ButtonSignage5 = "";
+
+    ViewBag.ButtonProject6 = "";
+    ViewBag.MenuOpenProject6 = "";
+    ViewBag.DisplayProject6 = "none"; // block/none
+    ViewBag.ButtonProject6Infor = "";
+    ViewBag.ButtonProject6Event = "";
+    ViewBag.ButtonProject6Alarm = "";
+    ViewBag.ButtonProject6Weather = "";
+    ViewBag.ButtonSignage6 = "";
+
+    ViewBag.ButtonProject7 = "";
+    ViewBag.MenuOpenProject7 = "";
+    ViewBag.DisplayProject7 = "none"; // block/none
+    ViewBag.ButtonProject7Infor = "";
+    ViewBag.ButtonProject7Event = "";
+    ViewBag.ButtonProject7Alarm = "";
+    ViewBag.ButtonProject7Weather = "";
+    ViewBag.ButtonSignage7 = "";
+
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+<title>Image Text Frame Demo</title>
+<style>
+    #text-frame {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: #fff;
+        border: 1px solid #000;
+        padding: 3px;
+        z-index: 9999;
+    }
+</style>
+
+<div class="row">
+    <!-- PROJECT INFORMATION -->
+    <div class="col-md-6">
+        <!-- /.card-header -->
+        <div class="card-body">
+            <table id="example1" class="table table-bordered">
+                <thead style="background-color: cornflowerblue">
+                    <tr>
+                        <th class="text-center" style="width: 200px;">General information of rooftop</th>
+                        <th class="text-center" style="width: 200px;">Detail</th>
+                    </tr>
+                </thead>
+                <tbody class="text-center">
+                    <tr>
+                        <td>Installed DC Power</td>
+                        <td style="font-weight: bold">2.4 MWp</td>
+                    </tr>
+                    <tr>
+                        <td>Number of installed rooftop project</td>
+                        <td style="font-weight: bold">2</td>
+                    </tr>
+                    <tr>
+                        <td>Number of Inverter</td>
+                        <td style="font-weight: bold">17</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table id="example1" class="table table-bordered">
+                    <thead style="background-color: cornflowerblue">
+                        <tr style="height: 10px;">
+                            <th class="text-center" style="text-align: center; vertical-align: middle">Plant</th>
+                            <th class="text-center" style="text-align: center; vertical-align: middle">Connection Grid Date</th>
+                            <th class="text-center" style="text-align: center; vertical-align: middle">Current Power (kW)</th>
+                            <th class="text-center" style="text-align: center; vertical-align: middle">Yield Today (kWh)</th>
+                            <th class="text-center" style="text-align: center; vertical-align: middle">Total Yield (kWh)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="height: 10px;">
+                            <td style="text-align: center; vertical-align: middle;">Rental Factory 1</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">2023-07-10</td>
+                            <td id="Project1ActivePower" style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td id="Project1DailyEnergy" style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td id="Project1TotalEnergy" style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">Rental Factory 3</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">2023-07-10</td>
+                            <td id="Project2ActivePower" style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td id="Project2DailyEnergy" style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td id="Project2TotalEnergy" style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">Kolmar</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">KYC</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">Nagae</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">Setsu Carton</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">Pegasus</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                            <td style="font-weight: bold; text-align: center; vertical-align: middle;">---</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div div class="col-md-6">
+        <img id="image" src="~/Image/anh VN.jpg" style="margin-left:6vw;margin-top:2vw" alt="A description of the image" usemap="#myMap">
+        <map name="myMap">
+            <area shape="circle" coords="260,645,10" onmouseover="showHandCursor()" onmouseout="showDefaultCursor()" onclick="info()">
+        </map>
+        <img id="info" src="~/Image/2.png" style="display:none; position: absolute; top: 0; left: 0;" />
+    </div>
+
+    <script>
+        const image = document.getElementById('image');
+        const infoImage = document.getElementById('info');
+        let isImageVisible = false;
+
+        function info() {
+            if (isImageVisible) {
+                // Nếu ảnh đang hiển thị, thì tắt nó
+                infoImage.style.display = 'none';
+                isImageVisible = false;
+            } else {
+                // Nếu ảnh không hiển thị, thì hiển thị nó
+                const x = image.offsetLeft;
+                const y = image.offsetTop;
+                infoImage.style.display = 'block';
+                infoImage.style.top = x + 350 + 'px';
+                infoImage.style.left = y + -100 + 'px';
+                isImageVisible = true;
+            }
+        }
+
+        function showHandCursor() {
+            // Hiện biểu tượng bàn tay khi di chuột vào
+            document.body.style.cursor = 'pointer';
+        }
+
+        function showDefaultCursor() {
+            // Quay lại biểu tượng mặc định khi di chuột ra ngoài
+            document.body.style.cursor = 'default';
+        }
+
+        infoImage.addEventListener('click', function () {
+            // Khi kích vào ảnh thì tắt ảnh
+            infoImage.style.display = 'none';
+            isImageVisible = false;
+        });
+    </script>
+</div>
+
+<atscada-task at-interval="1000"></atscada-task>
+
+@section Scripts
+{
+    <script type="module" src="~/JavaScript/Core/Component/Task/atscada-task-element.js"></script>
+
+    <script src="~/JavaScript/RealTime/HomeRealtime.js"></script>
+}
+
+
+
