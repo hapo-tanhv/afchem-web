@@ -11,9 +11,9 @@
     ViewBag.MenuOpenProject = "";
     ViewBag.DisplayProject = "none";
 
-    ViewBag.ButtonProject1 = ""; // active
-    ViewBag.MenuOpenProject1 = ""; // menu-open
-    ViewBag.DisplayProject1 = "none"; // block/none
+    ViewBag.ButtonProject1 = "";
+    ViewBag.MenuOpenProject1 = "";
+    ViewBag.DisplayProject1 = "none";
     ViewBag.ButtonProject1Infor = "";
     ViewBag.ButtonProject1Event = "";
     ViewBag.ButtonProject1Alarm = "";
@@ -22,7 +22,7 @@
 
     ViewBag.ButtonProject2 = "";
     ViewBag.MenuOpenProject2 = "";
-    ViewBag.DisplayProject2 = "none"; // block/none
+    ViewBag.DisplayProject2 = "none";
     ViewBag.ButtonProject2Infor = "";
     ViewBag.ButtonProject2Event = "";
     ViewBag.ButtonProject2Alarm = "";
@@ -31,7 +31,7 @@
 
     ViewBag.ButtonProject3 = "";
     ViewBag.MenuOpenProject3 = "";
-    ViewBag.DisplayProject3 = "none"; // block/none
+    ViewBag.DisplayProject3 = "none";
     ViewBag.ButtonProject3Infor = "";
     ViewBag.ButtonProject3Event = "";
     ViewBag.ButtonProject3Alarm = "";
@@ -40,7 +40,7 @@
 
     ViewBag.ButtonProject4 = "";
     ViewBag.MenuOpenProject4 = "";
-    ViewBag.DisplayProject4 = "none"; // block/none
+    ViewBag.DisplayProject4 = "none";
     ViewBag.ButtonProject4Infor = "";
     ViewBag.ButtonProject4Event = "";
     ViewBag.ButtonProject4Alarm = "";
@@ -49,7 +49,7 @@
 
     ViewBag.ButtonProject5 = "";
     ViewBag.MenuOpenProject5 = "";
-    ViewBag.DisplayProject5 = "none"; // block/none
+    ViewBag.DisplayProject5 = "none";
     ViewBag.ButtonProject5Infor = "";
     ViewBag.ButtonProject5Event = "";
     ViewBag.ButtonProject5Alarm = "";
@@ -58,7 +58,7 @@
 
     ViewBag.ButtonProject6 = "";
     ViewBag.MenuOpenProject6 = "";
-    ViewBag.DisplayProject6 = "none"; // block/none
+    ViewBag.DisplayProject6 = "none";
     ViewBag.ButtonProject6Infor = "";
     ViewBag.ButtonProject6Event = "";
     ViewBag.ButtonProject6Alarm = "";
@@ -67,7 +67,7 @@
 
     ViewBag.ButtonProject7 = "";
     ViewBag.MenuOpenProject7 = "";
-    ViewBag.DisplayProject7 = "none"; // block/none
+    ViewBag.DisplayProject7 = "none";
     ViewBag.ButtonProject7Infor = "";
     ViewBag.ButtonProject7Event = "";
     ViewBag.ButtonProject7Alarm = "";
@@ -75,7 +75,10 @@
     ViewBag.ButtonSignage7 = "";
 
     Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
 
+@section Styles {
+    <link href="@Url.Content("~/Css/Overview.css?v=now()")" rel="stylesheet" />
 }
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/modules/series-label.js"></script>
@@ -95,539 +98,194 @@
 
 <!-- Main content -->
 <body onload="Load()" id="load">
-    <section class="content">
+    <section class="content overview-dashboard">
         <div class="container-fluid">
-            <!-- Small boxes (Stat box) -->
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="small-box1 bg-info3">
-                        <p class="small-box-footer" style="text-align:center;color:white">
-                            Solar Active Power
-                        </p>
-                        <div class="highcharts-figure1" id="container-speed">
-
+            <div class="row stats-row">
+                <div class="col-md-2">
+                    <div class="stat-card">
+                        <span class="stat-label">QUY TRÌNH</span>
+                        <div class="stat-main">
+                            <i class="fas fa-project-diagram text-cyan"></i>
+                            <span class="stat-value" id="ProcessValue">1</span>
                         </div>
-                        <p style="text-align: center; font-size: 20px; color: #2d8cf0; font-weight: bold;">Maximum AC Power: 5,170kW</p>
                     </div>
                 </div>
-                <!-- ./col -->
-                <div class="col-md-9">
-                    <div class="row">
-                        <div class="col-lg-12 col-12">
-                            <!-- small box -->
-                            <div class="small-box1 bg-info3">
-                                <p class="small-box-footer" style="text-align:center;color:white">
-                                    Plant Information
-                                </p>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="ReactivePower" style="color: #2d8cf0;">-</text>
-                                        <sup style=" top: 0vw; color: #2d8cf0">kVAr</sup>
-                                    </h3>
-
-                                    <p>Solar Reactive Power</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-stream" style="color: #2d8cf0; font-size: 2.2vw "></i>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <div class="col-lg-3 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="DailyEnergy" style="color: #2d8cf0 ">-</text>
-                                        <sup style=" top: 0vw; color: #2d8cf0">kWh</sup>
-                                    </h3>
-
-                                    <p>Solar Daily Energy</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-solar-panel" style="color: #2d8cf0; font-size: 2.2vw "></i>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-3 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="MonthlyEnergy" style="color: #2d8cf0">-</text>
-                                        <sup style=" top: 0vw; color: #2d8cf0">kWh</sup>
-                                    </h3>
-
-                                    <p>Solar Monthly Energy</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-solar-panel" style="color: #2d8cf0; font-size:2.2vw "></i>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-3 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="CO2Reduction" style="color: #2d8cf0">-</text>
-                                        <sup style="top: 0vw; color: #2d8cf0">t-CO2</sup>
-                                    </h3>
-
-                                    <p>Reduction of CO2</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-leaf" style="color: #2d8cf0; font-size: 2.2vw "></i>
-                                </div>
-                            </div>
+                <div class="col-md-2">
+                    <div class="stat-card">
+                        <span class="stat-label">CÔNG ĐOẠN MÁY</span>
+                        <div class="stat-main">
+                            <i class="fas fa-project-diagram text-cyan"></i>
+                            <span class="stat-value" id="MachineProcessing">2</span>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-lg-3 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text style="color: #2d8cf0">6,480 </text>
-                                        <sup style="top: 0vw; color: #2d8cf0">kWp</sup>
-                                    </h3>
-
-                                    <p>Installed DC Capacity</p>
-                                </div>
-                                <div class="icon">
-                                    <img src="https://img.icons8.com/ios-filled/308CF4/ac-dc-converter.png" alt="ac-dc-converter" style="max-width: 100%; height: 3.5vw;width:3.5vw; float: right; margin-top: -100px; right: 60px;">
-                                </div>
-                            </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stat-card">
+                        <span class="stat-label">NHIỆT ĐỘ MÁY TRỘN</span>
+                        <div class="stat-main">
+                            <i class="fas fa-thermometer-half text-cyan"></i>
+                            <span class="stat-value" id="MixerTemp">40.5</span>
+                            <span class="stat-unit">°C</span>
                         </div>
-
-                        <div class="col-lg-3 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="YearlyEnergy" style="color: #2d8cf0 ">-</text>
-                                        <sup style="top:0vw; color: #2d8cf0">kWh</sup>
-                                    </h3>
-
-                                    <p>Solar Yearly Energy</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-solar-panel" style="color: #2d8cf0; font-size: 2.2vw "></i>
-                                </div>
-                            </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stat-card">
+                        <span class="stat-label">NHIỆT ĐỘ MÔI TRƯỜNG</span>
+                        <div class="stat-main">
+                            <i class="fas fa-thermometer-half text-cyan"></i>
+                            <span class="stat-value" id="AmbientTemp">35.5</span>
+                            <span class="stat-unit">°C</span>
                         </div>
-                        <div class="col-lg-3 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="TotalEnergy" style="color: #2d8cf0">-</text>
-                                        <sup style="  top: 0vw; color: #2d8cf0">kWh</sup>
-                                    </h3>
-
-                                    <p>Solar Total Energy</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-solar-panel" style="color: #2d8cf0; font-size: 2.2vw "></i>
-                                </div>
-                            </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stat-card">
+                        <span class="stat-label">NHIỆT ĐỘ GIỮA BUỒNG TRỘN</span>
+                        <div class="stat-main">
+                            <i class="fas fa-tint text-cyan"></i>
+                            <span class="stat-value" id="TempChamber">40.5</span>
+                            <span class="stat-unit">°C</span>
                         </div>
-
-                        <div class="col-lg-3 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="Performance" style="color: #2d8cf0">-</text>
-                                        <sup style="top: 0vw; color: #2d8cf0">%</sup>
-                                    </h3>
-
-                                    <p>Performance Ratio</p>
-                                </div>
-                                @*<div class="icon">
-                                        <i class="fas fa-sun fa-lg" style="color: #2d8cf0 "></i>
-                                    </div>*@
-                            </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stat-card">
+                        <span class="stat-label">ĐỘ ẨM MÔI TRƯỜNG</span>
+                        <div class="stat-main">
+                            <i class="fas fa-tachometer-alt text-warning"></i>
+                            <span class="stat-value" id="Humidity">75.5</span>
+                            <span class="stat-unit">%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stat-card">
+                        <span class="stat-label">ÁP SUẤT KHÍ</span>
+                        <div class="stat-main">
+                            <i class="fas fa-tachometer-alt text-primary"></i>
+                            <span class="stat-value" id="Pressure">10.1</span>
+                            <span class="stat-unit">Bar</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stat-card">
+                        <span class="stat-label">THỜI GIAN CẤP LIỆU</span>
+                        <div class="stat-main">
+                            <i class="fas fa-regular fa-clock text-success"></i>
+                            <span class="stat-value" id="FeedingTime">35</span>
+                            <span class="stat-unit text-success">s</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stat-card">
+                        <span class="stat-label">THỜI GIAN TRỘN 1</span>
+                        <div class="stat-main">
+                            <i class="fas fa-regular fa-clock text-success"></i>
+                            <span class="stat-value" id="MixTime1">35</span>
+                            <span class="stat-unit text-success">s</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stat-card">
+                        <span class="stat-label">THỜI GIAN XẢ ĐÁY</span>
+                        <div class="stat-main">
+                            <i class="fas fa-regular fa-clock text-success"></i>
+                            <span class="stat-value" id="BottomDischargeTime">35</span>
+                            <span class="stat-unit text-success">s</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stat-card">
+                        <span class="stat-label">THỜI GIAN HÚT XẢ</span>
+                        <div class="stat-main">
+                            <i class="fas fa-regular fa-clock text-success"></i>
+                            <span class="stat-value" id="SuctionDischargeTime">35</span>
+                            <span class="stat-unit text-success">s</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stat-card">
+                        <span class="stat-label">THỜI GIAN TRỘN 2</span>
+                        <div class="stat-main">
+                            <i class="fas fa-regular fa-clock text-success"></i>
+                            <span class="stat-value" id="MixTime2">35</span>
+                            <span class="stat-unit text-success">s</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-    <!-- /.card -->
 
-    <section class="content">
-        <div class="container-fluid">
-            <!-- Small boxes (Stat box) -->
-            <div class="row">
-                <!-- ./col -->
-                <div class="col-lg-12 col-12">
-                    <!-- small box -->
-                    <div class="small-box1 bg-info3">
-                        <p class="small-box-footer" style="text-align:center;color:white">
-                            Power Plant Status
-                        </p>
-                    </div>
-                </div>
-                <div class="col-md-12">
-                    <div class="row">
-                        <div class="col-lg-2 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="TotalInverterON" style="color: #2d8cf0">-</text>
-                                        <sup></sup>
-                                    </h3>
-
-                                    <p>Total Inverter<br>RUNNING</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-play-circle" style="color: #2d8cf0"></i>
-                                </div>
-                            </div>
+            <div class="row main-dashboard-grid">
+                <div class="col-md-8">
+                    <div class="dashboard-box main-chart-box">
+                        <div class="box-header">
+                            <span class="box-title">THÔNG SỐ QUAN TRỌNG</span>
                         </div>
-                        <div class="col-lg-2 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="TotalInverterOFF" style="color: #2d8cf0">-</text>
-                                        <sup></sup>
-                                    </h3>
 
-                                    <p>Total Inverter<br>STOP</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-stop-circle" style="color: #2d8cf0; font-size: 2.5vw "></i>
-                                </div>
-                            </div>
+                        <div class="gauge-container">
+                            <div id="container-speed" class="gauge-item"></div>
+                            <div id="container-temp" class="gauge-item"></div>
+                            <div id="container-pressure" class="gauge-item"></div>
                         </div>
-                        <div class="col-lg-2 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="TotalInverterFault" style="color: #2d8cf0 ">-</text>
-                                        <sup></sup>
-                                    </h3>
 
-                                    <p>Total Inverter<br>FAULT</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-bell" style="color: #2d8cf0; font-size: 2.5vw "></i>
-                                </div>
-                            </div>
+                        <div class="main-line-chart">
+                            <div id="container_line" style="height: 350px;"></div>
                         </div>
-                        <div class="col-lg-2 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="TotalInverterStandby" style="color: #2d8cf0 ">-</text>
-                                        <sup></sup>
-                                    </h3>
 
-                                    <p>Total Inverter<br>STANDBY</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-table" style="color: #2d8cf0; font-size: 2.5vw "></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="AmbientTemp" style="color: #2d8cf0">-</text>
-                                        <sup style="  top: 0vw; color: #2d8cf0">°C</sup>
-                                    </h3>
-
-                                    <p>Ambient<br>Temperature</p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-temperature-high" style="color: #2d8cf0; font-size: 2.4vw; top: 1vw; right: 0.4vw "></i>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="Irradiation" style="color: #2d8cf0">-</text>
-                                        <sup style="  top: 0vw; color: #2d8cf0">W/m2</sup>
-                                    </h3>
-                                    <p>
-                                        <span style="color: black;">Irradiation</span>
-                                        <br>
-                                        <span style="color: white;">---</span>
-                                    </p>
-                                </div>
-                                <div class="icon">
-                                    <i class="fas fa-sun fa-lg" style="color: #2d8cf0; font-size: 3vw "></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-lg-2 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="Project1ACB" style="color: #FF0000; font-size:xx-large">---</text>
-                                        <sup></sup>
-                                    </h3>
-
-                                    <p><strong style="font-size: larger">Rental Factory 1</strong><br>ACB Status</p>
-                                </div>
-                                <div class="icon">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="Project2ACB" style="color: #FF0000; font-size: xx-large ">---</text>
-                                        <sup></sup>
-                                    </h3>
-
-                                    <p><strong style="font-size: larger">Rental Factory 3</strong><br>ACB Status</p>
-                                </div>
-                                <div class="icon">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="Project6ACB1" style="color: #FF0000; font-size: xx-large ">---</text>
-                                        <sup></sup>
-                                    </h3>
-
-                                    <p><strong style="font-size: larger">Settsu Carton</strong><br>ACB-1 Status</p>
-                                </div>
-                                <div class="icon">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="Project6ACB2" style="color: #FF0000; font-size: xx-large ">---</text>
-                                        <sup></sup>
-                                    </h3>
-
-                                    <p><strong style="font-size: larger">Settsu Carton</strong><br>ACB-2 Status</p>
-                                </div>
-                                <div class="icon">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-6">
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="Project3ACB1" style="color: #FF0000; font-size:xx-large">---</text>
-                                        <sup></sup>
-                                    </h3>
-
-                                    <p><strong style="font-size: larger">Kolmar</strong><br>ACB-1 Status</p>
-                                </div>
-                                <div class="icon">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-6">
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="Project3ACB2" style="color: #FF0000; font-size:xx-large">---</text>
-                                        <sup></sup>
-                                    </h3>
-
-                                    <p><strong style="font-size: larger">Kolmar</strong><br>ACB-2 Status</p>
-                                </div>
-                                <div class="icon">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-lg-2 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="Project4ACB" style="color: #FF0000; font-size:xx-large">---</text>
-                                        <sup></sup>
-                                    </h3>
-
-                                    <p><strong style="font-size: larger">KYC</strong><br>ACB Status</p>
-                                </div>
-                                <div class="icon">
-                                    @*<i class="fas fa-calendar" style="color: #2d8cf0; font-size: 2.5vw "></i>*@
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="Project5ACB" style="color: #FF0000; font-size:xx-large">---</text>
-                                        <sup></sup>
-                                    </h3>
-
-                                    <p><strong style="font-size: larger">Nagae</strong><br>ACB Status</p>
-                                </div>
-                                <div class="icon">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text id="Project7ACB" style="color: #FF0000; font-size:xx-large">---</text>
-                                        <sup></sup>
-                                    </h3>
-
-                                    <p><strong style="font-size: larger">Pegasus</strong><br>ACB Status</p>
-                                </div>
-                                <div class="icon">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text style="color: #000000">---</text>
-                                        <sup></sup>
-                                    </h3>
-                                    <p>
-                                        <span style="color: black;">Spare</span>
-                                        <br>
-                                        <span style="color: white;">---</span>
-                                    </p>
-
-                                </div>
-                                <div class="icon">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text style="color: #000000">---</text>
-                                        <sup></sup>
-                                    </h3>
-                                    <p>
-                                        <span style="color: black;">Spare</span>
-                                        <br>
-                                        <span style="color: white;">---</span>
-                                    </p>
-
-                                </div>
-                                <div class="icon">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-6">
-                            <!-- small box -->
-                            <div class="small-box bg-info3">
-                                <div class="inner">
-                                    <h3>
-                                        <text style="color: #000000">---</text>
-                                        <sup></sup>
-                                    </h3>
-                                    <p>
-                                        <span style="color: black;">Spare</span>
-                                        <br>
-                                        <span style="color: white;">---</span>
-                                    </p>
-
-                                </div>
-                                <div class="icon">
-                                </div>
-                            </div>
+                        <div class="chart-footer">
+                            <button class="btn-scada btn-excel"><i class="fas fa-file-excel"></i> Export Excel</button>
+                            <button class="btn-scada btn-csv"><i class="fas fa-file-csv"></i> Export CSV</button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </section>
-    <!-- ./col -->
-    <section class="content">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-6">
-                    <!-- ENERGY CHART -->
-                    <div class="card card-primary">
-                        <div class="card-header">
-                            <div id="time">
-                                <input onchange="Submit()" type="date" id="selectimeEnergy" value="2023-08-21" style="width:120px">
-                                <button onclick="day()" id="day" class="buttonChart">Day</button><button onclick="month()" id="month" class="buttonChart">Month</button><button onclick="year()" id="year" class="buttonChart">Year</button>
-                                <button onclick="ExportExcelColumn()" id="ExportExcelColumn" class="buttonChart" style="width:100px"> Report Excel</button>
-                                <button onclick="ExportCSVEnergy()" id="ExportCSVEnergy" class="buttonChart" style="margin-right:15%;width:85px"> ReportCSV</button>
-                            </div>
 
+                <div class="col-md-4">
+                    <div class="dashboard-box side-box">
+                        <div class="box-header">
+                            <span class="box-title">ALARM / CẢNH BÁO</span>
+                            <a href="#" class="view-all">Xem tất cả →</a>
                         </div>
-                        <div class="card-body">
-                            <div class="chart">
-                                <div>
-                                    <figure class="highcharts-figure">
-                                        <div id="container" style="min-height: 250px; height: 400px; max-height: 400px; max-width: 100%"></div>
-                                    </figure>
-                                </div>
+                        <div class="list-container" id="alarm-list">
+                            <div class="list-item">
+                                <i class="fas fa-exclamation-triangle text-warning"></i>
+                                <span class="item-time">10:46:21</span>
+                                <span class="item-text">Máy nhiệt độ cao</span>
+                                <span class="badge badge-warning-outline">WARNING</span>
+                            </div>
+                            <div class="list-item">
+                                <i class="fas fa-exclamation-triangle text-warning"></i>
+                                <span class="item-time">10:46:21</span>
+                                <span class="item-text">Máy nhiệt độ cao</span>
+                                <span class="badge badge-warning-outline">WARNING</span>
                             </div>
                         </div>
-                        <!-- /.card-body -->
                     </div>
-                </div>
-                <div class="col-md-6">
-                    <!-- POWER CHART -->
-                    <div class="card card-primary">
-                        <div class="card-header">
-                            <input onchange="SubmitLine()" type="date" id="selecttimePower" value="2023-08-21" style="width:120px">
-                            <button onclick="ExportExcelLine()" id="ExportExcelLine" class="buttonChart" style="width:100px"> Report Excel</button>
-                            <button onclick="ExportCSVPower()" id="ExportCSVPower" class="buttonChart" style="margin-right:15%;width:85px"> ReportCSV</button>
+
+                    <div class="dashboard-box side-box mt-3">
+                        <div class="box-header">
+                            <span class="box-title">EVENT / SỰ KIỆN GẦN NHẤT</span>
+                            <a href="#" class="view-all">Xem tất cả →</a>
                         </div>
-                        <div class="card-body">
-                            <div class="chart">
-                                <div>
-                                    <figure class="highcharts-figure">
-                                        <div id="container_line" style="min-height: 250px; height: 400px; max-height: 400px; max-width: 100%"></div>
-                                    </figure>
-                                </div>
-                                <div id="time" style="position:absolute;left:400px;top:0px">
-                                </div>
+                        <div class="list-container" id="event-list">
+                            <div class="list-item">
+                                <div class="status-dot-green"></div>
+                                <span class="item-time">10:46:33</span>
+                                <span class="item-text">Máy ở công đoạn 1</span>
+                                <span class="badge badge-success-outline">RUN</span>
+                            </div>
+                            <div class="list-item">
+                                <div class="status-dot-green"></div>
+                                <span class="item-time">10:46:33</span>
+                                <span class="item-text">Máy ở công đoạn 2</span>
+                                <span class="badge badge-success-outline">RUN</span>
                             </div>
                         </div>
-                        <!-- /.card-body -->
                     </div>
                 </div>
             </div>
@@ -637,6 +295,5 @@
 <atscada-task at-interval="1000"></atscada-task>
 
 <script type="module" src="~/JavaScript/Core/Component/Task/atscada-task-element.js"></script>
-<script src="~/JavaScript/Common/EnenrgyPowerCommon.js"></script>
-<script src="~/JavaScript/RealTime/OverviewRealtime.js"></script>
-<link href="~/Css/Overview.css" rel="stylesheet" />
+<script src="~/JavaScript/Common/EnenrgyPowerCommon.js?v=now()"></script>
+<script src="~/JavaScript/RealTime/OverviewRealtime.js?v=now()"></script>

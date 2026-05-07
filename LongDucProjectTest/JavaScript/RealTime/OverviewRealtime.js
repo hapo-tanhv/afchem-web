@@ -1,13 +1,57 @@
 ﻿var activepower;
+var temperature;
+var pressure;
+var USE_FAKE_DATA = true; // Set to true to use fake data, false to use real SCADA data
+
 document.addEventListener("DOMContentLoaded", function () {
+    // FAKE DATA - Generate random values for testing
+    function generateFakeData() {
+        if (!USE_FAKE_DATA) return; // Skip if using real data
+
+        try {
+            activepower = Math.floor(Math.random() * 4500) + 500; // 500-5000 kW
+            temperature = Math.floor(Math.random() * 1500) + 500;    // 500-2000 °C
+            pressure = Math.floor(Math.random() * 1200) + 200;    // 200-1400 Pa
+
+            // Update charts with fake data
+            if (window.speedChartInstance && window.speedChartInstance.series[0]) {
+                window.speedChartInstance.series[0].update({ data: [activepower] });
+            }
+            if (window.tempChartInstance && window.tempChartInstance.series[0]) {
+                window.tempChartInstance.series[0].update({ data: [temperature] });
+            }
+            if (window.pressureChartInstance && window.pressureChartInstance.series[0]) {
+                window.pressureChartInstance.series[0].update({ data: [pressure] });
+            }
+            console.log('Fake data updated:', { activepower, temperature, pressure });
+        } catch (e) {
+            console.error('Error updating fake data:', e);
+        }
+    }
+
+    // Initialize charts
+    try {
+        window.speedChartInstance = AcivePowerChart();
+        window.tempChartInstance = TemperatureChart();
+        window.pressureChartInstance = PressureChart();
+        console.log('Charts initialized successfully');
+    } catch (e) {
+        console.error('Error initializing charts:', e);
+    }
+
+    // Generate fake data every 2 seconds
+    if (USE_FAKE_DATA) {
+        setInterval(generateFakeData, 2000);
+        // Initial call after a short delay to ensure DOM is ready
+        setTimeout(generateFakeData, 500);
+    }
+
     var atscadaTask = document.querySelector('atscada-task');
     var dataTask = atscadaTask.dataTask;
     var dataCollection = dataTask.dataCollection;
-    AcivePowerChart();
 
-    //Add tag solar information
-    
-    dataCollection.add(`ITNCommonSolar.ActivePower`);
+    // SKIPPED REAL DATA - Using fake data instead
+    // dataCollection.add(`ITNCommonSolar.ActivePower`);
     dataCollection.add(`ITNCommonSolar.DailyEnergy`);
     dataCollection.add(`ITNCommonSolar.MonthlyEnergy`);
     dataCollection.add(`ITNCommonSolar.YearlyEnergy`);
@@ -76,10 +120,24 @@ document.addEventListener("DOMContentLoaded", function () {
     dataCollection.add(`Project7SolarPanelMainCB.OFF`);
     dataCollection.add(`Project7SolarPanelMainCB.Trip`);
     dataCollection.add(`Project7SolarPanelMainCB.Emergency`);
+    // For Temperature and Pressure gauges - replace with your actual PLC tags
+    dataCollection.add(`ITNCommonSolar.Temperature`);
+    dataCollection.add(`ITNCommonSolar.Pressure`);
 
     updateTag1(
         dataCollection.get(`ITNCommonSolar.ActivePower`),
         document.querySelector('#container-speed'));
+
+    // Temperature gauge - updates chart and text
+    updateTemperatureTag(
+        dataCollection.get(`ITNCommonSolar.Temperature`),
+        document.querySelector('#container-temp'));
+
+    // Pressure gauge - updates chart and text
+    updatePressureTag(
+        dataCollection.get(`ITNCommonSolar.Pressure`),
+        document.querySelector('#container-pressure'));
+
     updateTag2(
         dataCollection.get(`ITNCommonSolar.DailyEnergy`),
         document.querySelector('#DailyEnergy'));
@@ -365,6 +423,42 @@ function updateTag8(dataTag, element) {
         });
         if (dataTag.Value !== undefined) {
             element.innerHTML = data.e.newValue;
+        }
+    }
+}
+
+function updateTemperatureTag(dataTag, element) {
+    if (dataTag && element) {
+        dataTag.dispatcher.on('valueChanged', (data) => {
+            if (data.e.newValue !== undefined) {
+                var value = Number(data.e.newValue);
+                element.innerHTML = value.toFixed(1);
+                if (window.tempChartInstance && window.tempChartInstance.series[0]) {
+                    window.tempChartInstance.series[0].update({ data: [value] });
+                }
+            }
+        });
+        if (dataTag.Value !== undefined) {
+            var value = Number(dataTag.Value);
+            element.innerHTML = value.toFixed(1);
+        }
+    }
+}
+
+function updatePressureTag(dataTag, element) {
+    if (dataTag && element) {
+        dataTag.dispatcher.on('valueChanged', (data) => {
+            if (data.e.newValue !== undefined) {
+                var value = Number(data.e.newValue);
+                element.innerHTML = value.toFixed(0);
+                if (window.pressureChartInstance && window.pressureChartInstance.series[0]) {
+                    window.pressureChartInstance.series[0].update({ data: [value] });
+                }
+            }
+        });
+        if (dataTag.Value !== undefined) {
+            var value = Number(dataTag.Value);
+            element.innerHTML = value.toFixed(0);
         }
     }
 }
@@ -1252,93 +1346,169 @@ function updateTag56(dataTag, element) {
 }
 
 
-
 var gaugeOptions = {
     chart: {
-        type: 'solidgauge'
+        type: 'gauge',
+        backgroundColor: 'transparent',
+        height: '250px' // Cố định chiều cao để không bị vỡ layout
     },
 
     title: null,
 
     pane: {
-        //startAngle: -180,
-        //endAngle: 180,
-        background: {
-            backgroundColor:
-                Highcharts.defaultOptions.legend.backgroundColor || '#EEE',
+        startAngle: -100,
+        endAngle: 100,
+        background: [{
+            backgroundColor: 'rgba(255, 255, 255, 0.05)', // Tạo vòng cung nền mờ
+            borderWidth: 0,
+            outerRadius: '105%',
             innerRadius: '60%',
-            outerRadius: '100%',
-        }
+            shape: 'arc'
+        }],
+        center: ['50%', '55%'] // Căn giữa lại để chừa chỗ cho label bên dưới
     },
 
-    exporting: {
-        enabled: false
-    },
-
-    tooltip: {
-        enabled: false
-    },
-
-    // the value axis
     yAxis: {
-        stops: [
-            [0.1, '#2d8cf0']
-        ],
-        lineWidth: 0,
-        tickWidth: 0,
-        minorTickInterval: null,
-        tickAmount: 2,
-        title: {
-            y: -70,
+        minorTickInterval: 'auto',
+        minorTickWidth: 1,
+        minorTickLength: 5,
+        minorTickPosition: 'inside',
+        minorTickColor: '#475569',
 
-        },
+        tickPixelInterval: 30,
+        tickWidth: 2,
+        tickPosition: 'inside',
+        tickLength: 12,
+        tickColor: '#94a3b8',
+
         labels: {
-            y: 16
-        }
+            distance: -25, // Đẩy con số vào sâu bên trong vòng cung
+            style: {
+                color: '#64748b',
+                fontSize: '10px'
+            }
+        },
+        title: { text: null },
+        lineWidth: 0
     },
 
     plotOptions: {
-        solidgauge: {
-            dataLabels: {
-                y: -20,
-                color: '#2d8cf0',
-                borderWidth: 0,
-                useHTML: true
+        gauge: {
+            dial: {
+                radius: '65%', // Kim ngắn lại để trông sang hơn
+                backgroundColor: '#ffffff',
+                baseWidth: 4,
+                topWidth: 1,
+                baseLength: '0%',
+                rearLength: '10%' // Thêm một chút đuôi kim
+            },
+            pivot: {
+                radius: 8, // Tâm kim to và rõ như ảnh 2
+                backgroundColor: '#ffffff'
             }
         }
-    }
+    },
+    exporting: { enabled: false },
+    credits: { enabled: false }
 };
 
-
-
 function AcivePowerChart() {
-    var chartSpeed = Highcharts.chart('container-speed', Highcharts.merge(gaugeOptions, {
+    return Highcharts.chart('container-speed', Highcharts.merge(gaugeOptions, {
         yAxis: {
             min: 0,
-            max: 5170,
-            visible: false,
+            max: 5000,
+            plotBands: [{
+                from: 0, to: 3500, color: '#EF4444', thickness: 15
+            }, {
+                from: 3500, to: 5000, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
+            }],
+            labels: {
+                step: 2,
+                rotation: 'auto',
+                style: { color: '#94a3b8' }
+            }
         },
-
-        credits: {
-            enabled: false
-        },
-
         series: [{
-            animation: false,
-            name: 'Speed',
-             data: [activepower],
+            name: 'Nhiệt độ môi trường',
+            data: [1435],
             dataLabels: {
-                format:
-                    '<div style="text-align:center">' +
-                    '<span style="font-size:25px">{y}</span><br/>' +
-                    '<span style="font-size:12px">kW</span>' +
-                    '</div>'
-            },
-            tooltip: {
-                valueSuffix: ' kW'
+                format: '<div style="text-align:center">' +
+                    '<span style="font-size:22px;color:#fff;font-weight:bold">{y}</span> ' +
+                    '<span style="font-size:16px;color:#fff">kW</span><br/>' +
+                    '<div style="width:15px; height:2px; background:#EF4444; display:inline-block; margin-bottom:4px"></div> ' +
+                    '<span style="font-size:12px;color:#94a3b8;font-weight:normal">Nhiệt độ môi trường</span>' +
+                    '</div>',
+                borderWidth: 0,
+                y: 80,
+                useHTML: true
             }
         }]
-
     }));
-    
+}
+
+// Ví dụ cho Temperature - Màu Đỏ (Nhiệt độ môi trường)
+function TemperatureChart() {
+    return Highcharts.chart('container-temp', Highcharts.merge(gaugeOptions, {
+        yAxis: {
+            min: 0, max: 2000,
+            plotBands: [{
+                from: 0, to: 1200,
+                color: '#7373f3', // Đỏ rực như ảnh 2
+                thickness: 15
+            }, {
+                from: 1200, to: 2000,
+                color: 'rgba(239, 68, 68, 0.1)', // Phần còn lại màu mờ
+                thickness: 15
+            }]
+        },
+        series: [{
+            name: 'Nhiệt độ máy',
+            data: [1435],
+            dataLabels: {
+                format: '<div style="text-align:center; margin-top: 20px">' +
+                    '<span style="font-size:24px;color:#fff;font-weight:bold">{y}</span> ' +
+                    '<span style="font-size:16px;color:#fff">°C</span><br/>' +
+                    '<div style="width:15px; height:2px; background:#7373f3; display:inline-block; margin-bottom:4px"></div> ' +
+                    '<span style="font-size:12px;color:#94a3b8;font-weight:normal">Nhiệt độ máy</span>' +
+                    '</div>',
+                y: 65, // Điều chỉnh lại vị trí text
+                useHTML: true,
+                borderWidth: 0
+            }
+        }]
+    }));
+}
+
+function PressureChart() {
+    return Highcharts.chart('container-pressure', Highcharts.merge(gaugeOptions, {
+        yAxis: {
+            min: 0,
+            max: 1500,
+            plotBands: [{
+                from: 0, to: 1000, color: '#a2f7f7', thickness: 15
+            }, {
+                from: 1000, to: 1500, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
+            }],
+            labels: {
+                step: 2,
+                rotation: 'auto',
+                style: { color: '#94a3b8' }
+            }
+        },
+        series: [{
+            name: 'Áp suất',
+            data: [0],
+            dataLabels: {
+                format: '<div style="text-align:center">' +
+                    '<span style="font-size:22px;color:#fff;font-weight:bold">{y}</span> ' +
+                    '<span style="font-size:16px;color:#fff">Pa</span><br/>' +
+                    '<div style="width:15px; height:2px; background:#a2f7f7; display:inline-block; margin-bottom:4px"></div> ' +
+                    '<span style="font-size:12px;color:#94a3b8;font-weight:normal">Áp suất</span>' +
+                    '</div>',
+                borderWidth: 0,
+                y: 80,
+                useHTML: true
+            }
+        }]
+    }));
 }

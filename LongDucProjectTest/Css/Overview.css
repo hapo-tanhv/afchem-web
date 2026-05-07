@@ -1,21 +1,192 @@
-﻿/*body {
+﻿/* RESET & NỀN TỔNG THỂ */
+.content-wrapper {
+    background-color: #0a0a0a !important;
+    padding: 20px;
 }
-@media(min-width:1024px){
-    h3 {
-        font-size: 1.7vw !important;      
-    }
+
+/* STYLE CHO THẺ THÔNG SỐ NHANH (HÀNG 1) */
+.stat-card {
+    background: #111a2d;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    transition: transform 0.2s;
 }
-@media(min-width:740px)and (max-width:1024px) {
-    h3 {
-        font-size: 1.8vw !important;
-        color:red;
-    }
-    p{
-        font-size:1.5vw !important;
-    }
+
+.stat-label {
+    color: #d4d8dd;
+    font-size: 16px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 10px;
 }
-@media(max-width:740px) {
-    h3 {
-        font-size: 2.8vw !important;
-    }
-}*/
+
+.stat-main {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.stat-value {
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.stat-unit {
+    color: #3b82f6;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.stat-sub {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.stat-sub-2 {
+    border: 1px solid green;
+    margin-bottom: 0.7rem;
+    margin-top: 0.7rem;
+}
+
+.text-cyan {
+    color: #00e5ff;
+}
+
+/* STYLE CHO BOX CHÍNH */
+.dashboard-box {
+    background: #111a2d;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
+    padding: 20px;
+}
+
+.box-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.box-title {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+}
+
+/* GAUGE & CHART */
+.gauge-container {
+    display: flex;
+    justify-content: space-between;
+    background: #0f172a; /* Nền đồng nhất với header */
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.gauge-item {
+    width: 33%;
+    height: 250px; /* Tăng chiều cao để đủ chỗ cho label bên dưới */
+    background: transparent;
+    box-shadow: none !important; /* Xóa bóng đổ để layout không bị "vụn" */
+    border: none !important;
+}
+
+.gauge-item .highcharts-background {
+    fill: transparent;
+}
+
+.gauge-item .highcharts-pane-series-0 {
+    fill: #1a1a1a;
+}
+
+/* DANH SÁCH ALARM/EVENT (BÊN PHẢI) */
+.list-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    gap: 15px;
+}
+
+.item-time {
+    color: #94a3b8;
+    font-size: 13px;
+    font-family: monospace;
+}
+
+.item-text {
+    color: #e2e8f0;
+    font-size: 13px;
+    flex-grow: 1;
+}
+
+/* BADGES */
+.badge-warning-outline {
+    border: 1px solid #f59e0b;
+    color: #f59e0b;
+    background: transparent;
+    padding: 4px 8px;
+    font-size: 10px;
+    border-radius: 4px;
+}
+
+.badge-success-outline {
+    border: 1px solid #22c55e;
+    color: #22c55e;
+    background: transparent;
+    padding: 4px 8px;
+    font-size: 10px;
+    border-radius: 4px;
+}
+
+.status-dot-green {
+    width: 10px;
+    height: 10px;
+    background: #22c55e;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #22c55e;
+}
+
+.view-all {
+    font-size: 12px;
+    color: #3b82f6;
+}
+
+/* INPUT & BUTTON */
+.dark-input {
+    background: #0a0a0a;
+    border: 1px solid #334155;
+    color: white;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.btn-scada {
+    border: none;
+    border-radius: 4px;
+    padding: 6px 15px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.btn-excel {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+
+.btn-csv {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+}
+
+.chart-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
+}

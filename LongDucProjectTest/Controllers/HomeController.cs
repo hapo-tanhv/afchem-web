@@ -55,13 +55,13 @@ namespace LongDucProject.Controllers
             switch (role)
             {
                 case Role.Admin:
-                    return RedirectToAction("Home", "Home");
+                    return RedirectToAction("Overview", "Home");
                 case Role.SolEnergy:
-                    return RedirectToAction("Home", "Home");
+                    return RedirectToAction("Overview", "Home");
                 case Role.JGC:
-                    return RedirectToAction("Home", "Home");
+                    return RedirectToAction("Overview", "Home");
                 case Role.Hino:
-                    return RedirectToAction("Home", "Home");
+                    return RedirectToAction("Overview", "Home");
                 case Role.LDIP:
                     return RedirectToAction("Home", "LDIP");
                 case Role.Project1:

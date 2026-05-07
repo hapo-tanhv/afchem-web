@@ -48,7 +48,8 @@
             height: 65px;
             padding: 0 20px !important;
             margin-left: 0 !important;
-            position: relative;
+            position: sticky;
+            top: 0;
             z-index: 1035 !important;
         }
 
@@ -172,8 +173,87 @@
         .notif-time { color: #475569; font-size: 10px; margin-top: 4px; }
 
         /* Sidebar & Content */
-        .main-sidebar { padding-top: 65px !important; z-index: 1030 !important; background-color: #0f172a !important; }
-        .content-wrapper { background-color: #0a0a0a !important; }
+        .main-sidebar {
+            padding-top: 75px !important;
+            z-index: 1030 !important;
+            background-color: #0c1425 !important; /* Màu tối sâu */
+        }
+
+        /* Căn chỉnh lại List Menu */
+        .nav-sidebar {
+            padding: 0 10px !important;
+        }
+
+            .nav-sidebar .nav-item {
+                margin-bottom: 8px !important;
+            }
+
+            /* Style cơ bản cho các Link menu */
+            .nav-sidebar .nav-link {
+                color: #94a3b8 !important;
+                border-radius: 10px !important; /* Bo góc item */
+                padding: 12px 15px !important;
+                transition: all 0.3s ease;
+                border: none !important;
+            }
+
+                /* HOVER: Lớp phủ nhẹ */
+                .nav-sidebar .nav-link:hover {
+                    background-color: rgba(255, 255, 255, 0.05) !important;
+                    color: #ffffff !important;
+                }
+
+            /* ACTIVE PART: Khớp hoàn toàn ảnh 2 */
+            .nav-sidebar .nav-item .nav-link.active {
+                background: linear-gradient(90deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.3) 100%) !important;
+                color: #ffffff !important;
+                position: relative;
+                box-shadow: none !important;
+            }
+
+                /* Vạch xanh Cyan bên trái cho phần Active */
+                .nav-sidebar .nav-item .nav-link.active::before {
+                    content: "";
+                    position: absolute;
+                    left: 0;
+                    top: 15%;
+                    height: 70%;
+                    width: 4px;
+                    background-color: #00e5ff; /* Màu Cyan đặc trưng */
+                    border-radius: 0 4px 4px 0;
+                    box-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+                }
+
+            /* Icon Active */
+            .nav-sidebar .nav-link.active i {
+                color: #00e5ff !important;
+                filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.4));
+            }
+
+        /* Sidebar Footer Text */
+        .sidebar-brand-footer {
+            position: absolute;
+            bottom: 30px;
+            width: 100%;
+            text-align: center;
+            left: 0;
+        }
+
+            .sidebar-brand-footer span {
+                color: #475569;
+                font-size: 12px;
+                letter-spacing: 1px;
+                font-weight: 500;
+            }
+
+        /* Sửa lỗi hiển thị Dropdown và các thành phần khác của AdminLTE */
+        .content-wrapper {
+            background-color: #0a0a0a !important;
+        }
+
+        .nav-sidebar .nav-link p {
+            margin-left: 10px;
+        }
 
         @@keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
@@ -182,6 +262,8 @@
         }
     </style>
 
+</head>
+    @RenderSection("Styles", required: false)
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">
@@ -290,17 +372,51 @@
             </div>
         </nav>
 
-        <aside class="main-sidebar sidebar-dark-primary">
+        <aside class="main-sidebar">
             <div class="sidebar">
                 <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+
                         <li class="nav-item">
-                            <a href="~/Home/Home" class="nav-link @ViewBag.ButtonHome">
-                                <i class="nav-icon fas fa-th-large"></i> <p>Tổng quan</p>
+                            <a href="~/Home/Overview" class="nav-link @(ViewBag.ButtonHome ?? "active")">
+                                <i class="nav-icon fas fa-th-large"></i>
+                                <p>Tổng quan</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="~/Home/Alarm" class="nav-link">
+                                <i class="nav-icon fas fa-exclamation-triangle"></i>
+                                <p>Cảnh báo</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="~/Home/Event" class="nav-link">
+                                <i class="nav-icon fas fa-calendar"></i>
+                                <p>Sự kiện</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-file-alt"></i>
+                                <p>Báo cáo</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="~/Home/UserSetting" class="nav-link">
+                                <i class="nav-icon fas fa-cog"></i>
+                                <p>Cài đặt hệ thống</p>
                             </a>
                         </li>
                     </ul>
                 </nav>
+
+                <div class="sidebar-brand-footer">
+                    <span>© 2026 HAPOSOFT</span>
+                </div>
             </div>
         </aside>
 
