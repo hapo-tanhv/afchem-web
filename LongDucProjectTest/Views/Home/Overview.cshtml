@@ -78,7 +78,7 @@
 }
 
 @section Styles {
-    <link href="@Url.Content("~/Css/Overview.css?v=now()")" rel="stylesheet" />
+    <link rel="stylesheet" href="~/Css/Overview.css" asp-append-version="true" />
 }
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/modules/series-label.js"></script>
@@ -97,7 +97,7 @@
 
 
 <!-- Main content -->
-<body onload="Load()" id="load">
+<body>
     <section class="content overview-dashboard">
         <div class="container-fluid">
             <div class="row stats-row">
@@ -105,8 +105,8 @@
                     <div class="stat-card">
                         <span class="stat-label">QUY TRÌNH</span>
                         <div class="stat-main">
-                            <i class="fas fa-project-diagram text-cyan"></i>
-                            <span class="stat-value" id="ProcessValue">1</span>
+                            <img src="~/icons/robotic-arm.svg" alt="Process" style="width:50px;height:50px;" />
+                            <span class="stat-value" id="Process">-</span>
                         </div>
                     </div>
                 </div>
@@ -114,7 +114,7 @@
                     <div class="stat-card">
                         <span class="stat-label">CÔNG ĐOẠN MÁY</span>
                         <div class="stat-main">
-                            <i class="fas fa-project-diagram text-cyan"></i>
+                            <img src="~/icons/machine-processing.svg" alt="MachineProcessing" style="width:50px;height:50px;" />
                             <span class="stat-value" id="MachineProcessing">2</span>
                         </div>
                     </div>
@@ -123,7 +123,7 @@
                     <div class="stat-card">
                         <span class="stat-label">NHIỆT ĐỘ MÁY TRỘN</span>
                         <div class="stat-main">
-                            <i class="fas fa-thermometer-half text-cyan"></i>
+                            <i class="fas fa-thermometer-half text-cyan" style="font-size: 28px"></i>
                             <span class="stat-value" id="MixerTemp">40.5</span>
                             <span class="stat-unit">°C</span>
                         </div>
@@ -133,7 +133,7 @@
                     <div class="stat-card">
                         <span class="stat-label">NHIỆT ĐỘ MÔI TRƯỜNG</span>
                         <div class="stat-main">
-                            <i class="fas fa-thermometer-half text-cyan"></i>
+                            <i class="fas fa-thermometer-half text-cyan" style="font-size: 28px"></i>
                             <span class="stat-value" id="AmbientTemp">35.5</span>
                             <span class="stat-unit">°C</span>
                         </div>
@@ -143,7 +143,7 @@
                     <div class="stat-card">
                         <span class="stat-label">NHIỆT ĐỘ GIỮA BUỒNG TRỘN</span>
                         <div class="stat-main">
-                            <i class="fas fa-tint text-cyan"></i>
+                            <i class="fas fa-tint text-cyan" style="font-size: 28px"></i>
                             <span class="stat-value" id="TempChamber">40.5</span>
                             <span class="stat-unit">°C</span>
                         </div>
@@ -153,7 +153,7 @@
                     <div class="stat-card">
                         <span class="stat-label">ĐỘ ẨM MÔI TRƯỜNG</span>
                         <div class="stat-main">
-                            <i class="fas fa-tachometer-alt text-warning"></i>
+                            <i class="fas fa-tachometer-alt text-warning" style="font-size: 28px"></i>
                             <span class="stat-value" id="Humidity">75.5</span>
                             <span class="stat-unit">%</span>
                         </div>
@@ -163,7 +163,7 @@
                     <div class="stat-card">
                         <span class="stat-label">ÁP SUẤT KHÍ</span>
                         <div class="stat-main">
-                            <i class="fas fa-tachometer-alt text-primary"></i>
+                            <i class="fas fa-tachometer-alt text-primary" style="font-size: 28px"></i>
                             <span class="stat-value" id="Pressure">10.1</span>
                             <span class="stat-unit">Bar</span>
                         </div>
@@ -173,7 +173,7 @@
                     <div class="stat-card">
                         <span class="stat-label">THỜI GIAN CẤP LIỆU</span>
                         <div class="stat-main">
-                            <i class="fas fa-regular fa-clock text-success"></i>
+                            <i class="fas fa-regular fa-clock text-success" style="font-size: 28px"></i>
                             <span class="stat-value" id="FeedingTime">35</span>
                             <span class="stat-unit text-success">s</span>
                         </div>
@@ -183,7 +183,7 @@
                     <div class="stat-card">
                         <span class="stat-label">THỜI GIAN TRỘN 1</span>
                         <div class="stat-main">
-                            <i class="fas fa-regular fa-clock text-success"></i>
+                            <i class="fas fa-regular fa-clock text-success" style="font-size: 28px"></i>
                             <span class="stat-value" id="MixTime1">35</span>
                             <span class="stat-unit text-success">s</span>
                         </div>
@@ -193,7 +193,7 @@
                     <div class="stat-card">
                         <span class="stat-label">THỜI GIAN XẢ ĐÁY</span>
                         <div class="stat-main">
-                            <i class="fas fa-regular fa-clock text-success"></i>
+                            <i class="fas fa-regular fa-clock text-success" style="font-size: 28px"></i>
                             <span class="stat-value" id="BottomDischargeTime">35</span>
                             <span class="stat-unit text-success">s</span>
                         </div>
@@ -203,7 +203,7 @@
                     <div class="stat-card">
                         <span class="stat-label">THỜI GIAN HÚT XẢ</span>
                         <div class="stat-main">
-                            <i class="fas fa-regular fa-clock text-success"></i>
+                            <i class="fas fa-regular fa-clock text-success" style="font-size: 28px"></i>
                             <span class="stat-value" id="SuctionDischargeTime">35</span>
                             <span class="stat-unit text-success">s</span>
                         </div>
@@ -213,7 +213,7 @@
                     <div class="stat-card">
                         <span class="stat-label">THỜI GIAN TRỘN 2</span>
                         <div class="stat-main">
-                            <i class="fas fa-regular fa-clock text-success"></i>
+                            <i class="fas fa-regular fa-clock text-success" style="font-size: 28px"></i>
                             <span class="stat-value" id="MixTime2">35</span>
                             <span class="stat-unit text-success">s</span>
                         </div>
@@ -249,7 +249,7 @@
                     <div class="dashboard-box side-box">
                         <div class="box-header">
                             <span class="box-title">ALARM / CẢNH BÁO</span>
-                            <a href="#" class="view-all">Xem tất cả →</a>
+                            <a href="~/Home/Alarm" class="view-all">Xem tất cả →</a>
                         </div>
                         <div class="list-container" id="alarm-list">
                             <div class="list-item">
@@ -270,7 +270,7 @@
                     <div class="dashboard-box side-box mt-3">
                         <div class="box-header">
                             <span class="box-title">EVENT / SỰ KIỆN GẦN NHẤT</span>
-                            <a href="#" class="view-all">Xem tất cả →</a>
+                            <a href="~/Home/Event" class="view-all">Xem tất cả →</a>
                         </div>
                         <div class="list-container" id="event-list">
                             <div class="list-item">
@@ -295,5 +295,4 @@
 <atscada-task at-interval="1000"></atscada-task>
 
 <script type="module" src="~/JavaScript/Core/Component/Task/atscada-task-element.js"></script>
-<script src="~/JavaScript/Common/EnenrgyPowerCommon.js?v=now()"></script>
 <script src="~/JavaScript/RealTime/OverviewRealtime.js?v=now()"></script>

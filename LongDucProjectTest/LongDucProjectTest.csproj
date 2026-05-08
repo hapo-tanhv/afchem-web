@@ -179,13 +179,6 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\LDIPController.cs" />
     <Compile Include="Controllers\OverviewController.cs" />
-    <Compile Include="Controllers\Project1Controller.cs" />
-    <Compile Include="Controllers\Project2Controller.cs" />
-    <Compile Include="Controllers\Project3Controller.cs" />
-    <Compile Include="Controllers\Project4Controller.cs" />
-    <Compile Include="Controllers\Project5Controller.cs" />
-    <Compile Include="Controllers\Project6Controller.cs" />
-    <Compile Include="Controllers\Project7Controller.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>

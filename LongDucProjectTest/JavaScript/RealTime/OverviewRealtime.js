@@ -13,32 +13,40 @@ document.addEventListener("DOMContentLoaded", function () {
             temperature = Math.floor(Math.random() * 1500) + 500;    // 500-2000 °C
             pressure = Math.floor(Math.random() * 1200) + 200;    // 200-1400 Pa
 
+            // Separate values for line chart (realistic temperature ranges)
+            var ambientTemp = 24 + Math.random() * 8; // 24-32°C
+            var machineTemp = ambientTemp + 10 + Math.random() * 10; // machine is 10-20°C higher than ambient
+
             // Update charts with fake data
-            if (window.speedChartInstance && window.speedChartInstance.series[0]) {
+            if (window.speedChartInstance && window.speedChartInstance.series && window.speedChartInstance.series[0]) {
                 window.speedChartInstance.series[0].update({ data: [activepower] });
                 // Update plotBands dynamically based on current value
                 updateChartWithDynamicBands(window.speedChartInstance, activepower, 5000, {
-                    greenColor: '#22c55e',
-                    redColor: '#EF4444'
+                    color1: '#EF4444',
+                    color2: 'rgba(239, 68, 68, 0.1)'
                 });
             }
-            if (window.tempChartInstance && window.tempChartInstance.series[0]) {
+            if (window.tempChartInstance && window.tempChartInstance.series && window.tempChartInstance.series[0]) {
                 window.tempChartInstance.series[0].update({ data: [temperature] });
                 // Update plotBands dynamically based on current value
                 updateChartWithDynamicBands(window.tempChartInstance, temperature, 2000, {
-                    greenColor: '#7373f3',
-                    redColor: '#EF4444'
+                    color1: '#7373f3',
+                    color2: 'rgba(239, 68, 68, 0.1)'
                 });
             }
-            if (window.pressureChartInstance && window.pressureChartInstance.series[0]) {
+            if (window.pressureChartInstance && window.pressureChartInstance.series && window.pressureChartInstance.series[0]) {
                 window.pressureChartInstance.series[0].update({ data: [pressure] });
                 // Update plotBands dynamically based on current value
                 updateChartWithDynamicBands(window.pressureChartInstance, pressure, 1500, {
-                    greenColor: '#a2f7f7',
-                    redColor: '#EF4444'
+                    color1: '#a2f7f7',
+                    color2: 'rgba(239, 68, 68, 0.1)'
                 });
             }
-            console.log('Fake data updated:', { activepower, temperature, pressure });
+            // Update line chart with temperature and pressure data
+            if (window.lineChartInstance) {
+                updateLineChart(ambientTemp, machineTemp, pressure);
+            }
+            console.log('Fake data updated:', { activepower, temperature, pressure, ambientTemp, machineTemp });
         } catch (e) {
             console.error('Error updating fake data:', e);
         }
@@ -49,6 +57,7 @@ document.addEventListener("DOMContentLoaded", function () {
         window.speedChartInstance = AcivePowerChart();
         window.tempChartInstance = TemperatureChart();
         window.pressureChartInstance = PressureChart();
+        window.lineChartInstance = LineChart(); // Initialize line chart
         console.log('Charts initialized successfully');
     } catch (e) {
         console.error('Error initializing charts:', e);
@@ -65,1309 +74,84 @@ document.addEventListener("DOMContentLoaded", function () {
     var dataTask = atscadaTask.dataTask;
     var dataCollection = dataTask.dataCollection;
 
-    // SKIPPED REAL DATA - Using fake data instead
-    // dataCollection.add(`ITNCommonSolar.ActivePower`);
-    dataCollection.add(`ITNCommonSolar.DailyEnergy`);
-    dataCollection.add(`ITNCommonSolar.MonthlyEnergy`);
-    dataCollection.add(`ITNCommonSolar.YearlyEnergy`);
-    dataCollection.add(`ITNCommonSolar.TotalEnergy`);
-    dataCollection.add(`ITNCommonSolar.ReactivePower`);
-    dataCollection.add(`ITNCommonSolar.CO2Reduction`);
-    dataCollection.add(`ITNCommonSolar.Performance`);
-   // ITNCommon.Solar.ReactivePower
+    // Read scala tag data
+    dataCollection.add(`AFChemPLC.NhietDoMay`);
+    dataCollection.add(`AFChemPLC.NhietDoMoiTruong`);
+    dataCollection.add(`AFChemPLC.ApSuat`);
+    dataCollection.add(`AFChemPLC.QuyTrinh`);
+    dataCollection.add(`AFChemPLC.CongDoanMay`);
+    dataCollection.add(`AFChemPLC.NhietDoGiuaBuongTron`);
+    dataCollection.add(`AFChemPLC.DoAmMoiTruong`);
+    dataCollection.add(`AFChemPLC.ThoiGianCapLieu`);
+    dataCollection.add(`AFChemPLC.ThoiGianTron1`);
+    dataCollection.add(`AFChemPLC.ThoiGianXaDay`);
+    dataCollection.add(`AFChemPLC.ThoiGianHutXa`);
+    dataCollection.add(`AFChemPLC.ThoiGianTron2`);
 
+    updateTag(
+        dataCollection.get(`AFChemPLC.NhietDoMay`),
+        document.querySelector('#MixerTemp')
+    );
+    updateTag(
+        dataCollection.get(`AFChemPLC.NhietDoMoiTruong`),
+        document.querySelector('#AmbientTemp')
+    );
+    updateTag(
+        dataCollection.get(`AFChemPLC.ApSuat`),
+        document.querySelector('#Pressure')
+    );
+    updateTag(
+        dataCollection.get(`AFChemPLC.QuyTrinh`),
+        document.querySelector('#Process')
+    );
+    updateTag(
+        dataCollection.get(`AFChemPLC.CongDoanMay`),
+        document.querySelector('#MachineProcessing')
+    );
+    updateTag(
+        dataCollection.get(`AFChemPLC.NhietDoGiuaBuongTron`),
+        document.querySelector('#TempChamber')
+    );
+    updateTag(
+        dataCollection.get(`AFChemPLC.DoAmMoiTruong`),
+        document.querySelector('#Humidity')
+    );
+    updateTag(
+        dataCollection.get(`AFChemPLC.ThoiGianCapLieu`),
+        document.querySelector('#FeedingTime')
+    );
+    updateTag(
+        dataCollection.get(`AFChemPLC.ThoiGianTron1`),
+        document.querySelector('#MixTime1')
+    );
+    updateTag(
+        dataCollection.get(`AFChemPLC.ThoiGianXaDay`),
+        document.querySelector('#BottomDischargeTime')
+    );
+    updateTag(
+        dataCollection.get(`AFChemPLC.ThoiGianHutXa`),
+        document.querySelector('#SuctionDischargeTime')
+    );
+    updateTag(
+        dataCollection.get(`AFChemPLC.ThoiGianTron2`),
+        document.querySelector('#MixTime2')
+    );
 
-    //Add tag weather information
-    dataCollection.add(`WetherStationRF1.AmbientTemp`);
-    dataCollection.add(`WetherStationRF1.Irradiation`);
-
-    //Add tag plant information.
-    dataCollection.add(`ITNCommonSolar.Tree`);
-    dataCollection.add(`ITNCommonSolar.TotalProjectActive`);
-    dataCollection.add(`ITNCommonSolar.TotalProjectInActive`);
-    dataCollection.add(`ITNCommonSolar.TotalInverterON`);
-    dataCollection.add(`ITNCommonSolar.TotalInverterOFF`);
-    dataCollection.add(`ITNCommonSolar.TotalInverterFault`);
-    dataCollection.add(`ITNCommonSolar.TotalInverterOther`);
-    dataCollection.add(`ITNCommonSolar.TotalInverterStandby`);
-
-    
-    //Add ACB status
-    dataCollection.add(`Project1SolarPanelMainCB.ON`);
-    dataCollection.add(`Project1SolarPanelMainCB.OFF`);
-    dataCollection.add(`Project1SolarPanelMainCB.Trip`);
-    dataCollection.add(`Project1SolarPanelMainCB.Emergency`);
-
-    dataCollection.add(`Project2SolarPanelMainCB.ON`);
-    dataCollection.add(`Project2SolarPanelMainCB.OFF`);
-    dataCollection.add(`Project2SolarPanelMainCB.Trip`);
-    dataCollection.add(`Project2SolarPanelMainCB.Emergency`);
-   
-    dataCollection.add(`Project3SolarPanelMainCB1.ON`);
-    dataCollection.add(`Project3SolarPanelMainCB1.OFF`);
-    dataCollection.add(`Project3SolarPanelMainCB1.Trip`);
-    dataCollection.add(`Project3SolarPanelMainCB1.Emergency`);
-    dataCollection.add(`Project3SolarPanelMainCB2.ON`);
-    dataCollection.add(`Project3SolarPanelMainCB2.OFF`);
-    dataCollection.add(`Project3SolarPanelMainCB2.Trip`);
-    dataCollection.add(`Project3SolarPanelMainCB2.Emergency`);
-
-    dataCollection.add(`Project4SolarPanelMainCB.ON`);
-    dataCollection.add(`Project4SolarPanelMainCB.OFF`);
-    dataCollection.add(`Project4SolarPanelMainCB.Trip`);
-    dataCollection.add(`Project4SolarPanelMainCB.Emergency`);
-
-    dataCollection.add(`Project5SolarPanelMainCB.ON`);
-    dataCollection.add(`Project5SolarPanelMainCB.OFF`);
-    dataCollection.add(`Project5SolarPanelMainCB.Trip`);
-    dataCollection.add(`Project5SolarPanelMainCB.Emergency`);
-
-    dataCollection.add(`Project6SolarPanelMainCB1.ON`);
-    dataCollection.add(`Project6SolarPanelMainCB1.OFF`);
-    dataCollection.add(`Project6SolarPanelMainCB1.Trip`);
-    dataCollection.add(`Project6SolarPanelMainCB1.Emergency`);
-    dataCollection.add(`Project6SolarPanelMainCB2.ON`);
-    dataCollection.add(`Project6SolarPanelMainCB2.OFF`);
-    dataCollection.add(`Project6SolarPanelMainCB2.Trip`);
-    dataCollection.add(`Project6SolarPanelMainCB2.Emergency`);
-
-    dataCollection.add(`Project7SolarPanelMainCB.ON`);
-    dataCollection.add(`Project7SolarPanelMainCB.OFF`);
-    dataCollection.add(`Project7SolarPanelMainCB.Trip`);
-    dataCollection.add(`Project7SolarPanelMainCB.Emergency`);
-    // For Temperature and Pressure gauges - replace with your actual PLC tags
-    dataCollection.add(`ITNCommonSolar.Temperature`);
-    dataCollection.add(`ITNCommonSolar.Pressure`);
-
-    updateTag1(
-        dataCollection.get(`ITNCommonSolar.ActivePower`),
-        document.querySelector('#container-speed'));
-
-    // Temperature gauge - updates chart and text
-    updateTemperatureTag(
-        dataCollection.get(`ITNCommonSolar.Temperature`),
-        document.querySelector('#container-temp'));
-
-    // Pressure gauge - updates chart and text
-    updatePressureTag(
-        dataCollection.get(`ITNCommonSolar.Pressure`),
-        document.querySelector('#container-pressure'));
-
-    updateTag2(
-        dataCollection.get(`ITNCommonSolar.DailyEnergy`),
-        document.querySelector('#DailyEnergy'));
-    updateTag3(
-        dataCollection.get(`ITNCommonSolar.MonthlyEnergy`),
-        document.querySelector('#MonthlyEnergy'));
-    updateTag4(
-        dataCollection.get(`ITNCommonSolar.YearlyEnergy`),
-        document.querySelector('#YearlyEnergy'));
-    updateTag5(
-        dataCollection.get(`ITNCommonSolar.TotalEnergy`),
-        document.querySelector('#TotalEnergy'));
-    updateTag6(
-        dataCollection.get(`ITNCommonSolar.ReactivePower`),
-        document.querySelector('#ReactivePower'));
-    updateTag7(
-        dataCollection.get(`ITNCommonSolar.CO2Reduction`),
-        document.querySelector('#CO2Reduction'));
-    updateTag8(
-        dataCollection.get(`ITNCommonSolar.Performance`),
-        document.querySelector('#Performance'));
-
-    updateTag9(
-        dataCollection.get(`WetherStationRF1.AmbientTemp`),
-        document.querySelector('#AmbientTemp'));
-    updateTag10(
-        dataCollection.get(`WetherStationRF1.Irradiation`),
-        document.querySelector('#Irradiation'));
-
-    updateTag13(
-        dataCollection.get(`ITNCommonSolar.TotalProjectActive`),
-        document.querySelector('#TotalProjectActive'));
-    updateTag14(
-        dataCollection.get(`ITNCommonSolar.TotalProjectInActive`),
-        document.querySelector('#TotalProjectInActive'));
-    updateTag15(
-        dataCollection.get(`ITNCommonSolar.TotalInverterON`),
-        document.querySelector('#TotalInverterON'));
-    updateTag16(
-        dataCollection.get(`ITNCommonSolar.TotalInverterOFF`),
-        document.querySelector('#TotalInverterOFF'));
-    updateTag17(
-        dataCollection.get(`ITNCommonSolar.TotalInverterFault`),
-        document.querySelector('#TotalInverterFault'));
-    updateTag18(
-        dataCollection.get(`ITNCommonSolar.TotalInverterOther`),
-        document.querySelector('#TotalInverterOther'));
-    updateTag19(
-        dataCollection.get(`ITNCommonSolar.Tree`),
-        document.querySelector('#tree'));
-    updateTag20(
-        dataCollection.get(`ITNCommonSolar.TotalInverterStandby`),
-        document.querySelector('#TotalInverterStandby'));
-
-    updateTag21(
-        dataCollection.get(`Project1SolarPanelMainCB.ON`),
-        document.querySelector('#Project1ACB'));
-    updateTag22(
-        dataCollection.get(`Project1SolarPanelMainCB.OFF`),
-        document.querySelector('#Project1ACB'));
-    updateTag23(
-        dataCollection.get(`Project1SolarPanelMainCB.Trip`),
-        document.querySelector('#Project1ACB'));
-    updateTag24(
-        dataCollection.get(`Project1SolarPanelMainCB.Emergency`),
-        document.querySelector('#Project1ACB'));
-
-    updateTag25(
-        dataCollection.get(`Project2SolarPanelMainCB.ON`),
-        document.querySelector('#Project2ACB'));
-    updateTag26(
-        dataCollection.get(`Project2SolarPanelMainCB.OFF`),
-        document.querySelector('#Project2ACB'));
-    updateTag27(
-        dataCollection.get(`Project2SolarPanelMainCB.Trip`),
-        document.querySelector('#Project2ACB'));
-    updateTag28(
-        dataCollection.get(`Project2SolarPanelMainCB.Emergency`),
-        document.querySelector('#Project2ACB'));
-
-    updateTag29(
-        dataCollection.get(`Project3SolarPanelMainCB1.ON`),
-        document.querySelector('#Project3ACB1'));
-    updateTag30(
-        dataCollection.get(`Project3SolarPanelMainCB1.OFF`),
-        document.querySelector('#Project3ACB1'));
-    updateTag31(
-        dataCollection.get(`Project3SolarPanelMainCB1.Trip`),
-        document.querySelector('#Project3ACB1'));
-    updateTag32(
-        dataCollection.get(`Project3SolarPanelMainCB1.Emergency`),
-        document.querySelector('#Project3ACB1'));
-
-    updateTag33(
-        dataCollection.get(`Project3SolarPanelMainCB2.ON`),
-        document.querySelector('#Project3ACB2'));
-    updateTag34(
-        dataCollection.get(`Project3SolarPanelMainCB2.OFF`),
-        document.querySelector('#Project3ACB2'));
-    updateTag35(
-        dataCollection.get(`Project3SolarPanelMainCB2.Trip`),
-        document.querySelector('#Project3ACB2'));
-    updateTag36(
-        dataCollection.get(`Project3SolarPanelMainCB2.Emergency`),
-        document.querySelector('#Project3ACB2'));
-
-    updateTag37(
-        dataCollection.get(`Project4SolarPanelMainCB.ON`),
-        document.querySelector('#Project4ACB'));
-    updateTag38(
-        dataCollection.get(`Project4SolarPanelMainCB.OFF`),
-        document.querySelector('#Project4ACB'));
-    updateTag39(
-        dataCollection.get(`Project4SolarPanelMainCB.Trip`),
-        document.querySelector('#Project4ACB'));
-    updateTag40(
-        dataCollection.get(`Project4SolarPanelMainCB.Emergency`),
-        document.querySelector('#Project4ACB'));
-
-    updateTag41(
-        dataCollection.get(`Project5SolarPanelMainCB.ON`),
-        document.querySelector('#Project5ACB'));
-    updateTag42(
-        dataCollection.get(`Project5SolarPanelMainCB.OFF`),
-        document.querySelector('#Project5ACB'));
-    updateTag43(
-        dataCollection.get(`Project5SolarPanelMainCB.Trip`),
-        document.querySelector('#Project5ACB'));
-    updateTag44(
-        dataCollection.get(`Project5SolarPanelMainCB.Emergency`),
-        document.querySelector('#Project5ACB'));
-
-    updateTag45(
-        dataCollection.get(`Project6SolarPanelMainCB1.ON`),
-        document.querySelector('#Project6ACB1'));
-    updateTag46(
-        dataCollection.get(`Project6SolarPanelMainCB1.OFF`),
-        document.querySelector('#Project6ACB1'));
-    updateTag47(
-        dataCollection.get(`Project6SolarPanelMainCB1.Trip`),
-        document.querySelector('#Project6ACB1'));
-    updateTag48(
-        dataCollection.get(`Project6SolarPanelMainCB1.Emergency`),
-        document.querySelector('#Project6ACB1'));
-
-
-    updateTag49(
-        dataCollection.get(`Project6SolarPanelMainCB2.ON`),
-        document.querySelector('#Project6ACB2'));
-    updateTag50(
-        dataCollection.get(`Project6SolarPanelMainCB2.OFF`),
-        document.querySelector('#Project6ACB2'));
-    updateTag51(
-        dataCollection.get(`Project6SolarPanelMainCB2.Trip`),
-        document.querySelector('#Project6ACB2'));
-    updateTag52(
-        dataCollection.get(`Project6SolarPanelMainCB2.Emergency`),
-        document.querySelector('#Project6ACB2'));
-
-
-    updateTag53(
-        dataCollection.get(`Project7SolarPanelMainCB.ON`),
-        document.querySelector('#Project7ACB'));
-    updateTag54(
-        dataCollection.get(`Project7SolarPanelMainCB.OFF`),
-        document.querySelector('#Project7ACB'));
-    updateTag55(
-        dataCollection.get(`Project7SolarPanelMainCB.Trip`),
-        document.querySelector('#Project7ACB'));
-    updateTag56(
-        dataCollection.get(`Project7SolarPanelMainCB.Emergency`),
-        document.querySelector('#Project7ACB'));
     dataTask.start();
 });
 
-function updateTag1(dataTag, element) {
+function updateTag(dataTag, element) {
     if (dataTag && element) {
         dataTag.dispatcher.on('valueChanged', (data) => {
             if (data.e.newValue !== undefined) {                
                 element.innerHTML = data.e.newValue;
-                activepower = Number(data.e.newValue);
-                AcivePowerChart();
             }
         });
         if (dataTag.Value !== undefined) {            
             element.innerHTML = data.e.newValue;
-            activepower = data.e.newValue;
         }
     }
 }
-
-function updateTag2(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                var x = Number(data.e.newValue);
-                element.innerHTML = x.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }); // Hiển thị số hàng nghìn ngăn cách bằng dấu phẩy và giữ lại một chữ số hàng thập phân
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag3(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                var x = Number(data.e.newValue);
-                element.innerHTML = x.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }); // Hiển thị số hàng nghìn ngăn cách bằng dấu phẩy và giữ lại một chữ số hàng thập phân
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag4(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                var x = Number(data.e.newValue);
-                element.innerHTML = x.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }); // Hiển thị số hàng nghìn ngăn cách bằng dấu phẩy và giữ lại một chữ số hàng thập phân
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag5(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                var x = Number(data.e.newValue);
-                element.innerHTML = x.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }); // Hiển thị số hàng nghìn ngăn cách bằng dấu phẩy và giữ lại một chữ số hàng thập phân
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag6(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                var x = Number(data.e.newValue);
-                element.innerHTML = parseFloat(x.toFixed(1));
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag7(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                var x = Number(data.e.newValue/1000);
-                element.innerHTML = x.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }); // Hiển thị số hàng nghìn ngăn cách bằng dấu phẩy và giữ lại một chữ số hàng thập phân
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag8(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                var x = Number(data.e.newValue);
-                element.innerHTML = parseFloat(x.toFixed(1));
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTemperatureTag(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                var value = Number(data.e.newValue);
-                element.innerHTML = value.toFixed(1);
-                if (window.tempChartInstance && window.tempChartInstance.series[0]) {
-                    window.tempChartInstance.series[0].update({ data: [value] });
-                    updateChartWithDynamicBands(window.tempChartInstance, value, 2000, {
-                        greenColor: '#7373f3',
-                        redColor: '#EF4444'
-                    });
-                }
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            var value = Number(dataTag.Value);
-            element.innerHTML = value.toFixed(1);
-        }
-    }
-}
-
-function updatePressureTag(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                var value = Number(data.e.newValue);
-                element.innerHTML = value.toFixed(0);
-                if (window.pressureChartInstance && window.pressureChartInstance.series[0]) {
-                    window.pressureChartInstance.series[0].update({ data: [value] });
-                    updateChartWithDynamicBands(window.pressureChartInstance, value, 1500, {
-                        greenColor: '#a2f7f7',
-                        redColor: '#EF4444'
-                    });
-                }
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            var value = Number(dataTag.Value);
-            element.innerHTML = value.toFixed(0);
-        }
-    }
-}
-
-function updateTag9(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                var x = Number(data.e.newValue);
-                element.innerHTML = parseFloat(x.toFixed(1));
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag10(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                var x = Number(data.e.newValue);
-                element.innerHTML = parseFloat(x.toFixed(1));
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag11(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                var x = Number(data.e.newValue);
-                element.innerHTML = parseFloat(x.toFixed(1));
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag12(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                var x = Number(data.e.newValue);
-                element.innerHTML = parseFloat(x.toFixed(1));
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-function updateTag13(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                element.innerHTML = data.e.newValue;
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag14(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                element.innerHTML = data.e.newValue;
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag15(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                element.innerHTML = data.e.newValue;
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag16(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                element.innerHTML = data.e.newValue;
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag17(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                element.innerHTML = data.e.newValue;
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag18(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                element.innerHTML = data.e.newValue;
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag19(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                element.innerHTML = data.e.newValue;
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag20(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                element.innerHTML = data.e.newValue;
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
-        }
-    }
-}
-
-function updateTag21(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "CLOSE";
-                    element.style.color = "red";
-                }                
-                
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "CLOSE";
-                element.style.color = "red";
-            }
-        }
-    }
-}
-
-function updateTag22(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "OPEN";
-                    element.style.color = "lime";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "OPEN";
-                element.style.color = "lime";
-            }
-        }
-    }
-}
-
-function updateTag23(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "TRIP";
-                    element.style.color = "orange";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "TRIP";
-                element.style.color = "orange";
-            }
-        }
-    }
-}
-
-function updateTag24(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "EMER.SHUTDOWN";
-                    element.style.color = "purple";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "EMER.SHUTDOWN";
-                element.style.color = "purple";
-            }
-        }
-    }
-}
-
-function updateTag25(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "CLOSE";
-                    element.style.color = "red";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "CLOSE";
-                element.style.color = "red";
-            }
-        }
-    }
-}
-
-function updateTag26(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "OPEN";
-                    element.style.color = "lime";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "OPEN";
-                element.style.color = "lime";
-            }
-        }
-    }
-}
-
-function updateTag27(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "TRIP";
-                    element.style.color = "orange";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "TRIP";
-                element.style.color = "orange";
-            }
-        }
-    }
-}
-
-function updateTag28(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "EMER.SHUTDOWN";
-                    element.style.color = "purple";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "EMER.SHUTDOWN";
-                element.style.color = "purple";
-            }
-        }
-    }
-}
-
-function updateTag29(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "CLOSE";
-                    element.style.color = "red";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "CLOSE";
-                element.style.color = "red";
-            }
-        }
-    }
-}
-
-function updateTag30(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "OPEN";
-                    element.style.color = "lime";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "OPEN";
-                element.style.color = "lime";
-            }
-        }
-    }
-}
-
-function updateTag31(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "TRIP";
-                    element.style.color = "orange";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "TRIP";
-                element.style.color = "orange";
-            }
-        }
-    }
-}
-
-function updateTag32(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "EMER.SHUTDOWN";
-                    element.style.color = "purple";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "EMER.SHUTDOWN";
-                element.style.color = "purple";
-            }
-        }
-    }
-}
-
-
-function updateTag33(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "CLOSE";
-                    element.style.color = "red";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "CLOSE";
-                element.style.color = "red";
-            }
-        }
-    }
-}
-
-function updateTag34(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "OPEN";
-                    element.style.color = "lime";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "OPEN";
-                element.style.color = "lime";
-            }
-        }
-    }
-}
-
-function updateTag35(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "TRIP";
-                    element.style.color = "orange";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "TRIP";
-                element.style.color = "orange";
-            }
-        }
-    }
-}
-
-function updateTag36(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "EMER.SHUTDOWN";
-                    element.style.color = "purple";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "EMER.SHUTDOWN";
-                element.style.color = "purple";
-            }
-        }
-    }
-}
-
-function updateTag37(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "CLOSE";
-                    element.style.color = "red";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "CLOSE";
-                element.style.color = "red";
-            }
-        }
-    }
-}
-
-function updateTag38(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "OPEN";
-                    element.style.color = "lime";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "OPEN";
-                element.style.color = "lime";
-            }
-        }
-    }
-}
-
-function updateTag39(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "TRIP";
-                    element.style.color = "orange";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "TRIP";
-                element.style.color = "orange";
-            }
-        }
-    }
-}
-
-function updateTag40(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "EMER.SHUTDOWN";
-                    element.style.color = "purple";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "EMER.SHUTDOWN";
-                element.style.color = "purple";
-            }
-        }
-    }
-}
-
-function updateTag41(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "CLOSE";
-                    element.style.color = "red";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "CLOSE";
-                element.style.color = "red";
-            }
-        }
-    }
-}
-
-function updateTag42(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "OPEN";
-                    element.style.color = "lime";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "OPEN";
-                element.style.color = "lime";
-            }
-        }
-    }
-}
-
-function updateTag43(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "TRIP";
-                    element.style.color = "orange";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "TRIP";
-                element.style.color = "orange";
-            }
-        }
-    }
-}
-
-function updateTag44(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "EMER.SHUTDOWN";
-                    element.style.color = "purple";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "EMER.SHUTDOWN";
-                element.style.color = "purple";
-            }
-        }
-    }
-}
-
-
-function updateTag45(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "CLOSE";
-                    element.style.color = "red";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "CLOSE";
-                element.style.color = "red";
-            }
-        }
-    }
-}
-
-function updateTag46(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "OPEN";
-                    element.style.color = "lime";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "OPEN";
-                element.style.color = "lime";
-            }
-        }
-    }
-}
-
-function updateTag47(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "TRIP";
-                    element.style.color = "orange";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "TRIP";
-                element.style.color = "orange";
-            }
-        }
-    }
-}
-
-function updateTag48(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "EMER.SHUTDOWN";
-                    element.style.color = "purple";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "EMER.SHUTDOWN";
-                element.style.color = "purple";
-            }
-        }
-    }
-}
-
-
-function updateTag49(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "CLOSE";
-                    element.style.color = "red";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "CLOSE";
-                element.style.color = "red";
-            }
-        }
-    }
-}
-
-function updateTag50(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "OPEN";
-                    element.style.color = "lime";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "OPEN";
-                element.style.color = "lime";
-            }
-        }
-    }
-}
-
-function updateTag51(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "TRIP";
-                    element.style.color = "orange";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "TRIP";
-                element.style.color = "orange";
-            }
-        }
-    }
-}
-
-function updateTag52(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "EMER.SHUTDOWN";
-                    element.style.color = "purple";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "EMER.SHUTDOWN";
-                element.style.color = "purple";
-            }
-        }
-    }
-}
-
-function updateTag53(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "CLOSE";
-                    element.style.color = "red";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "CLOSE";
-                element.style.color = "red";
-            }
-        }
-    }
-}
-
-function updateTag54(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "OPEN";
-                    element.style.color = "lime";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "OPEN";
-                element.style.color = "lime";
-            }
-        }
-    }
-}
-
-function updateTag55(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "TRIP";
-                    element.style.color = "orange";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "TRIP";
-                element.style.color = "orange";
-            }
-        }
-    }
-}
-
-function updateTag56(dataTag, element) {
-    if (dataTag && element) {
-        dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {
-                if (data.e.newValue == "1") {
-                    element.innerHTML = "TRIP";
-                    element.style.color = "orange";
-                }
-
-            }
-        });
-        if (dataTag.Value !== undefined) {
-            if (data.e.newValue == "1") {
-                element.innerHTML = "TRIP";
-                element.style.color = "orange";
-            }
-        }
-    }
-}
-
 
 var gaugeOptions = {
     chart: {
@@ -1442,7 +226,7 @@ function AcivePowerChart() {
             max: 5000,
             plotBands: [{
                 id: 'green-band',
-                from: 0, to: 0, color: '#22c55e', thickness: 15
+                from: 0, to: 0, color: '#EF4444', thickness: 15
             }, {
                 id: 'red-band',
                 from: 0, to: 5000, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
@@ -1459,7 +243,7 @@ function AcivePowerChart() {
             dataLabels: {
                 format: '<div style="text-align:center">' +
                     '<span style="font-size:22px;color:#fff;font-weight:bold">{y}</span> ' +
-                    '<span style="font-size:16px;color:#fff">kW</span><br/>' +
+                    '<span style="font-size:16px;color:#fff">°C</span><br/>' +
                     '<div style="width:15px; height:2px; background:#EF4444; display:inline-block; margin-bottom:4px"></div> ' +
                     '<span style="font-size:12px;color:#94a3b8;font-weight:normal">Nhiệt độ môi trường</span>' +
                     '</div>',
@@ -1506,6 +290,151 @@ function TemperatureChart() {
     }));
 }
 
+// Line chart with 2 Y-axes for temperature and pressure
+function LineChart() {
+    // Initial fake data for demonstration
+    var now = new Date();
+    var dataPoints = 20; // Number of data points to show
+
+    // Generate initial data
+    var ambientTempData = [];
+    var machineTempData = [];
+    var pressureData = [];
+    var categories = [];
+
+    for (var i = dataPoints; i > 0; i--) {
+        var time = new Date(now.getTime() - i * 60000);
+        categories.push(time.getHours() + ':' + (time.getMinutes() < 10 ? '0' : '') + time.getMinutes());
+
+        // Generate fake data with realistic values
+        ambientTempData.push(28 + Math.random() * 8 - 4); // 24-32°C
+        machineTempData.push(35 + Math.random() * 15 - 7.5); // 27.5-42.5°C
+        pressureData.push(980 + Math.random() * 40 - 20); // 960-1000 hPa
+    }
+
+    return Highcharts.chart('container_line', {
+        chart: {
+            type: 'line',
+            animation: true,
+            backgroundColor: 'transparent'
+        },
+        title: {
+            text: 'Biểu đồ Nhiệt độ và Áp suất',
+            style: {
+                color: '#ffffff',
+                fontSize: '16px'
+            }
+        },
+        xAxis: {
+            categories: categories,
+            labels: {
+                style: { color: '#94a3b8' }
+            },
+            lineColor: '#475569',
+            tickColor: '#475569'
+        },
+        yAxis: [{
+            title: {
+                text: 'Nhiệt độ (°C)',
+                style: { color: '#e879f9' }
+            },
+            labels: {
+                style: { color: '#e879f9' },
+                format: '{value}°C'
+            },
+            opposite: false,
+            gridLineColor: 'rgba(255,255,255,0.1)'
+        }, {
+            title: {
+                text: 'Áp suất (Bar)',
+                style: { color: '#22d3ee' }
+            },
+            labels: {
+                style: { color: '#22d3ee' },
+                format: '{value}'
+            },
+            opposite: true,
+            gridLineColor: 'rgba(255,255,255,0.1)'
+        }],
+        tooltip: {
+            shared: true,
+            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+            borderColor: '#475569',
+            style: { color: '#ffffff' },
+            valueSuffix: ''
+        },
+        legend: {
+            itemStyle: { color: '#94a3b8' },
+            itemHoverStyle: { color: '#ffffff' }
+        },
+        plotOptions: {
+            line: {
+                marker: {
+                    enabled: true,
+                    radius: 4
+                },
+                lineWidth: 2,
+                states: {
+                    hover: {
+                        lineWidth: 3
+                    }
+                }
+            }
+        },
+        series: [{
+            name: 'Nhiệt độ môi trường',
+            data: ambientTempData,
+            color: '#e879f9',
+            marker: {
+                symbol: 'diamond'
+            },
+            yAxis: 0
+        }, {
+            name: 'Nhiệt độ máy',
+            data: machineTempData,
+            color: '#3b82f6',
+            marker: {
+                symbol: 'square'
+            },
+            yAxis: 0
+        }, {
+            name: 'Áp suất',
+            data: pressureData,
+            color: '#22d3ee',
+            marker: {
+                symbol: 'circle'
+            },
+            yAxis: 1
+        }],
+        credits: { enabled: false }
+    });
+}
+
+// Update line chart with new data point
+function updateLineChart(ambientTemp, machineTemp, pressure) {
+    if (!window.lineChartInstance || !window.lineChartInstance.series) return;
+
+    var chart = window.lineChartInstance;
+    var shift = chart.series[0].data.length > 30; // Keep last 30 points
+
+    // Get current time for x-axis
+    var now = new Date();
+    var timeStr = now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+
+    // Add new data points
+    chart.series[0].addPoint([timeStr, ambientTemp], true, shift);
+    chart.series[1].addPoint([timeStr, machineTemp], true, shift);
+    chart.series[2].addPoint([timeStr, pressure], true, shift);
+
+    // Update categories (x-axis)
+    var categories = chart.xAxis[0].categories;
+    categories.push(timeStr);
+    if (categories.length > 30) {
+        categories.shift();
+    }
+    chart.xAxis[0].setCategories(categories, true);
+}
+
 function PressureChart() {
     return Highcharts.chart('container-pressure', Highcharts.merge(gaugeOptions, {
         yAxis: {
@@ -1530,7 +459,7 @@ function PressureChart() {
             dataLabels: {
                 format: '<div style="text-align:center">' +
                     '<span style="font-size:22px;color:#fff;font-weight:bold">{y}</span> ' +
-                    '<span style="font-size:16px;color:#fff">Pa</span><br/>' +
+                    '<span style="font-size:16px;color:#fff">Bar</span><br/>' +
                     '<div style="width:15px; height:2px; background:#a2f7f7; display:inline-block; margin-bottom:4px"></div> ' +
                     '<span style="font-size:12px;color:#94a3b8;font-weight:normal">Áp suất</span>' +
                     '</div>',
@@ -1557,7 +486,7 @@ function updateChartWithDynamicBands(chartInstance, value, max, config) {
         id: 'green-band',
         from: 0,
         to: value,
-        color: config.greenColor || '#22c55e',
+        color: config.color1 || '#EF4444',
         thickness: 15
     });
 

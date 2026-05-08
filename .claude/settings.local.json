@@ -4,7 +4,9 @@
       "Bash(cd \"C:\\\\Users\\\\tanhv\\\\Project\\\\WebApp_LongDuc_22012025Phase2\\\\WebApp_LongDuc_22012025Phase2\\\\LongDucProjectTest\\\\JavaScript\\\\RealTime\" -ErrorAction Stop)",
       "Bash(Get-Content OverviewRealtime.js)",
       "Bash(Select-String -Pattern \"/\\\\*|\\\\*/\")",
-      "Bash(Select-Object -First 20)"
+      "Bash(Select-Object -First 20)",
+      "Bash(Get-ChildItem -Path \"LongDucProjectTest\\\\Views\" -Directory)",
+      "Bash(Select-Object Name)"
     ]
   }
 }
