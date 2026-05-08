@@ -378,21 +378,21 @@
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
 
                         <li class="nav-item">
-                            <a href="~/Home/Overview" class="nav-link @(ViewBag.ButtonHome ?? "active")">
+                            <a href="~/Home/Overview" class="nav-link @(ViewBag.ButtonHome)">
                                 <i class="nav-icon fas fa-th-large"></i>
                                 <p>Tổng quan</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="~/Home/Alarm" class="nav-link">
+                            <a href="~/Home/Alarm" class="nav-link @(ViewBag.ButtonAlarm)">
                                 <i class="nav-icon fas fa-exclamation-triangle"></i>
                                 <p>Cảnh báo</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a href="~/Home/Event" class="nav-link">
+                            <a href="~/Home/Event" class="nav-link @(ViewBag.ButtonEvent)">
                                 <i class="nav-icon fas fa-calendar"></i>
                                 <p>Sự kiện</p>
                             </a>
@@ -406,7 +406,7 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="~/Home/UserSetting" class="nav-link">
+                            <a href="~/Home/UserSetting" class="nav-link @(ViewBag.ButtonUser)">
                                 <i class="nav-icon fas fa-cog"></i>
                                 <p>Cài đặt hệ thống</p>
                             </a>

@@ -134,6 +134,7 @@ namespace LongDucProject.Controllers
         }
         public ActionResult Overview()
         {
+            ViewBag.ButtonHome = "active";
             if (Session["Role"] is null) return RedirectToAction("Login", "Home");
 
             if ((int)Session["Role"] == (int)Role.Admin || (int)Session["Role"] == (int)Role.SolEnergy || (int)Session["Role"] == (int)Role.JGC || (int)Session["Role"] == (int)Role.Hino)
@@ -153,6 +154,7 @@ namespace LongDucProject.Controllers
 
         public ActionResult OverviewSignage()
         {
+            ViewBag.ButtonHome = "active";
             if (Session["Role"] is null) return RedirectToAction("Login", "Home");
             if ((int)Session["Role"] == (int)Role.Admin || (int)Session["Role"] == (int)Role.SolEnergy || (int)Session["Role"] == (int)Role.JGC || (int)Session["Role"] == (int)Role.Hino)
             {
@@ -171,6 +173,7 @@ namespace LongDucProject.Controllers
 
         public ActionResult Alarm()
         {
+            ViewBag.ButtonAlarm = "active";
             if (Session["Role"] is null) return RedirectToAction("Login", "Home");
 
             if ((int)Session["Role"] == (int)Role.Admin || (int)Session["Role"] == (int)Role.SolEnergy || (int)Session["Role"] == (int)Role.JGC || (int)Session["Role"] == (int)Role.Hino)
@@ -189,6 +192,7 @@ namespace LongDucProject.Controllers
         }
         public ActionResult Event()
         {
+            ViewBag.ButtonEvent = "active";
             if (Session["Role"] is null) return RedirectToAction("Login", "Home");
 
             if ((int)Session["Role"] == (int)Role.Admin || (int)Session["Role"] == (int)Role.SolEnergy || (int)Session["Role"] == (int)Role.JGC || (int)Session["Role"] == (int)Role.Hino)
@@ -208,6 +212,7 @@ namespace LongDucProject.Controllers
 
         public ActionResult UserSetting()
         {
+            ViewBag.ButtonUser = "active";
             if (Session["Role"] is null) return RedirectToAction("Login", "Home");
 
             if ((int)Session["Role"] == (int)Role.Admin || (int)Session["Role"] == (int)Role.SolEnergy || (int)Session["Role"] == (int)Role.JGC || (int)Session["Role"] == (int)Role.Hino)
