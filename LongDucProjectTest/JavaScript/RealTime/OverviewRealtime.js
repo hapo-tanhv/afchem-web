@@ -16,12 +16,27 @@ document.addEventListener("DOMContentLoaded", function () {
             // Update charts with fake data
             if (window.speedChartInstance && window.speedChartInstance.series[0]) {
                 window.speedChartInstance.series[0].update({ data: [activepower] });
+                // Update plotBands dynamically based on current value
+                updateChartWithDynamicBands(window.speedChartInstance, activepower, 5000, {
+                    greenColor: '#22c55e',
+                    redColor: '#EF4444'
+                });
             }
             if (window.tempChartInstance && window.tempChartInstance.series[0]) {
                 window.tempChartInstance.series[0].update({ data: [temperature] });
+                // Update plotBands dynamically based on current value
+                updateChartWithDynamicBands(window.tempChartInstance, temperature, 2000, {
+                    greenColor: '#7373f3',
+                    redColor: '#EF4444'
+                });
             }
             if (window.pressureChartInstance && window.pressureChartInstance.series[0]) {
                 window.pressureChartInstance.series[0].update({ data: [pressure] });
+                // Update plotBands dynamically based on current value
+                updateChartWithDynamicBands(window.pressureChartInstance, pressure, 1500, {
+                    greenColor: '#a2f7f7',
+                    redColor: '#EF4444'
+                });
             }
             console.log('Fake data updated:', { activepower, temperature, pressure });
         } catch (e) {
@@ -435,6 +450,10 @@ function updateTemperatureTag(dataTag, element) {
                 element.innerHTML = value.toFixed(1);
                 if (window.tempChartInstance && window.tempChartInstance.series[0]) {
                     window.tempChartInstance.series[0].update({ data: [value] });
+                    updateChartWithDynamicBands(window.tempChartInstance, value, 2000, {
+                        greenColor: '#7373f3',
+                        redColor: '#EF4444'
+                    });
                 }
             }
         });
@@ -453,6 +472,10 @@ function updatePressureTag(dataTag, element) {
                 element.innerHTML = value.toFixed(0);
                 if (window.pressureChartInstance && window.pressureChartInstance.series[0]) {
                     window.pressureChartInstance.series[0].update({ data: [value] });
+                    updateChartWithDynamicBands(window.pressureChartInstance, value, 1500, {
+                        greenColor: '#a2f7f7',
+                        redColor: '#EF4444'
+                    });
                 }
             }
         });
@@ -1418,9 +1441,11 @@ function AcivePowerChart() {
             min: 0,
             max: 5000,
             plotBands: [{
-                from: 0, to: 3500, color: '#EF4444', thickness: 15
+                id: 'green-band',
+                from: 0, to: 0, color: '#22c55e', thickness: 15
             }, {
-                from: 3500, to: 5000, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
+                id: 'red-band',
+                from: 0, to: 5000, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
             }],
             labels: {
                 step: 2,
@@ -1430,7 +1455,7 @@ function AcivePowerChart() {
         },
         series: [{
             name: 'Nhiệt độ môi trường',
-            data: [1435],
+            data: [0],
             dataLabels: {
                 format: '<div style="text-align:center">' +
                     '<span style="font-size:22px;color:#fff;font-weight:bold">{y}</span> ' +
@@ -1452,18 +1477,20 @@ function TemperatureChart() {
         yAxis: {
             min: 0, max: 2000,
             plotBands: [{
-                from: 0, to: 1200,
+                id: 'green-band',
+                from: 0, to: 0,
                 color: '#7373f3', // Đỏ rực như ảnh 2
                 thickness: 15
             }, {
-                from: 1200, to: 2000,
+                id: 'red-band',
+                from: 0, to: 2000,
                 color: 'rgba(239, 68, 68, 0.1)', // Phần còn lại màu mờ
                 thickness: 15
             }]
         },
         series: [{
             name: 'Nhiệt độ máy',
-            data: [1435],
+            data: [0],
             dataLabels: {
                 format: '<div style="text-align:center; margin-top: 20px">' +
                     '<span style="font-size:24px;color:#fff;font-weight:bold">{y}</span> ' +
@@ -1485,9 +1512,11 @@ function PressureChart() {
             min: 0,
             max: 1500,
             plotBands: [{
-                from: 0, to: 1000, color: '#a2f7f7', thickness: 15
+                id: 'green-band',
+                from: 0, to: 0, color: '#a2f7f7', thickness: 15
             }, {
-                from: 1000, to: 1500, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
+                id: 'red-band',
+                from: 0, to: 1500, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
             }],
             labels: {
                 step: 2,
@@ -1511,4 +1540,35 @@ function PressureChart() {
             }
         }]
     }));
+}
+
+// Function to update plotBands dynamically based on current value
+function updateChartWithDynamicBands(chartInstance, value, max, config) {
+    if (!chartInstance || !chartInstance.yAxis || !chartInstance.yAxis[0]) return;
+
+    var yAxis = chartInstance.yAxis[0];
+
+    // Remove existing plotBands by ID
+    yAxis.removePlotBand('green-band');
+    yAxis.removePlotBand('red-band');
+
+    // Add new plotBands with updated values
+    yAxis.addPlotBand({
+        id: 'green-band',
+        from: 0,
+        to: value,
+        color: config.greenColor || '#22c55e',
+        thickness: 15
+    });
+
+    yAxis.addPlotBand({
+        id: 'red-band',
+        from: value,
+        to: max,
+        color: 'rgba(239, 68, 68, 0.1)',
+        thickness: 15
+    });
+
+    // Redraw the entire chart
+    chartInstance.redraw();
 }
