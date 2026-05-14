@@ -60,7 +60,12 @@
         .brand-wrapper { display: flex !important; align-items: center !important; gap: 12px; }
         .brand-text-content { display: flex !important; flex-direction: column !important; line-height: 1.1 !important; }
         .brand-text-content .main-title { color: #ffffff !important; font-weight: 700; font-size: 16px; letter-spacing: 0.5px; margin: 0 !important; }
-        .brand-text-content .sub-title { color: #94a3b8 !important; font-size: 10px; text-transform: uppercase; margin: 0 !important; }
+        .brand-text-content .sub-title {
+            color: #e7ecf3 !important;
+            font-size: 10px;
+            text-transform: uppercase;
+            margin: 0 !important;
+        }
 
         /* ==================================================================
            3. KHỐI TIỆN ÍCH (BÊN PHẢI)
@@ -87,8 +92,11 @@
         .clock-wrapper { display: flex; align-items: center; gap: 12px; color: #e2e8f0; }
         .clock-icon { font-size: 20px; color: #94a3b8; }
         .clock-data { display: flex; flex-direction: column; line-height: 1.1; }
-        .clock-time { font-weight: 700; font-size: 14px; color: #ffffff; }
-        .clock-date { font-size: 11px; color: #64748b; }
+        .clock-time { font-size: 14px; color: #ffffff; }
+        .clock-date {
+            font-size: 11px;
+            color: #a9b7cb;
+        }
 
         /* Notification */
         .notification-btn { position: relative; color: #94a3b8; font-size: 20px; transition: 0.3s; }
@@ -103,7 +111,10 @@
         .user-profile-toggle { display: flex; align-items: center; gap: 12px; cursor: pointer; padding-left: 20px; border-left: 1px solid rgba(255,255,255,0.1); }
         .user-meta { display: flex; flex-direction: column; text-align: right; line-height: 1.1; }
         .u-name { color: #ffffff; font-size: 13px; font-weight: 700; }
-        .u-role { color: #64748b; font-size: 11px; }
+        .u-role {
+            color: #a9b7cb;
+            font-size: 11px;
+        }
         .u-avatar { width: 38px; height: 38px; border-radius: 50%; border: 1px solid #334155; object-fit: cover; }
 
         /* Dropdown Menu */
@@ -174,7 +185,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 6px 12px;
+            padding: 12px;
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid rgba(59, 130, 246, 0.25);
             border-radius: 6px;
@@ -188,23 +199,22 @@
         }
 
         .selected-machine .machine-icon {
-            color: #3b82f6;
+            color: #00e5ff;
             font-size: 14px;
         }
 
         .selected-machine .machine-text {
-            color: #94a3b8;
-            font-size: 12px;
-            font-weight: 500;
+            color: #00e5ff;
+            font-size: 14px;
+            font-weight: 600;
         }
 
         .selected-machine .machine-text span {
-            color: #ffffff;
-            font-weight: 700;
+            color: #00e5ff;
         }
 
         .selected-machine .dropdown-arrow {
-            color: #3b82f6;
+            color: #00e5ff;
             font-size: 10px;
             margin-left: auto;
             transition: transform 0.2s ease;
@@ -260,17 +270,19 @@
 
         .info-item .shift-value {
             color: #fff;
+            font-weight: 600;
+            font-size: 16px;
         }
 
         .machine-info-bar .info-label {
-            font-size: 11px;
-            color: #64748b;
+            font-size: 13px;
+            color: #a9b7cb;
             font-weight: 600;
         }
 
         .machine-info-bar .info-value {
-            font-size: 14px;
-            color: #3b82f6;
+            font-size: 16px;
+            color: #00e5ff;
             font-weight: 700;
         }
 
@@ -283,22 +295,21 @@
         }
 
         .machine-info-bar .machine-status.running {
-            background: rgba(34, 197, 94, 0.15);
             color: #22c55e;
-            border: 1px solid rgba(34, 197, 94, 0.3);
+            font-size: 16px;
         }
 
         .machine-info-bar .production-value {
             display: flex;
             align-items: center;
             gap: 3px;
-            font-size: 14px;
+            font-size: 16px;
             color: #ffffff;
             font-weight: 700;
         }
 
         .machine-info-bar .production-value .current-value {
-            color: #3b82f6;
+            color: #00e5ff;
         }
 
         .machine-info-bar .production-value .sep {
@@ -306,15 +317,9 @@
             font-weight: 500;
         }
 
-        .machine-info-bar .production-value .unit {
-            font-size: 10px;
-            color: #94a3b8;
-            font-weight: 600;
-        }
-
         .machine-info-bar .runtime-value {
-            font-size: 14px;
-            color: #f59e0b;
+            font-size: 16px;
+            color: #00e5ff;
             font-weight: 700;
         }
 
@@ -335,8 +340,8 @@
         }
 
         .machine-info-bar .alarm-item .alarm-bell {
-            color: #ef4444;
-            font-size: 14px;
+            color: #f59e0b;
+            font-size: 16px;
             animation: bell-shake 2s infinite;
         }
 
@@ -350,9 +355,9 @@
         }
 
         .machine-info-bar .alarm-item .alarm-badge {
-            color: #ef4444;
-            font-size: 13px;
-            font-weight: 700;
+            color: #f59e0b;
+            font-size: 16px;
+            font-weight: 600;
         }
 
         .machine-info-bar .sub-stage {
@@ -379,25 +384,23 @@
         }
 
         .machine-clock i {
-            color: #3b82f6;
+            color: #00e5ff;
             font-size: 14px;
         }
 
         .machine-clock .clock-data {
             display: flex;
             flex-direction: column;
-            line-height: 1.3;
+            font-weight: 600;
         }
 
         .machine-clock .clock-time {
             color: #ffffff;
-            font-size: 13px;
-            font-weight: 700;
-            font-family: 'Consolas', monospace;
+            font-size: 14px;
         }
 
         .machine-clock .clock-date {
-            color: #8d9cb1;
+            color: #ffffff;
             font-size: 14px;
         }
 
@@ -420,7 +423,10 @@
         .notif-icon.info { background: rgba(59, 130, 246, 0.2); }
         .notif-icon.info i { color: #3b82f6; }
         .notif-title { color: #ffffff; font-size: 13px; font-weight: 500; }
-        .notif-desc { color: #64748b; font-size: 11px; }
+        .notif-desc {
+            color: #a9b7cb;
+            font-size: 11px;
+        }
         .notif-time { color: #475569; font-size: 10px; margin-top: 4px; }
 
         /* Sidebar & Content */
@@ -522,7 +528,7 @@
         <nav class="main-header navbar navbar-expand navbar-dark">
             <div class="header-left-group">
                 <div class="brand-wrapper">
-                    <img src="~/AdminLTE-master/dist/img/user2-160x160.jpg" style="height: 35px;" alt="Logo">
+                    <img src="~/Image/afchem_logo.png" style="height: 35px;" alt="Logo">
                     <div class="brand-text-content">
                         <span class="main-title">AFCHEM SYSTEM</span>
                         <span class="sub-title">SCADA MONITORING</span>
@@ -536,7 +542,7 @@
                     <!-- Machine Select Custom -->
                     <div class="machine-select-custom" id="machineSelectContainer">
                         <div class="selected-machine" onclick="toggleMachineDropdown()">
-                            <i class="fas fa-cog machine-icon"></i>
+                            <i class="fas fa-industry machine-icon"></i>
                             <span class="machine-text">Chọn máy: <span id="selectedMachineName">TX01</span></span>
                             <i class="fas fa-chevron-down dropdown-arrow"></i>
                         </div>
@@ -598,8 +604,8 @@
                     <div class="machine-clock">
                         <i class="far fa-clock"></i>
                         <div class="clock-data">
-                            <span id="txtTime" class="clock-time">04:50:26 PM</span>
                             <span id="txtDate" class="clock-date">28/10/2023</span>
+                            <span id="txtTime" class="clock-time">04:50:26</span>
                         </div>
                     </div>
                 </div>
@@ -608,10 +614,9 @@
                     <div class="user-profile-toggle" data-toggle="dropdown">
                         <div class="user-meta d-none d-sm-flex">
                             <span class="u-name">Admin</span>
-                            <span class="u-role">Administrator</span>
                         </div>
                         <img src="~/AdminLTE-master/dist/img/user2-160x160.jpg" class="u-avatar" alt="User">
-                        <i class="fas fa-angle-down" style="color: #64748b; font-size: 11px;"></i>
+                        <i class="fas fa-angle-down" style="color: #a9b7cb; font-size: 11px;"></i>
                     </div>
                     <div class="dropdown-menu dropdown-menu-right user-dropdown-menu">
                         <a class="dropdown-item" href="#"><i class="fas fa-user-circle mr-2"></i> Thông tin cá nhân</a>
@@ -766,6 +771,6 @@
         setInterval(updateClock, 1000);
         updateClock();
     </script>
-    @RenderSection("Scripts", false/*required*/)
+    @@RenderSection("Scripts", false/*required*/)
 </body>
 </html>

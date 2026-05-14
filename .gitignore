@@ -79,3 +79,8 @@ logs/
 # Application files
 appsettings.Development.json
 appsettings.Local.json
+
+# CafeKit / Ecosystem
+specs/_shared/
+plans/
+!plans/templates/

@@ -66,88 +66,45 @@ document.addEventListener("DOMContentLoaded", function () {
     // Generate fake data every 2 seconds
     if (USE_FAKE_DATA) {
         setInterval(generateFakeData, 2000);
-        // Initial call after a short delay to ensure DOM is ready
         setTimeout(generateFakeData, 500);
     }
 
     var atscadaTask = document.querySelector('atscada-task');
-    var dataTask = atscadaTask.dataTask;
-    var dataCollection = dataTask.dataCollection;
+    if (atscadaTask && atscadaTask.dataTask) {
+        var dataTask = atscadaTask.dataTask;
+        var dataCollection = dataTask.dataCollection;
 
-    // Read scala tag data
-    dataCollection.add(`AFChemPLC.NhietDoMay`);
-    dataCollection.add(`AFChemPLC.NhietDoMoiTruong`);
-    dataCollection.add(`AFChemPLC.ApSuat`);
-    dataCollection.add(`AFChemPLC.QuyTrinh`);
-    dataCollection.add(`AFChemPLC.CongDoanMay`);
-    dataCollection.add(`AFChemPLC.NhietDoGiuaBuongTron`);
-    dataCollection.add(`AFChemPLC.DoAmMoiTruong`);
-    dataCollection.add(`AFChemPLC.ThoiGianCapLieu`);
-    dataCollection.add(`AFChemPLC.ThoiGianTron1`);
-    dataCollection.add(`AFChemPLC.ThoiGianXaDay`);
-    dataCollection.add(`AFChemPLC.ThoiGianHutXa`);
-    dataCollection.add(`AFChemPLC.ThoiGianTron2`);
+        // Read scada tag data
+        dataCollection.add(`AFChemPLC.NhietDoMay`);
+        dataCollection.add(`AFChemPLC.NhietDoMoiTruong`);
+        dataCollection.add(`AFChemPLC.ApSuat`);
+        dataCollection.add(`AFChemPLC.QuyTrinh`);
+        dataCollection.add(`AFChemPLC.CongDoanMay`);
+        dataCollection.add(`AFChemPLC.NhietDoGiuaBuongTron`);
+        dataCollection.add(`AFChemPLC.DoAmMoiTruong`);
 
-    updateTag(
-        dataCollection.get(`AFChemPLC.NhietDoMay`),
-        document.querySelector('#MixerTemp')
-    );
-    updateTag(
-        dataCollection.get(`AFChemPLC.NhietDoMoiTruong`),
-        document.querySelector('#AmbientTemp')
-    );
-    updateTag(
-        dataCollection.get(`AFChemPLC.ApSuat`),
-        document.querySelector('#Pressure')
-    );
-    updateTag(
-        dataCollection.get(`AFChemPLC.QuyTrinh`),
-        document.querySelector('#Process')
-    );
-    updateTag(
-        dataCollection.get(`AFChemPLC.CongDoanMay`),
-        document.querySelector('#MachineProcessing')
-    );
-    updateTag(
-        dataCollection.get(`AFChemPLC.NhietDoGiuaBuongTron`),
-        document.querySelector('#TempChamber')
-    );
-    updateTag(
-        dataCollection.get(`AFChemPLC.DoAmMoiTruong`),
-        document.querySelector('#Humidity')
-    );
-    updateTag(
-        dataCollection.get(`AFChemPLC.ThoiGianCapLieu`),
-        document.querySelector('#FeedingTime')
-    );
-    updateTag(
-        dataCollection.get(`AFChemPLC.ThoiGianTron1`),
-        document.querySelector('#MixTime1')
-    );
-    updateTag(
-        dataCollection.get(`AFChemPLC.ThoiGianXaDay`),
-        document.querySelector('#BottomDischargeTime')
-    );
-    updateTag(
-        dataCollection.get(`AFChemPLC.ThoiGianHutXa`),
-        document.querySelector('#SuctionDischargeTime')
-    );
-    updateTag(
-        dataCollection.get(`AFChemPLC.ThoiGianTron2`),
-        document.querySelector('#MixTime2')
-    );
+        // Thêm tag nếu cần (các tag mới sẽ được cập nhật ở phase sau nếu kết nối PLC thật)
 
-    dataTask.start();
+        if (!USE_FAKE_DATA) {
+            updateTag(dataCollection.get(`AFChemPLC.NhietDoMoiTruong`), document.querySelector('#AmbientTemp'));
+            updateTag(dataCollection.get(`AFChemPLC.DoAmMoiTruong`), document.querySelector('#Humidity'));
+            updateTag(dataCollection.get(`AFChemPLC.NhietDoGiuaBuongTron`), document.querySelector('#MixerMidTemp'));
+            updateTag(dataCollection.get(`AFChemPLC.NhietDoGiuaBuongTron`), document.querySelector('#TankDiagramTemp'));
+            updateTag(dataCollection.get(`AFChemPLC.ApSuat`), document.querySelector('#TankDiagramPressure'));
+        }
+
+        dataTask.start();
+    }
 });
 
 function updateTag(dataTag, element) {
     if (dataTag && element) {
         dataTag.dispatcher.on('valueChanged', (data) => {
-            if (data.e.newValue !== undefined) {                
+            if (data.e.newValue !== undefined) {
                 element.innerHTML = data.e.newValue;
             }
         });
-        if (dataTag.Value !== undefined) {            
+        if (dataTag.Value !== undefined) {
             element.innerHTML = data.e.newValue;
         }
     }
@@ -191,7 +148,7 @@ var gaugeOptions = {
         labels: {
             distance: -25, // Đẩy con số vào sâu bên trong vòng cung
             style: {
-                color: '#64748b',
+                color: '#a9b7cb',
                 fontSize: '10px'
             }
         },
