@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using Hino.Getdata.Common;
 using OfficeOpenXml;
 using System;
@@ -23,6 +23,74 @@ namespace LongDucProject.Controllers
             var Event = new EventCommon();
             var list = Event.GetEventLog(starttime, endtime).ToList();
             return Json(list, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpPost]
+        public JsonResult GetEventData(string starttime, string endtime, string batchId, int draw, int start, int length)
+        {
+            var Event = new EventCommon();
+            var resultList = Event.GetEventLog(starttime, endtime);
+            var list = resultList != null ? resultList.ToList() : new List<Hino.Parameter.Common.EventParameter>();
+
+            var searchValue = Request.Form["search[value]"];
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                list = list.Where(x => 
+                    (x.Description != null && x.Description.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) || 
+                    (x.Location != null && x.Location.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                    (x.Status != null && x.Status.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                ).ToList();
+            }
+
+            int recordsTotal = list.Count;
+            var data = list.Skip(start).Take(length).ToList();
+
+            return Json(new {
+                draw = draw,
+                recordsTotal = recordsTotal,
+                recordsFiltered = recordsTotal,
+                data = data
+            });
+        }
+
+        [HttpGet]
+        public FileResult ExportEventExcel(string starttime, string endtime, string batchId, string searchValue)
+        {
+            var Event = new EventCommon();
+            var resultList = Event.GetEventLog(starttime, endtime);
+            var list = resultList != null ? resultList.ToList() : new List<Hino.Parameter.Common.EventParameter>();
+
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                list = list.Where(x => 
+                    (x.Description != null && x.Description.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) || 
+                    (x.Location != null && x.Location.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                    (x.Status != null && x.Status.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                ).ToList();
+            }
+
+            byte[] fileBytes = LongDucProjectTest.Service.ExportUtility.ExportToExcel(list, "Events");
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Events_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+        }
+
+        [HttpGet]
+        public FileResult ExportEventCsv(string starttime, string endtime, string batchId, string searchValue)
+        {
+            var Event = new EventCommon();
+            var resultList = Event.GetEventLog(starttime, endtime);
+            var list = resultList != null ? resultList.ToList() : new List<Hino.Parameter.Common.EventParameter>();
+
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                list = list.Where(x => 
+                    (x.Description != null && x.Description.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) || 
+                    (x.Location != null && x.Location.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                    (x.Status != null && x.Status.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                ).ToList();
+            }
+
+            byte[] fileBytes = LongDucProjectTest.Service.ExportUtility.ExportToCsv(list);
+            return File(fileBytes, "text/csv", $"Events_{DateTime.Now:yyyyMMddHHmmss}.csv");
         }
 
         public ActionResult GetdataExportEvent(string starttime, string endtime, string filepath)

@@ -433,7 +433,7 @@
         .main-sidebar {
             padding-top: 75px !important;
             z-index: 1030 !important;
-            background-color: #0c1425 !important; /* Màu tối sâu */
+            background-color: #131c2f !important;
         }
 
         /* Căn chỉnh lại List Menu */
@@ -656,7 +656,7 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
+                            <a href="~/Home/Report" class="nav-link @(ViewBag.ButtonReport)">
                                 <i class="nav-icon fas fa-file-alt"></i>
                                 <p>Báo cáo</p>
                             </a>
@@ -771,6 +771,6 @@
         setInterval(updateClock, 1000);
         updateClock();
     </script>
-    @@RenderSection("Scripts", false/*required*/)
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

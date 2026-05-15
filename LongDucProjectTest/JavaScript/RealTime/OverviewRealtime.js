@@ -9,9 +9,9 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!USE_FAKE_DATA) return; // Skip if using real data
 
         try {
-            activepower = Math.floor(Math.random() * 4500) + 500; // 500-5000 kW
-            temperature = Math.floor(Math.random() * 1500) + 500;    // 500-2000 °C
-            pressure = Math.floor(Math.random() * 1200) + 200;    // 200-1400 Pa
+            activepower = Math.floor(Math.random() * 90) + 10; // 10-100 kW
+            temperature = Math.floor(Math.random() * 50) + 25;    // 25-75 °C
+            pressure = Math.floor(Math.random() * 200) + 200;    // 200-400 Pa
 
             // Separate values for line chart (realistic temperature ranges)
             var ambientTemp = 24 + Math.random() * 8; // 24-32°C
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (window.speedChartInstance && window.speedChartInstance.series && window.speedChartInstance.series[0]) {
                 window.speedChartInstance.series[0].update({ data: [activepower] });
                 // Update plotBands dynamically based on current value
-                updateChartWithDynamicBands(window.speedChartInstance, activepower, 5000, {
+                updateChartWithDynamicBands(window.speedChartInstance, activepower, 3000, {
                     color1: '#EF4444',
                     color2: 'rgba(239, 68, 68, 0.1)'
                 });
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (window.tempChartInstance && window.tempChartInstance.series && window.tempChartInstance.series[0]) {
                 window.tempChartInstance.series[0].update({ data: [temperature] });
                 // Update plotBands dynamically based on current value
-                updateChartWithDynamicBands(window.tempChartInstance, temperature, 2000, {
+                updateChartWithDynamicBands(window.tempChartInstance, temperature, 3000, {
                     color1: '#7373f3',
                     color2: 'rgba(239, 68, 68, 0.1)'
                 });
@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (window.pressureChartInstance && window.pressureChartInstance.series && window.pressureChartInstance.series[0]) {
                 window.pressureChartInstance.series[0].update({ data: [pressure] });
                 // Update plotBands dynamically based on current value
-                updateChartWithDynamicBands(window.pressureChartInstance, pressure, 1500, {
+                updateChartWithDynamicBands(window.pressureChartInstance, pressure, 3000, {
                     color1: '#a2f7f7',
                     color2: 'rgba(239, 68, 68, 0.1)'
                 });
@@ -46,6 +46,33 @@ document.addEventListener("DOMContentLoaded", function () {
             if (window.lineChartInstance) {
                 updateLineChart(ambientTemp, machineTemp, pressure);
             }
+
+            // Update Tank UI Elements
+            function updateElementIfExist(id, value) {
+                var el = document.getElementById(id);
+                if (el) { el.innerHTML = value; }
+            }
+
+            // Randomize tank temperatures based on machine temp
+            var tankTopTemp = (machineTemp * 1.1 + Math.random() * 2).toFixed(1);
+            var tankMidTemp = (machineTemp * 1.0 + Math.random() * 2).toFixed(1);
+            var tankBotTemp = (machineTemp * 0.9 + Math.random() * 2).toFixed(1);
+            var tankPressure = (pressure / 1000).toFixed(2); // converting Pa to bar for display
+
+            var envHumidity = (50 + Math.random() * 20).toFixed(1); // 50-70%
+            var envPM25 = Math.floor(10 + Math.random() * 20); // 10-30
+            var envDust = (0.2 + Math.random() * 0.5).toFixed(2); // 0.2 - 0.7
+
+            updateElementIfExist('TankDiagramTempTop', tankTopTemp);
+            updateElementIfExist('TankDiagramTemp', tankMidTemp);
+            updateElementIfExist('TankDiagramTempBot', tankBotTemp);
+            updateElementIfExist('TankDiagramPressure', tankPressure);
+
+            updateElementIfExist('AmbientTemp', ambientTemp.toFixed(1));
+            updateElementIfExist('Humidity', envHumidity);
+            updateElementIfExist('PM25', envPM25);
+            updateElementIfExist('TotalDust', envDust);
+
             console.log('Fake data updated:', { activepower, temperature, pressure, ambientTemp, machineTemp });
         } catch (e) {
             console.error('Error updating fake data:', e);
@@ -65,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Generate fake data every 2 seconds
     if (USE_FAKE_DATA) {
-        setInterval(generateFakeData, 2000);
+        setInterval(generateFakeData, 5000);
         setTimeout(generateFakeData, 500);
     }
 
@@ -123,7 +150,7 @@ var gaugeOptions = {
         startAngle: -100,
         endAngle: 100,
         background: [{
-            backgroundColor: 'rgba(255, 255, 255, 0.05)', // Tạo vòng cung nền mờ
+            backgroundColor: 'transparent',
             borderWidth: 0,
             outerRadius: '105%',
             innerRadius: '60%',
@@ -133,9 +160,9 @@ var gaugeOptions = {
     },
 
     yAxis: {
-        minorTickInterval: 'auto',
-        minorTickWidth: 1,
-        minorTickLength: 5,
+        minorTickInterval: null,
+        minorTickWidth: 0,
+        minorTickLength: 0,
         minorTickPosition: 'inside',
         minorTickColor: '#475569',
 
@@ -180,16 +207,16 @@ function AcivePowerChart() {
     return Highcharts.chart('container-speed', Highcharts.merge(gaugeOptions, {
         yAxis: {
             min: 0,
-            max: 5000,
+            max: 100,
+            tickPositions: [0, 100],
             plotBands: [{
                 id: 'green-band',
                 from: 0, to: 0, color: '#EF4444', thickness: 15
             }, {
                 id: 'red-band',
-                from: 0, to: 5000, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
+                from: 0, to: 100, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
             }],
             labels: {
-                step: 2,
                 rotation: 'auto',
                 style: { color: '#94a3b8' }
             }
@@ -216,7 +243,8 @@ function AcivePowerChart() {
 function TemperatureChart() {
     return Highcharts.chart('container-temp', Highcharts.merge(gaugeOptions, {
         yAxis: {
-            min: 0, max: 2000,
+            min: 0, max: 75,
+            tickPositions: [0, 75],
             plotBands: [{
                 id: 'green-band',
                 from: 0, to: 0,
@@ -224,7 +252,7 @@ function TemperatureChart() {
                 thickness: 15
             }, {
                 id: 'red-band',
-                from: 0, to: 2000,
+                from: 0, to: 75,
                 color: 'rgba(239, 68, 68, 0.1)', // Phần còn lại màu mờ
                 thickness: 15
             }]
@@ -260,8 +288,11 @@ function LineChart() {
     var categories = [];
 
     for (var i = dataPoints; i > 0; i--) {
-        var time = new Date(now.getTime() - i * 60000);
-        categories.push(time.getHours() + ':' + (time.getMinutes() < 10 ? '0' : '') + time.getMinutes());
+        var time = new Date(now.getTime() - i * 5000);
+        categories.push(
+            (time.getMinutes() < 10 ? '0' : '') + time.getMinutes() + ':' +
+            (time.getSeconds() < 10 ? '0' : '') + time.getSeconds()
+        );
 
         // Generate fake data with realistic values
         ambientTempData.push(28 + Math.random() * 8 - 4); // 24-32°C
@@ -271,7 +302,7 @@ function LineChart() {
 
     return Highcharts.chart('container_line', {
         chart: {
-            type: 'line',
+            type: 'spline',
             animation: true,
             backgroundColor: 'transparent'
         },
@@ -325,7 +356,7 @@ function LineChart() {
             itemHoverStyle: { color: '#ffffff' }
         },
         plotOptions: {
-            line: {
+            spline: {
                 marker: {
                     enabled: true,
                     radius: 4
@@ -341,7 +372,7 @@ function LineChart() {
         series: [{
             name: 'Nhiệt độ môi trường',
             data: ambientTempData,
-            color: '#e879f9',
+            color: '#EF4444',
             marker: {
                 symbol: 'diamond'
             },
@@ -349,7 +380,7 @@ function LineChart() {
         }, {
             name: 'Nhiệt độ máy',
             data: machineTempData,
-            color: '#3b82f6',
+            color: '#7373f3',
             marker: {
                 symbol: 'square'
             },
@@ -376,7 +407,7 @@ function updateLineChart(ambientTemp, machineTemp, pressure) {
 
     // Get current time for x-axis
     var now = new Date();
-    var timeStr = now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+    var timeStr = (now.getMinutes() < 10 ? '0' : '') + now.getMinutes() + ':' + (now.getSeconds() < 10 ? '0' : '') + now.getSeconds();
 
     // Add new data points
     chart.series[0].addPoint([timeStr, ambientTemp], true, shift);
@@ -397,6 +428,7 @@ function PressureChart() {
         yAxis: {
             min: 0,
             max: 1500,
+            tickPositions: [0, 1500],
             plotBands: [{
                 id: 'green-band',
                 from: 0, to: 0, color: '#a2f7f7', thickness: 15
@@ -405,7 +437,6 @@ function PressureChart() {
                 from: 0, to: 1500, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
             }],
             labels: {
-                step: 2,
                 rotation: 'auto',
                 style: { color: '#94a3b8' }
             }

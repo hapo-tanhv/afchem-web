@@ -113,24 +113,24 @@
                 <li class="step completed">
                     <div class="step-icon"><i class="fas fa-check"></i></div>
                     <div class="step-label">2</div>
-                    <div class="step-name">Hút xả đáy</div>
-                </li>
-                <li class="step completed">
-                    <div class="step-icon"><i class="fas fa-check"></i></div>
-                    <div class="step-label">3</div>
                     <div class="step-name">Trộn 1</div>
                 </li>
-                <li class="step completed">
-                    <div class="step-icon"><i class="fas fa-check"></i></div>
-                    <div class="step-label">4</div>
+                <li class="step active">
+                    <div class="step-icon"></div>
+                    <div class="step-label">3</div>
                     <div class="step-name">Xả đáy</div>
                 </li>
-                <li class="step completed">
-                    <div class="step-icon"><i class="fas fa-check"></i></div>
-                    <div class="step-label">5</div>
+                <li class="step active">
+                    <div class="step-icon"></div>
+                    <div class="step-label">4</div>
                     <div class="step-name">Rung xả đáy</div>
                 </li>
                 <li class="step active">
+                    <div class="step-icon"></div>
+                    <div class="step-label">5</div>
+                    <div class="step-name">Hút xả đáy</div>
+                </li>
+                <li class="step pending">
                     <div class="step-icon"></div>
                     <div class="step-label">6</div>
                     <div class="step-name">Trộn 2</div>
@@ -149,7 +149,7 @@
             <div class="step-stats">
                 <div class="stat-box">
                     <div class="stat-title">Bước hiện tại</div>
-                    <div class="stat-val text-cyan">6 / 8</div>
+                    <div class="stat-val text-cyan">3 / 8</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-title">Thời gian chuẩn</div>
@@ -165,9 +165,9 @@
                 </div>
                 <div class="stat-box">
                     <div class="stat-title">Tiến độ bước</div>
-                    <div class="stat-val text-cyan">75%</div>
-                    <div class="progress-bar-small"><div class="progress-fill" style="width: 75%;"></div></div>
-                </div>
+                    <div class="stat-val text-cyan">37.5%</div>
+                    <div class="progress-bar-small"><div class="progress-fill" style="width: 37.5%;"></div></div>
+                </div>3
             </div>
         </div>
     </div>
@@ -182,60 +182,195 @@
                 <h3>SƠ ĐỒ BỒN TRỘN</h3>
             </div>
             <div class="tank-diagram-container">
-                <img src="~/Image/sodobontron.jfif" alt="Sơ đồ bồn trộn" class="tank-img" />
-                
-                <!-- Sensor Overlays -->
-                <div class="sensor-overlay sensor-temp">
-                    <div class="sensor-label">Nhiệt độ bồn</div>
-                    <div class="sensor-val"><span id="TankDiagramTemp">23.9</span><small>°C</small></div>
+                <!-- Left Column -->
+                <div class="tank-side-col left-col">
+                    <div class="param-card-side">
+                        <div class="param-card-icon icon-blue"><i class="fas fa-stopwatch"></i></div>
+                        <div class="param-card-info">
+                            <div class="param-card-title">Thời gian cấp liệu</div>
+                            <div class="param-card-value">1426 <small>s</small></div>
+                            <div class="param-card-std">Tiêu chuẩn: <span>1426 <small>s</small></span></div>
+                        </div>
+                    </div>
+                    <div class="param-card-side">
+                        <div class="param-card-icon icon-cyan"><i class="fas fa-stopwatch"></i></div>
+                        <div class="param-card-info">
+                            <div class="param-card-title">Thời gian trộn 1</div>
+                            <div class="param-card-value">885 <small>s</small></div>
+                            <div class="param-card-std">Tiêu chuẩn: <span>885 <small>s</small></span></div>
+                        </div>
+                    </div>
+                    <div class="param-card-side">
+                        <div class="param-card-icon icon-orange"><i class="fas fa-stopwatch"></i></div>
+                        <div class="param-card-info">
+                            <div class="param-card-title">Thời gian xả đáy</div>
+                            <div class="param-card-value">16 <small>s</small></div>
+                            <div class="param-card-std">Tiêu chuẩn: <span>496 <small>s</small></span></div>
+                        </div>
+                    </div>
+                    <div class="param-card-side">
+                        <div class="param-card-icon icon-purple"><i class="fas fa-stopwatch"></i></div>
+                        <div class="param-card-info">
+                            <div class="param-card-title">Thời gian rung xả đáy</div>
+                            <div class="param-card-value">16 <small>s</small></div>
+                            <div class="param-card-std">Tiêu chuẩn: <span>16 <small>s</small></span></div>
+                        </div>
+                    </div>
+                    <div class="param-card-side">
+                        <div class="param-card-icon icon-purple"><i class="fas fa-tachometer-alt"></i></div>
+                        <div class="param-card-info">
+                            <div class="param-card-title">Áp suất đường ống</div>
+                            <div class="param-card-value"><span id="TankDiagramPressure">2.50</span> <small>bar</small></div>
+                            <div class="param-card-std">Tiêu chuẩn: <span>2.50 bar</span></div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="sensor-overlay sensor-pressure">
-                    <div class="sensor-label">Áp suất bồn</div>
-                    <div class="sensor-val"><span id="TankDiagramPressure">0.60</span><small>bar</small></div>
+
+                <!-- Center Tank -->
+                <div class="tank-center-wrapper">
+                    <img src="~/Image/sodobontron.jpg" alt="Sơ đồ bồn trộn" class="tank-img" />
+                    
+                    <!-- Equipment Labels -->
+                    <div class="eq-label eq-pump">Bơm cấp liệu</div>
+                    <div class="eq-label eq-mixer">Máy trộn</div>
+                    <div class="eq-label eq-valve">Van xả đáy</div>
+
+                    <!-- Sensor Overlays on Tank -->
+                    <div class="tank-temp-card top-temp">
+                        <div class="param-card-icon icon-red"><i class="fas fa-thermometer-half"></i></div>
+                        <div class="param-card-info">
+                            <div class="param-card-title">Nhiệt độ<br/>bồn trộn trên</div>
+                            <div class="param-card-value"><span id="TankDiagramTempTop">35.2</span> <small>°C</small></div>
+                            <div class="param-card-std">Tiêu chuẩn: <span>35.0 °C</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="tank-temp-card mid-temp">
+                        <div class="param-card-icon icon-orange"><i class="fas fa-thermometer-half"></i></div>
+                        <div class="param-card-info">
+                            <div class="param-card-title">Nhiệt độ<br/>bồn trộn giữa</div>
+                            <div class="param-card-value"><span id="TankDiagramTemp">32.8</span> <small>°C</small></div>
+                            <div class="param-card-std">Tiêu chuẩn: <span>35.0 °C</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="tank-temp-card bot-temp">
+                        <div class="param-card-icon icon-blue"><i class="fas fa-thermometer-half"></i></div>
+                        <div class="param-card-info">
+                            <div class="param-card-title">Nhiệt độ<br/>bồn trộn dưới</div>
+                            <div class="param-card-value"><span id="TankDiagramTempBot">30.1</span> <small>°C</small></div>
+                            <div class="param-card-std">Tiêu chuẩn: <span>35.0 °C</span></div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="sensor-overlay sensor-level">
-                    <div class="sensor-label">Mực chất lỏng</div>
-                    <div class="sensor-val"><span id="TankDiagramLevel">2.0</span><small>m (67%)</small></div>
+
+                <!-- Right Column -->
+                <div class="tank-side-col right-col">
+                    <div class="param-card-side">
+                        <div class="param-card-icon icon-cyan"><i class="fas fa-stopwatch"></i></div>
+                        <div class="param-card-info">
+                            <div class="param-card-title">Thời gian hút xả đáy</div>
+                            <div class="param-card-value">16 <small>s</small></div>
+                            <div class="param-card-std">Tiêu chuẩn: <span>586 <small>s</small></span></div>
+                        </div>
+                    </div>
+                    <div class="param-card-side">
+                        <div class="param-card-icon icon-green"><i class="fas fa-stopwatch"></i></div>
+                        <div class="param-card-info">
+                            <div class="param-card-title">Thời gian trộn 2</div>
+                            <div class="param-card-value">4 <small>s</small></div>
+                            <div class="param-card-std">Tiêu chuẩn: <span>1174 <small>s</small></span></div>
+                        </div>
+                    </div>
+                    <div class="param-card-side">
+                        <div class="param-card-icon icon-green"><i class="fas fa-stopwatch"></i></div>
+                        <div class="param-card-info">
+                            <div class="param-card-title">Thời gian xả hàng</div>
+                            <div class="param-card-value">2 <small>s</small></div>
+                            <div class="param-card-std">Tiêu chuẩn: <span>1142 <small>s</small></span></div>
+                        </div>
+                    </div>
+                    <div class="param-card-side">
+                        <div class="param-card-icon icon-purple"><i class="fas fa-stopwatch"></i></div>
+                        <div class="param-card-info">
+                            <div class="param-card-title">Thời gian rung xả hàng</div>
+                            <div class="param-card-value">3 <small>s</small></div>
+                            <div class="param-card-std">Tiêu chuẩn: <span>93 <small>s</small></span></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- TỔNG QUAN MẺ -->
-        <div class="batch-overview-panel">
-            <div class="panel-header">
-                <h3>TỔNG QUAN MẺ</h3>
+        <!-- RIGHT PANELS COLUMN -->
+        <div class="right-panels-col d-flex flex-column" style="gap: 20px;">
+            <!-- THÔNG SỐ MÔI TRƯỜNG -->
+            <div class="env-params-panel history-panel">
+                <div class="panel-header">
+                    <h3>THÔNG SỐ MÔI TRƯỜNG</h3>
+                </div>
+                <div class="env-params-content mt-3">
+                    <div class="param-card-side mb-3" style="width: 100%;">
+                        <div class="param-card-icon icon-cyan"><i class="fas fa-thermometer-half"></i></div>
+                        <div class="param-card-info">
+                            <div class="param-card-title">Nhiệt độ môi trường</div>
+                            <div class="param-card-value"><span id="AmbientTemp">25.5</span> <small>°C</small></div>
+                            <div class="param-card-std">Tiêu chuẩn: <span>≤ 30 °C</span></div>
+                        </div>
+                    </div>
+                    <div class="param-card-side mb-3" style="width: 100%;">
+                        <div class="param-card-icon icon-blue"><i class="fas fa-tint"></i></div>
+                        <div class="param-card-info">
+                            <div class="param-card-title">Độ ẩm môi trường</div>
+                            <div class="param-card-value"><span id="Humidity">60.2</span> <small>%RH</small></div>
+                            <div class="param-card-std">Tiêu chuẩn: <span>30-70 %</span></div>
+                        </div>
+                    </div>
+                    <div class="param-card-side mb-3" style="width: 100%;">
+                        <div class="param-card-icon icon-purple"><i class="fas fa-wind"></i></div>
+                        <div class="param-card-info">
+                            <div class="param-card-title">Chỉ số bụi</div>
+                            <div class="param-card-value"><span id="PM25">18</span> <small>µg/m³</small></div>
+                            <div class="param-card-std">Tiêu chuẩn: <span>≤ 50 µg/m³</span></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="batch-info-content mt-3">
-                <div class="info-row border-bottom-subtle">
-                    <span class="info-label">Mẻ số</span>
-                    <span class="info-value text-white font-weight-bold">2</span>
+
+            <!-- TỔNG QUAN MẺ -->
+            <div class="batch-overview-panel history-panel">
+                <div class="panel-header">
+                    <h3>TỔNG QUAN MẺ</h3>
                 </div>
-                <div class="info-row border-bottom-subtle">
-                    <span class="info-label">Sản phẩm</span>
-                    <span class="info-value text-white font-weight-bold">Jelly Powder JP-01</span>
-                </div>
-                <div class="info-row border-bottom-subtle">
-                    <span class="info-label">Sản lượng kế hoạch</span>
-                    <span class="info-value text-white font-weight-bold">2.000 KG</span>
-                </div>
-                <div class="info-row border-bottom-subtle" style="margin-bottom: 10px;">
-                    <span class="info-label">Sản lượng đã SX</span>
-                    <span class="info-value text-white font-weight-bold">1.000 KG (50%)</span>
-                </div>
-                
-                <div class="info-row border-bottom-subtle">
-                    <span class="info-label">Thời gian bắt đầu mẻ</span>
-                    <span class="info-value text-white font-weight-bold">14:02:10</span>
-                </div>
-                <div class="info-row border-bottom-subtle">
-                    <span class="info-label">Thời gian dự kiến kết thúc</span>
-                    <span class="info-value text-white font-weight-bold">15:33:00</span>
-                </div>
-                <div class="info-row border-bottom-subtle">
-                    <span class="info-label">Thời gian còn lại mẻ</span>
-                    <span class="info-value text-white font-weight-bold">1h 20m 35s</span>
+                <div class="batch-info-content mt-3">
+                    <div class="info-row border-bottom-subtle">
+                        <span class="info-label">Mẻ số</span>
+                        <span class="info-value text-white font-weight-bold">2</span>
+                    </div>
+                    <div class="info-row border-bottom-subtle">
+                        <span class="info-label">Sản phẩm</span>
+                        <span class="info-value text-white font-weight-bold">Jelly Powder JP-01</span>
+                    </div>
+                    <div class="info-row border-bottom-subtle">
+                        <span class="info-label">Sản lượng kế hoạch</span>
+                        <span class="info-value text-white font-weight-bold">2.000 KG</span>
+                    </div>
+                    <div class="info-row border-bottom-subtle" style="margin-bottom: 10px;">
+                        <span class="info-label">Sản lượng đã SX</span>
+                        <span class="info-value text-white font-weight-bold">1.000 KG (50%)</span>
+                    </div>
+                    <div class="info-row border-bottom-subtle">
+                        <span class="info-label">Thời gian bắt đầu mẻ</span>
+                        <span class="info-value text-white font-weight-bold">14:02:10</span>
+                    </div>
+                    <div class="info-row border-bottom-subtle">
+                        <span class="info-label">Thời gian dự kiến kết thúc</span>
+                        <span class="info-value text-white font-weight-bold">15:33:00</span>
+                    </div>
+                    <div class="info-row border-bottom-subtle">
+                        <span class="info-label">Thời gian còn lại mẻ</span>
+                        <span class="info-value text-white font-weight-bold">1h 20m 35s</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -243,19 +378,314 @@
 
     <!-- BOTTOM GRID -->
     <div class="overview-bottom">
-        <div class="bottom-lower-grid">
-            <div class="dashboard-box main-chart-box">
-                <div class="gauge-container">
+
+        <div style="display: grid; grid-template-columns: 1fr 350px; gap: 20px; margin-bottom: 24px;">
+            <div class="history-panel main-chart-box">
+            <div class="panel-header">
+                <span class="header-accent" style="background: #3b82f6;"></span>
+                <h3>Thống kê số liệu</h3>
+            </div>
+            <div class="gauge-container">
                     <div id="container-speed" class="gauge-item"></div>
                     <div id="container-temp" class="gauge-item"></div>
                     <div id="container-pressure" class="gauge-item"></div>
                 </div>
 
-                <div class="main-line-chart mt-3">
+                <div class="main-line-chart">
                     <div id="container_line" style="height: 350px;"></div>
                 </div>
             </div>
-            
+
+            <!-- ALARM / CẢNH BÁO PANEL -->
+            <div class="history-panel alarm-panel" style="display: flex; flex-direction: column;">
+                <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: none; margin-bottom: 0;">
+                    <div style="display: flex; align-items: center;">
+                        <span class="header-accent" style="background: #f59e0b;"></span>
+                        <h3 style="margin-bottom: 0;">ALARM / CẢNH BÁO</h3>
+                    </div>
+                    <a href="#" style="color: #3b82f6; font-size: 13px; text-decoration: none;">Xem tất cả &rarr;</a>
+                </div>
+                
+                <div class="alarm-list" style="margin-top: 15px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; padding-right: 5px;">
+                    <div class="alarm-item" style="display: flex; align-items: flex-start; gap: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div class="alarm-icon warning" style="color: #f59e0b; font-size: 20px; padding-top: 2px;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="alarm-content" style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="color: #94a3b8; font-size: 13px;">10:21:05</span>
+                                    <span style="color: #fff; font-weight: 600; font-size: 14px;">Nhiệt độ cao</span>
+                                </div>
+                                <span class="alarm-badge warning" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700;">WARNING</span>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 13px;">Nhiệt độ đạt 85°C, vượt mức cho phép 80°C</div>
+                        </div>
+                    </div>
+                    <div class="alarm-item" style="display: flex; align-items: flex-start; gap: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div class="alarm-icon warning" style="color: #f59e0b; font-size: 20px; padding-top: 2px;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="alarm-content" style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="color: #94a3b8; font-size: 13px;">10:23:32</span>
+                                    <span style="color: #fff; font-weight: 600; font-size: 14px;">Nhiệt độ cao</span>
+                                </div>
+                                <span class="alarm-badge warning" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700;">WARNING</span>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 13px;">Nhiệt độ đạt 82°C, vượt mức cho phép 80°C</div>
+                        </div>
+                    </div>
+                    <div class="alarm-item" style="display: flex; align-items: flex-start; gap: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div class="alarm-icon warning" style="color: #f59e0b; font-size: 20px; padding-top: 2px;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="alarm-content" style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="color: #94a3b8; font-size: 13px;">10:25:05</span>
+                                    <span style="color: #fff; font-weight: 600; font-size: 14px;">Nhiệt độ cao</span>
+                                </div>
+                                <span class="alarm-badge warning" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700;">WARNING</span>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 13px;">Nhiệt độ đạt 84°C, vượt mức cho phép 80°C</div>
+                        </div>
+                    </div>
+                    <div class="alarm-item" style="display: flex; align-items: flex-start; gap: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div class="alarm-icon warning" style="color: #f59e0b; font-size: 20px; padding-top: 2px;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="alarm-content" style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="color: #94a3b8; font-size: 13px;">10:28:32</span>
+                                    <span style="color: #fff; font-weight: 600; font-size: 14px;">Nhiệt độ cao</span>
+                                </div>
+                                <span class="alarm-badge warning" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700;">WARNING</span>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 13px;">Nhiệt độ đạt 83°C, vượt mức cho phép 80°C</div>
+                        </div>
+                    </div>
+                    <div class="alarm-item" style="display: flex; align-items: flex-start; gap: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div class="alarm-icon warning" style="color: #f59e0b; font-size: 20px; padding-top: 2px;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="alarm-content" style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="color: #94a3b8; font-size: 13px;">10:30:32</span>
+                                    <span style="color: #fff; font-weight: 600; font-size: 14px;">Nhiệt độ cao</span>
+                                </div>
+                                <span class="alarm-badge warning" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700;">WARNING</span>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 13px;">Nhiệt độ đạt 87°C, vượt mức cho phép 80°C</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LỊCH SỬ CÁC BƯỚC -->
+        <div class="history-panel">
+            <div class="panel-header">
+                <h3>Thống kê mẻ hiện tại</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="batch-table">
+                    <thead>
+                        <tr>
+                            <th class="th-process">Công đoạn</th>
+                            <th class="th-standard">TC cài đặt</th>
+                            <th class="th-start">T.g bắt đầu</th>
+                            <th class="th-end">T.g kết thúc</th>
+                            <th class="th-duration">Thời gian</th>
+                            <th class="th-temp">NĐ bồn trên</th>
+                            <th class="th-temp">NĐ bồn giữa</th>
+                            <th class="th-temp">NĐ bồn dưới</th>
+                            <th class="th-status">Trạng thái</th>
+                            <th class="th-alerts" colspan="3">Cảnh báo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="td-process">Cấp liệu</td>
+                            <td class="td-standard">720s</td>
+                            <td class="td-start">8:15:00</td>
+                            <td class="td-end">8:29:00</td>
+                            <td class="td-duration text-warning">840s</td>
+                            <td class="td-temp">30-32°C</td>
+                            <td class="td-temp">30-32°C</td>
+                            <td class="td-temp">30-32°C</td>
+                            <td class="td-status">
+                                <span class="status-badge completed">Hoàn thành</span>
+                            </td>
+                            <td class="td-alerts text-warning alarm-warning" colspan="3">
+                                <div class="alarm-icon warning" style="color: #f59e0b; font-size: 20px; padding-top: 2px;">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                Vượt quá thời gian cài đặt 120s
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="td-process">Trộn 1</td>
+                            <td class="td-standard">780s</td>
+                            <td class="td-start">8:29:00</td>
+                            <td class="td-end">8:42:00</td>
+                            <td class="td-duration">780s</td>
+                            <td class="td-temp">30-32°C</td>
+                            <td class="td-temp">32-35°C</td>
+                            <td class="td-temp">32-35°C</td>
+                            <td class="td-status">
+                                <span class="status-badge completed">Hoàn thành</span>
+                            </td>
+                            <td class="td-alerts" colspan="3">-</td>
+                        </tr>
+
+                        <tr class="row-active">
+                            <td class="td-process">Xả đáy</td>
+                            <td class="td-standard">600s</td>
+                            <td class="td-start">8:42:00</td>
+                            <td class="td-end">8:55:00</td>
+                            <td class="td-duration">-</td>
+                            <td class="td-temp">30-32°C</td>
+                            <td class="td-temp">32-35°C</td>
+                            <td class="td-temp">32-36°C</td>
+                            <td class="td-status">
+                                <span class="status-badge in-progress">Đang thực hiện</span>
+                            </td>
+                            <td class="td-alerts" colspan="3">-</td>
+                        </tr>
+
+                        <tr class="row-active">
+                            <td class="td-process">Rung xả đáy</td>
+                            <td class="td-standard">600s</td>
+                            <td class="td-start">8:42:00</td>
+                            <td class="td-end">9:05:00</td>
+                            <td class="td-duration">-</td>
+                            <td class="td-temp">30-32°C</td>
+                            <td class="td-temp">32-35°C</td>
+                            <td class="td-temp">32-36°C</td>
+                            <td class="td-status">
+                                <span class="status-badge in-progress">Đang thực hiện</span>
+                            </td>
+                            <td class="td-alerts" colspan="3">-</td>
+                        </tr>
+
+                        <tr class="row-active">
+                            <td class="td-process">Hút xả đáy</td>
+                            <td class="td-standard">720s</td>
+                            <td class="td-start">8:42:00</td>
+                            <td class="td-end">9:17:00</td>
+                            <td class="td-duration">-</td>
+                            <td class="td-temp">30-32°C</td>
+                            <td class="td-temp">32-35°C</td>
+                            <td class="td-temp">32-36°C</td>
+                            <td class="td-status">
+                                <span class="status-badge in-progress">Đang thực hiện</span>
+                            </td>
+                            <td class="td-alerts" colspan="3">-</td>
+                        </tr>
+
+                        <tr>
+                            <td class="td-process">Trộn 2</td>
+                            <td class="td-standard">1200s</td>
+                            <td class="td-start">-</td>
+                            <td class="td-end">-</td>
+                            <td class="td-duration">-</td>
+                            <td class="td-temp text-cyan">29-32°C</td>
+                            <td class="td-temp text-cyan">32-35°C</td>
+                            <td class="td-temp text-cyan">32-35°C</td>
+                            <td class="td-status">
+                                <span class="status-badge pending">Chưa thực hiện</span>
+                            </td>
+                            <td class="td-alerts" colspan="3">-</td>
+                        </tr>
+
+                        <tr>
+                            <td class="td-process">Xả hàng</td>
+                            <td class="td-standard">1500s</td>
+                            <td class="td-start">-</td>
+                            <td class="td-end">-</td>
+                            <td class="td-duration">-</td>
+                            <td class="td-temp">29-32°C</td>
+                            <td class="td-temp">32-35°C</td>
+                            <td class="td-temp">32-35°C</td>
+                            <td class="td-status">
+                                <span class="status-badge pending">Chưa thực hiện</span>
+                            </td>
+                            <td class="td-alerts" colspan="3">-</td>
+                        </tr>
+
+                        <tr>
+                            <td class="td-process">Rung xả hàng</td>
+                            <td class="td-standard">180s</td>
+                            <td class="td-start">-</td>
+                            <td class="td-end">-</td>
+                            <td class="td-duration">-</td>
+                            <td class="td-temp">28-32°C</td>
+                            <td class="td-temp">32-35°C</td>
+                            <td class="td-temp">32-36°C</td>
+                            <td class="td-status">
+                                <span class="status-badge pending">Chưa thực hiện</span>
+                            </td>
+                            <td class="td-alerts" colspan="3">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- NEW BOTTOM ROW: DAILY BATCHES & BOM -->
+        <div class="bottom-tables-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+            <!-- LEFT: TỔNG SỐ MẺ SẢN XUẤT TRONG NGÀY -->
+            <div class="bom-panel">
+                <div class="panel-header">
+                    <span class="header-accent" style="background: #00e5ff;"></span>
+                    <h3 style="text-transform: uppercase;">Tổng số mẻ sản xuất trong ngày</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="batch-table daily-batches-table" style="width: 100%; text-align: center;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; padding-left: 20px;">Số mẻ</th>
+                                <th style="text-align: center;">Khối lượng</th>
+                                <th style="text-align: center;">Thời gian sản xuất</th>
+                                <th style="text-align: center;">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="text-align: left; padding-left: 20px; font-weight: bold; color: #fff;">Mẻ 1</td>
+                                <td style="font-weight: bold; color: #fff;">500kg</td>
+                                <td style="color: #94a3b8;">8:00 - 9:30</td>
+                                <td><span class="status-badge completed" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">Hoàn thành</span></td>
+                            </tr>
+                            <tr class="row-active" style="background: rgba(0, 229, 255, 0.05);">
+                                <td style="text-align: left; padding-left: 20px; font-weight: bold;" class="text-cyan">Mẻ 2</td>
+                                <td style="font-weight: bold;" class="text-cyan">500kg</td>
+                                <td class="text-cyan">9:35 - 11:05</td>
+                                <td><span class="status-badge in-progress" style="border: 1px solid #00e5ff; background: transparent; color: #00e5ff;">Đang thực hiện</span></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left; padding-left: 20px; font-weight: bold; color: #fff;">Mẻ 3</td>
+                                <td style="font-weight: bold; color: #fff;">500kg</td>
+                                <td style="color: #64748b;">-</td>
+                                <td><span class="status-badge pending" style="border: 1px solid #475569; background: transparent; color: #94a3b8;">Chưa thực hiện</span></td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: left; padding-left: 20px; font-weight: bold; color: #fff;">Mẻ 4</td>
+                                <td style="font-weight: bold; color: #fff;">500kg</td>
+                                <td style="color: #64748b;">-</td>
+                                <td><span class="status-badge pending" style="border: 1px solid #475569; background: transparent; color: #94a3b8;">Chưa thực hiện</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- RIGHT: BOM SẢN XUẤT -->
             <div class="bom-panel">
                 <div class="panel-header">
                     <span class="header-accent"></span>
@@ -307,153 +737,6 @@
                             <td class="td-ratio">40</td>
                             <td class="td-unit">kg</td>
                             <td class="td-lot">BP00012-2</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <!-- LỊCH SỬ CÁC BƯỚC -->
-        <div class="history-panel">
-            <div class="panel-header">
-                <h3>Thống kê mẻ hiện tại</h3>
-            </div>
-            <div class="table-responsive">
-                <table class="batch-table">
-                    <thead>
-                        <tr>
-                            <th class="th-process">Công đoạn</th>
-                            <th class="th-standard">TC cài đặt</th>
-                            <th class="th-start">T.g bắt đầu</th>
-                            <th class="th-end">T.g kết thúc</th>
-                            <th class="th-duration">Thời gian</th>
-                            <th class="th-temp">NĐ bồn trên</th>
-                            <th class="th-temp">NĐ bồn giữa</th>
-                            <th class="th-temp">NĐ bồn dưới</th>
-                            <th class="th-status">Trạng thái</th>
-                            <th class="th-alerts" colspan="3">Cảnh báo</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="td-process">Cấp liệu</td>
-                            <td class="td-standard">720s</td>
-                            <td class="td-start">8:15:00</td>
-                            <td class="td-end">8:29:00</td>
-                            <td class="td-duration text-warning">840s</td>
-                            <td class="td-temp">30-32°C</td>
-                            <td class="td-temp">30-32°C</td>
-                            <td class="td-temp">30-32°C</td>
-                            <td class="td-status">
-                                <span class="status-badge completed">Hoàn thành</span>
-                            </td>
-                            <td class="td-alerts text-warning" colspan="3">
-                                Vượt quá thời gian cài đặt 120s
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td class="td-process">Trộn 1</td>
-                            <td class="td-standard">780s</td>
-                            <td class="td-start">8:29:00</td>
-                            <td class="td-end">8:42:00</td>
-                            <td class="td-duration">780s</td>
-                            <td class="td-temp">30-32°C</td>
-                            <td class="td-temp">32-35°C</td>
-                            <td class="td-temp">32-35°C</td>
-                            <td class="td-status">
-                                <span class="status-badge completed">Hoàn thành</span>
-                            </td>
-                            <td class="td-alerts" colspan="3">-</td>
-                        </tr>
-
-                        <tr>
-                            <td class="td-process">Xả đáy</td>
-                            <td class="td-standard">600s</td>
-                            <td class="td-start">8:42:00</td>
-                            <td class="td-end">8:55:00</td>
-                            <td class="td-duration">780s</td>
-                            <td class="td-temp">30-32°C</td>
-                            <td class="td-temp">32-35°C</td>
-                            <td class="td-temp">32-36°C</td>
-                            <td class="td-status">
-                                <span class="status-badge completed">Hoàn thành</span>
-                            </td>
-                            <td class="td-alerts" colspan="3">-</td>
-                        </tr>
-
-                        <tr>
-                            <td class="td-process">Rung xả đáy</td>
-                            <td class="td-standard">600s</td>
-                            <td class="td-start">8:55:00</td>
-                            <td class="td-end">9:05:00</td>
-                            <td class="td-duration">600s</td>
-                            <td class="td-temp">30-32°C</td>
-                            <td class="td-temp">32-35°C</td>
-                            <td class="td-temp">32-36°C</td>
-                            <td class="td-status">
-                                <span class="status-badge completed">Hoàn thành</span>
-                            </td>
-                            <td class="td-alerts" colspan="3">-</td>
-                        </tr>
-
-                        <tr>
-                            <td class="td-process">Hút xả đáy</td>
-                            <td class="td-standard">720s</td>
-                            <td class="td-start">9:05:00</td>
-                            <td class="td-end">9:17:00</td>
-                            <td class="td-duration">720s</td>
-                            <td class="td-temp">30-32°C</td>
-                            <td class="td-temp">32-35°C</td>
-                            <td class="td-temp">32-36°C</td>
-                            <td class="td-status">
-                                <span class="status-badge completed">Hoàn thành</span>
-                            </td>
-                            <td class="td-alerts" colspan="3">-</td>
-                        </tr>
-
-                        <tr class="row-active">
-                            <td class="td-process">Trộn 2</td>
-                            <td class="td-standard">1200s</td>
-                            <td class="td-start">9:17:00</td>
-                            <td class="td-end">-</td>
-                            <td class="td-duration">-</td>
-                            <td class="td-temp text-cyan">29-32°C</td>
-                            <td class="td-temp text-cyan">32-35°C</td>
-                            <td class="td-temp text-cyan">32-35°C</td>
-                            <td class="td-status">
-                                <span class="status-badge in-progress">Đang thực hiện</span>
-                            </td>
-                            <td class="td-alerts" colspan="3">-</td>
-                        </tr>
-
-                        <tr>
-                            <td class="td-process">Xả hàng</td>
-                            <td class="td-standard">1500s</td>
-                            <td class="td-start">-</td>
-                            <td class="td-end">-</td>
-                            <td class="td-duration">-</td>
-                            <td class="td-temp">29-32°C</td>
-                            <td class="td-temp">32-35°C</td>
-                            <td class="td-temp">32-35°C</td>
-                            <td class="td-status">
-                                <span class="status-badge pending">Chờ xử lý</span>
-                            </td>
-                            <td class="td-alerts" colspan="3">-</td>
-                        </tr>
-
-                        <tr>
-                            <td class="td-process">Rung xả hàng</td>
-                            <td class="td-standard">180s</td>
-                            <td class="td-start">-</td>
-                            <td class="td-end">-</td>
-                            <td class="td-duration">-</td>
-                            <td class="td-temp">28-32°C</td>
-                            <td class="td-temp">32-35°C</td>
-                            <td class="td-temp">32-36°C</td>
-                            <td class="td-status">
-                                <span class="status-badge pending">Chờ xử lý</span>
-                            </td>
-                            <td class="td-alerts" colspan="3">-</td>
                         </tr>
                     </tbody>
                 </table>

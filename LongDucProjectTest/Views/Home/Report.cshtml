@@ -1,0 +1,297 @@
+﻿@{
+    ViewBag.Title = "SOLAR SCADA SYSTEM - REPORT";
+    ViewBag.ButtonHome = "";
+    ViewBag.ButtonOverview = "";
+    ViewBag.ButtonAlarm = "";
+    ViewBag.ButtonEvent = "";
+    ViewBag.ButtonReport = "active";
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/AdminLTE-master/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/Css/Overview.css" asp-append-version="true" />
+    <style>
+        .filter-bar {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .filter-label {
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .filter-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            color: #00e5ff;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .filter-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 1px #3b82f6;
+        }
+        .btn-custom {
+            padding: 6px 16px;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-submit {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+        .btn-submit:hover {
+            background: rgba(59, 130, 246, 0.3);
+        }
+        .btn-export {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+        .btn-export:hover {
+            background: rgba(16, 185, 129, 0.4);
+        }
+        .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, 
+        .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing, 
+        .dataTables_wrapper .dataTables_paginate, .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+            color: #a9b7cb !important;
+        }
+        .dataTables_wrapper .dataTables_length select, .dataTables_wrapper .dataTables_filter input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            color: #00e5ff;
+            border-radius: 4px;
+        }
+        table.dataTable tbody tr {
+            background-color: transparent !important;
+        }
+        table.dataTable tbody tr td {
+            color: #e2e8f0 !important;
+        }
+        table.dataTable tbody tr.odd {
+            background-color: rgba(255, 255, 255, 0.02) !important;
+        }
+        table.dataTable tbody tr:hover {
+            background-color: rgba(59, 130, 246, 0.1) !important;
+        }
+        .batch-table th {
+            font-size: 13px !important;
+        }
+    </style>
+}
+
+<div class="overview-dashboard">
+    <!-- REPORT PANEL -->
+    <div class="history-panel" style="width: 100%;">
+        <div class="panel-header" style="margin-bottom: 15px;">
+            <h3>Báo Cáo Hoạt Động</h3>
+        </div>
+        
+        <!-- FILTER BAR -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <span class="filter-label">Từ ngày</span>
+                <input type="text" id="starttime" name="starttime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Đến ngày</span>
+                <input type="text" id="endtime" name="endtime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
+            </div>
+            <div class="filter-group" style="margin-left: 10px;">
+                <span class="filter-label">Chọn mẻ</span>
+                <select id="batchId" class="filter-input" style="min-width: 120px;">
+                    <option value="0">-- Tất cả --</option>
+                    <option value="1">Mẻ 1</option>
+                    <option value="2">Mẻ 2</option>
+                    <option value="3">Mẻ 3</option>
+                </select>
+            </div>
+            <button onclick="reloadTable()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>
+            
+            <div style="margin-left: auto; display: flex; gap: 10px;">
+                <button onclick="ExportExcel()" class="btn-custom btn-export"><i class="fas fa-file-excel"></i> Export Excel</button>
+                <button onclick="ExportCSV()" class="btn-custom btn-export"><i class="fas fa-file-csv"></i> Export CSV</button>
+            </div>
+        </div>
+        
+        <div class="table-responsive" style="margin-top: 15px;">
+            <table id="reportTable" class="batch-table" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Ngày</th>
+                        <th>Giờ</th>
+                        <th>Quy trình</th>
+                        <th>Công đoạn</th>
+                        <th>T/g cấp liệu</th>
+                        <th>T/g trộn 1</th>
+                        <th>T/g xả đáy</th>
+                        <th>T/g rung xả đáy</th>
+                        <th>T/g hút xả đáy</th>
+                        <th>T/g trộn 2</th>
+                        <th>T/g xả hàng</th>
+                        <th>T/g rung xả hàng</th>
+                        <th>Tổng t/g trộn</th>
+                        <th>Áp suất</th>
+                        <th>Nhiệt độ MT</th>
+                        <th>Độ ẩm MT</th>
+                        <th>Nhiệt nắp bồn</th>
+                        <th>Nhiệt giữa bồn</th>
+                        <th>Nhiệt đáy bồn</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/AdminLTE-master/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/AdminLTE-master/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+    <script>
+        var reportDt;
+
+        $(document).ready(function () {
+            // Init daterangepicker
+            $('.datepicker').daterangepicker({
+                singleDatePicker: true,
+                autoApply: true,
+                locale: {
+                    format: 'YYYY/MM/DD',
+                    daysOfWeek: ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
+                    monthNames: ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"],
+                }
+            });
+
+            // Init DataTable with mock data
+            initDataTable('#reportTable');
+        });
+
+        function initDataTable(selector) {
+            // Mock Data for demonstration based on the provided image
+            var mockData = [];
+            
+            // Generate multiple rows of mock data to demonstrate scrolling
+            for(let i = 0; i < 20; i++) {
+                let seconds = 13 + i * 30;
+                let minute = 24 + Math.floor(seconds / 60);
+                seconds = seconds % 60;
+                let timeStr = "10:" + minute.toString().padStart(2, '0') + ":" + seconds.toString().padStart(2, '0');
+                let tgCapLieu = 16 + i * 30;
+                
+                mockData.push({
+                    "Date": "2026/05/15",
+                    "Time": timeStr,
+                    "QuyTrinh": 1,
+                    "CongDoan": 1,
+                    "TgCapLieu": tgCapLieu,
+                    "TgTron1": 0,
+                    "TgXaDay": 0,
+                    "TgRungXaDay": 0,
+                    "TgHutXaDay": 0,
+                    "TgTron2": 0,
+                    "TgXaHang": 0,
+                    "TgRungXaHang": 0,
+                    "TongTgTron": tgCapLieu,
+                    "ApSuat": (4.49 + Math.random() * 2).toFixed(2),
+                    "NhietDoMT": 31.5,
+                    "DoAmMT": (64.4 - i * 0.1).toFixed(1),
+                    "NhietNapBon": (31.9 + Math.random() * 0.2).toFixed(1),
+                    "NhietGiuaBon": (32.1 - Math.random() * 0.5).toFixed(1),
+                    "NhietDayBon": (31.7 - Math.random() * 0.5).toFixed(1)
+                });
+            }
+
+            reportDt = $(selector).DataTable({
+                "data": mockData,
+                "columns": [
+                    { "data": "Date" },
+                    { "data": "Time" },
+                    { "data": "QuyTrinh" },
+                    { "data": "CongDoan" },
+                    { "data": "TgCapLieu" },
+                    { "data": "TgTron1" },
+                    { "data": "TgXaDay" },
+                    { "data": "TgRungXaDay" },
+                    { "data": "TgHutXaDay" },
+                    { "data": "TgTron2" },
+                    { "data": "TgXaHang" },
+                    { "data": "TgRungXaHang" },
+                    { "data": "TongTgTron" },
+                    { "data": "ApSuat" },
+                    { "data": "NhietDoMT" },
+                    { "data": "DoAmMT" },
+                    { "data": "NhietNapBon" },
+                    { "data": "NhietGiuaBon" },
+                    { "data": "NhietDayBon" }
+                ],
+                "ordering": false,
+                "scrollX": true,
+                "pageLength": 10,
+                "lengthMenu": [10, 25, 50, 100],
+                "language": {
+                    "search": "Tìm kiếm:",
+                    "lengthMenu": "Hiển thị _MENU_ bản ghi",
+                    "info": "Hiển thị _START_ đến _END_ của _TOTAL_ bản ghi",
+                    "infoEmpty": "Hiển thị 0 đến 0 của 0 bản ghi",
+                    "infoFiltered": "(lọc từ _MAX_ bản ghi)",
+                    "paginate": {
+                        "first": "Đầu",
+                        "last": "Cuối",
+                        "next": "Sau",
+                        "previous": "Trước"
+                    }
+                }
+            });
+        }
+
+        function reloadTable() {
+            // Because it's mock data, we just redraw
+            reportDt.clear().rows.add(reportDt.data()).draw();
+        }
+
+        function ExportExcel() {
+            var starttime = $('#starttime').val() + " 00:00:00";
+            var endtime = $('#endtime').val() + " 23:59:59";
+            var batchId = $('#batchId').val();
+            var searchValue = reportDt.search();
+            
+            var url = "/Home/ExportReportExcel?starttime=" + starttime + "&endtime=" + endtime + "&batchId=" + batchId + "&searchValue=" + searchValue;
+            window.location.href = url;
+        }
+
+        function ExportCSV() {
+            var starttime = $('#starttime').val() + " 00:00:00";
+            var endtime = $('#endtime').val() + " 23:59:59";
+            var batchId = $('#batchId').val();
+            var searchValue = reportDt.search();
+            
+            var url = "/Home/ExportReportCSV?starttime=" + starttime + "&endtime=" + endtime + "&batchId=" + batchId + "&searchValue=" + searchValue;
+            window.location.href = url;
+        }
+    </script>
+}

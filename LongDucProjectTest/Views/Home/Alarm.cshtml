@@ -1,123 +1,289 @@
-﻿
-@{
+﻿@{
     ViewBag.Title = "SOLAR SCADA SYSTEM - ALARM";
-    ViewBag.ButtonHome = "";
-    ViewBag.ButtonOverview = "";
-    ViewBag.ButtonOverviewSignage = "";
     ViewBag.ButtonAlarm = "active";
-    ViewBag.ButtonEvent = "";
-    ViewBag.ButtonReport = "";
-    ViewBag.ButtonProject = "";
-    ViewBag.MenuOpenProject = "";
-    ViewBag.DisplayProject = "none";
-
-    ViewBag.ButtonProject1 = ""; // active
-    ViewBag.MenuOpenProject1 = ""; // menu-open
-    ViewBag.DisplayProject1 = "none"; // block/none
-    ViewBag.ButtonProject1Infor = "";
-    ViewBag.ButtonProject1Event = "";
-    ViewBag.ButtonProject1Alarm = "";
-    ViewBag.ButtonProject1Weather = "";
-    ViewBag.ButtonSignage1 = "";
-
-    ViewBag.ButtonProject2 = "";
-    ViewBag.MenuOpenProject2 = "";
-    ViewBag.DisplayProject2 = "none"; // block/none
-    ViewBag.ButtonProject2Infor = "";
-    ViewBag.ButtonProject2Event = "";
-    ViewBag.ButtonProject2Alarm = "";
-    ViewBag.ButtonProject2Weather = "";
-    ViewBag.ButtonSignage2 = "";
-
-    ViewBag.ButtonProject3 = "";
-    ViewBag.MenuOpenProject3 = "";
-    ViewBag.DisplayProject3 = "none"; // block/none
-    ViewBag.ButtonProject3Infor = "";
-    ViewBag.ButtonProject3Event = "";
-    ViewBag.ButtonProject3Alarm = "";
-    ViewBag.ButtonProject3Weather = "";
-    ViewBag.ButtonSignage3 = "";
-
-    ViewBag.ButtonProject4 = "";
-    ViewBag.MenuOpenProject4 = "";
-    ViewBag.DisplayProject4 = "none"; // block/none
-    ViewBag.ButtonProject4Infor = "";
-    ViewBag.ButtonProject4Event = "";
-    ViewBag.ButtonProject4Alarm = "";
-    ViewBag.ButtonProject4Weather = "";
-    ViewBag.ButtonSignage4 = "";
-
-    ViewBag.ButtonProject5 = "";
-    ViewBag.MenuOpenProject5 = "";
-    ViewBag.DisplayProject5 = "none"; // block/none
-    ViewBag.ButtonProject5Infor = "";
-    ViewBag.ButtonProject5Event = "";
-    ViewBag.ButtonProject5Alarm = "";
-    ViewBag.ButtonProject5Weather = "";
-    ViewBag.ButtonSignage5 = "";
-
-    ViewBag.ButtonProject6 = "";
-    ViewBag.MenuOpenProject6 = "";
-    ViewBag.DisplayProject6 = "none"; // block/none
-    ViewBag.ButtonProject6Infor = "";
-    ViewBag.ButtonProject6Event = "";
-    ViewBag.ButtonProject6Alarm = "";
-    ViewBag.ButtonProject6Weather = "";
-    ViewBag.ButtonSignage6 = "";
-
-    ViewBag.ButtonProject7 = "";
-    ViewBag.MenuOpenProject7 = "";
-    ViewBag.DisplayProject7 = "none"; // block/none
-    ViewBag.ButtonProject7Infor = "";
-    ViewBag.ButtonProject7Event = "";
-    ViewBag.ButtonProject7Alarm = "";
-    ViewBag.ButtonProject7Weather = "";
-    ViewBag.ButtonSignage7 = "";
-
     Layout = "~/Views/Shared/_LayoutMain.cshtml";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/AdminLTE-master/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+    <link href="~/Css/Overview.css" rel="stylesheet" />
+    <style>
+        .filter-bar {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .filter-bar label {
+            color: #a9b7cb;
+            margin-bottom: 0;
+            font-size: 14px;
+        }
+        .filter-bar input[type="date"], .filter-bar select {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            color: #00e5ff;
+            border-radius: 4px;
+            padding: 6px 10px;
+            outline: none;
+        }
+        .filter-label {
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .filter-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            color: #00e5ff;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+        .filter-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 1px #3b82f6;
+        }
+        .btn-custom {
+            background: rgba(59, 130, 246, 0.2);
+            color: #00e5ff;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            padding: 6px 15px;
+            border-radius: 4px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .btn-custom:hover {
+            background: rgba(59, 130, 246, 0.4);
+        }
+        .btn-export {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+        .btn-export:hover {
+            background: rgba(16, 185, 129, 0.4);
+        }
+        .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, 
+        .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing, 
+        .dataTables_wrapper .dataTables_paginate, .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+            color: #a9b7cb !important;
+        }
+        .dataTables_wrapper .dataTables_length select, .dataTables_wrapper .dataTables_filter input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            color: #00e5ff;
+            border-radius: 4px;
+        }
+        table.dataTable tbody tr {
+            background-color: transparent !important;
+        }
+        table.dataTable tbody tr td {
+            color: #e2e8f0;
+        }
+        table.dataTable tbody tr.odd {
+            background-color: rgba(255, 255, 255, 0.02) !important;
+        }
+        table.dataTable tbody tr:hover {
+            background-color: rgba(59, 130, 246, 0.1) !important;
+        }
+        .nav-tabs {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 15px;
+        }
+        .nav-tabs .nav-link {
+            color: #a9b7cb;
+            border: none;
+            border-bottom: 2px solid transparent;
+            font-weight: 600;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: transparent;
+            color: #00e5ff;
+            border-bottom: 2px solid #00e5ff;
+        }
+        .nav-tabs .nav-link:hover {
+            border-color: transparent;
+            color: #ffffff;
+        }
+        .row-warning td {
+            color: #f59e0b !important;
+        }
+        .row-resolved td {
+            color: #22c55e !important;
+        }
+        .text-left {
+            text-align: left !important;
+        }
+    </style>
+}
 
-<body onload="Load()">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-lg-12 col-12">
-                <div>
-
-                    <text>From  </text>
-                    <input type="date" name="starttime" value="2022-05-22" style="margin-left:0.5vw">
-
-                    <text>  To </text>
-                    <input type="date" name="endtime" value="2022-08-31" style="margin-left:0.5vw">
-                    <button onclick="Submit()" value="Sep" class="buttonChart">Submit</button>
-                    <button onclick="ExportExcelAlarm()" id="Excel" class="buttonChart" style="width: 100px"> Report Excel</button>
-                    <button onclick="ExportCSVAlarm()" class="buttonChart" style="width: 100px"> Report CSV</button>
-                    <button onclick="Help()" value="Sep" class="buttonChart" style="width: 200px">Inverter Operation Manual</button>
-                </div>
-
-                <div class="table-responsive" style="font-size:1vw">
-                    <table id="alarmTable" class="table" border="1">
-                        <thead>
-                            <tr style="background-color: lightblue; border: 1px">
-                                <th class="text-center" style="width: 6%; text-align: center; vertical-align: middle">No</th>
-                                <th class="text-center" style="width: 12%; text-align: center; vertical-align: middle">OccurrenceTime</th>
-                                <th class="text-center" style="width: 12%; text-align: center; vertical-align: middle">RestoreTime</th>
-                                <th class="text-center" style="width: 15%; text-align: center; vertical-align: middle">Plant Name</th>
-                                <th class="text-center" style="width: 15%; text-align: center; vertical-align: middle">Device</th>
-                                <th class="text-center" style="width: 10%; text-align: center; vertical-align: middle">Fault Code</th>
-                                <th class="text-center" style="width: 20%; text-align: center; vertical-align: middle">Description</th>
-                                <th class="text-center" style="width: 10%; text-align: center; vertical-align: middle">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
+<div class="overview-dashboard">
+    <div class="left-panel" style="width: 100%;">
+        <div class="panel-header" style="margin-bottom: 15px;">
+            <h3>Bảng cảnh báo</h3>
+        </div>
+        
+        <div class="filter-bar">
+            <div class="filter-group">
+                <span class="filter-label">Từ ngày</span>
+                <input type="text" id="starttime" name="starttime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Đến ngày</span>
+                <input type="text" id="endtime" name="endtime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
+            </div>
+            <button onclick="reloadTables()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>
+            
+            <div style="margin-left: auto; display: flex; gap: 10px;">
+                <button onclick="ExportExcel()" class="btn-custom btn-export"><i class="fas fa-file-excel"></i> Export Excel</button>
+                <button onclick="ExportCSV()" class="btn-custom btn-export"><i class="fas fa-file-csv"></i> Export CSV</button>
             </div>
         </div>
-    </div>
-</body>
 
-<script src="~/JavaScript/Common/alarm.js"></script>
-@*<script src="~/JavaScript/Common/Count.js"></script>*@
-<link href="~/Css/Alarm.css" rel="stylesheet" />
+        <div class="table-responsive">
+            <table id="realtimeTable" class="batch-table" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Thời gian xảy ra</th>
+                        <th>Thời gian phục hồi</th>
+                        <th>Mô tả</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/AdminLTE-master/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/AdminLTE-master/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+    <script>
+        var realtimeDt;
+        var reportDt;
+
+        $(document).ready(function() {
+            // Init daterangepicker
+            $('.datepicker').daterangepicker({
+                singleDatePicker: true,
+                autoApply: true,
+                locale: {
+                    format: 'YYYY/MM/DD',
+                    daysOfWeek: ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
+                    monthNames: ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"],
+                }
+            });
+
+            // Init DataTables
+            realtimeDt = initDataTable('#realtimeTable', '/Alarm/GetAlarmsData');
+        });
+
+        function initDataTable(selector, url) {
+            // Mock Data for demonstration
+            var mockData = [];
+            var descriptions = [
+                "Cảnh báo nhiệt độ bồn trên",
+                "Cảnh báo nhiệt độ bồn giữa",
+                "Cảnh báo nhiệt độ bồn dưới",
+                "Cảnh báo áp suất"
+            ];
+
+            for(let i=1; i<=20; i++) {
+                let isWarning = (i % 3 !== 0);
+                let desc = descriptions[i % descriptions.length];
+                
+                let restoreTime = "-";
+                if (!isWarning) {
+                    let randomMin = Math.floor(Math.random() * 59);
+                    let randomSec = Math.floor(Math.random() * 59);
+                    restoreTime = `2026/05/15 10:${randomMin.toString().padStart(2, '0')}:${randomSec.toString().padStart(2, '0')}`;
+                }
+
+                mockData.push({
+                    "OccurrenceTime": `2026/05/15 10:15:${(10 + i).toString().padStart(2, '0')}`,
+                    "RestoreTime": restoreTime,
+                    "Description": desc + " cao bất thường",
+                    "Status": isWarning ? "Cảnh báo" : "Đã khôi phục"
+                });
+            }
+
+            return $(selector).DataTable({
+                "data": mockData,
+                "createdRow": function(row, data, dataIndex) {
+                    if (data.Status === 'Cảnh báo') {
+                        $(row).addClass('row-warning');
+                    } else if (data.Status === 'Đã khôi phục') {
+                        $(row).addClass('row-resolved');
+                    }
+                },
+                "columns": [
+                    { "data": null, "render": function (data, type, row, meta) {
+                        return meta.row + 1;
+                    }},
+                    { "data": "OccurrenceTime" },
+                    { "data": "RestoreTime" },
+                    { "data": "Description", "className": "text-left" },
+                    { "data": "Status" },
+                ],
+                "ordering": false, // Disabled sorting to match Event and Report pages
+                "pageLength": 10,
+                "lengthMenu": [10, 25, 50, 100],
+                "language": {
+                    "search": "Tìm kiếm:",
+                    "lengthMenu": "Hiển thị _MENU_ bản ghi",
+                    "info": "Hiển thị _START_ đến _END_ của _TOTAL_ bản ghi",
+                    "infoEmpty": "Hiển thị 0 đến 0 của 0 bản ghi",
+                    "infoFiltered": "(lọc từ _MAX_ bản ghi)",
+                    "paginate": {
+                        "first": "Đầu",
+                        "last": "Cuối",
+                        "next": "Sau",
+                        "previous": "Trước"
+                    }
+                }
+            });
+        }
+
+        function reloadTables() {
+            // Because it's mock data, we just redraw
+            realtimeDt.clear().rows.add(realtimeDt.data()).draw();
+        }
+
+        function ExportExcel() {
+            var starttime = $('#starttime').val() + " 00:00:00";
+            var endtime = $('#endtime').val() + " 23:59:59";
+            var batchId = $('#batchId').val();
+            var searchValue = realtimeDt.search();
+
+            var url = "/Alarm/ExportAlarmsExcel?";
+            var params = new URLSearchParams({
+                starttime: starttime,
+                endtime: endtime,
+                batchId: batchId,
+                searchValue: searchValue
+            });
+            window.location = url + params;
+        }
+
+        function ExportCSV() {
+            var starttime = $('#starttime').val() + " 00:00:00";
+            var endtime = $('#endtime').val() + " 23:59:59";
+            var batchId = $('#batchId').val();
+            var searchValue = realtimeDt.search();
+
+            var url = "/Alarm/ExportAlarmsCsv?";
+            var params = new URLSearchParams({
+                starttime: starttime,
+                endtime: endtime,
+                batchId: batchId,
+                searchValue: searchValue
+            });
+            window.location = url + params;
+        }
+    </script>
+}

@@ -1,4 +1,4 @@
-﻿using Hino.Getdata.Common;
+using Hino.Getdata.Common;
 using LongDucProjectTest.Controllers;
 using System;
 using System.Collections.Generic;
@@ -132,6 +132,80 @@ namespace LongDucProject.Controllers
             }
             return View();
         }
+
+        public ActionResult Report()
+        {
+            if (Session["Role"] is null) return RedirectToAction("Login", "Home");
+
+            return View();
+        }
+
+        [HttpPost]
+        public JsonResult GetReportData(string starttime, string endtime, string batchId, int draw, int start, int length)
+        {
+            // TODO: Replace with actual query to `alarmreport` or respective report table
+            var Alarm = new Hino.Getdata.Common.AlarmCommon();
+            var resultList = Alarm.GetAlarmLog(starttime, endtime);
+            var list = resultList != null ? resultList.ToList() : new List<Hino.Parameter.Common.AlarmParameter>();
+
+            var searchValue = Request.Form["search[value]"];
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                list = list.Where(x => 
+                    (x.Description != null && x.Description.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) || 
+                    (x.TagNo != null && x.TagNo.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                ).ToList();
+            }
+
+            int recordsTotal = list.Count;
+            var data = list.Skip(start).Take(length).ToList();
+
+            return Json(new {
+                draw = draw,
+                recordsTotal = recordsTotal,
+                recordsFiltered = recordsTotal,
+                data = data
+            });
+        }
+
+        [HttpGet]
+        public FileResult ExportReportExcel(string starttime, string endtime, string batchId, string searchValue)
+        {
+            var Alarm = new Hino.Getdata.Common.AlarmCommon();
+            var resultList = Alarm.GetAlarmLog(starttime, endtime);
+            var list = resultList != null ? resultList.ToList() : new List<Hino.Parameter.Common.AlarmParameter>();
+
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                list = list.Where(x => 
+                    (x.Description != null && x.Description.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) || 
+                    (x.TagNo != null && x.TagNo.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                ).ToList();
+            }
+
+            byte[] fileBytes = LongDucProjectTest.Service.ExportUtility.ExportToExcel(list, "Report");
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+        }
+
+        [HttpGet]
+        public FileResult ExportReportCsv(string starttime, string endtime, string batchId, string searchValue)
+        {
+            var Alarm = new Hino.Getdata.Common.AlarmCommon();
+            var resultList = Alarm.GetAlarmLog(starttime, endtime);
+            var list = resultList != null ? resultList.ToList() : new List<Hino.Parameter.Common.AlarmParameter>();
+
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                list = list.Where(x => 
+                    (x.Description != null && x.Description.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) || 
+                    (x.TagNo != null && x.TagNo.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                ).ToList();
+            }
+
+            byte[] fileBytes = LongDucProjectTest.Service.ExportUtility.ExportToCsv(list);
+            return File(fileBytes, "text/csv", $"Report_{DateTime.Now:yyyyMMddHHmmss}.csv");
+        }
+
         public ActionResult Overview()
         {
             ViewBag.ButtonHome = "active";
