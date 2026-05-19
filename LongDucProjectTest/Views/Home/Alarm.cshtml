@@ -135,6 +135,15 @@
                 <span class="filter-label">Đến ngày</span>
                 <input type="text" id="endtime" name="endtime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
             </div>
+            <div class="filter-group" style="margin-left: 10px;">
+                <span class="filter-label">Chọn batch</span>
+                <select id="batchId" class="filter-input" style="min-width: 120px;">
+                    <option value="0">-- Tất cả --</option>
+                    <option value="1">TX01-20260421-01</option>
+                    <option value="2">TX01-20260421-02</option>
+                    <option value="3">TX01-20260421-03</option>
+                </select>
+            </div>
             <button onclick="reloadTables()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>
             
             <div style="margin-left: auto; display: flex; gap: 10px;">
@@ -148,6 +157,7 @@
                 <thead>
                     <tr>
                         <th>STT</th>
+                        <th>Batch</th>
                         <th>Thời gian xảy ra</th>
                         <th>Thời gian phục hồi</th>
                         <th>Mô tả</th>
@@ -192,10 +202,12 @@
                 "Cảnh báo nhiệt độ bồn dưới",
                 "Cảnh báo áp suất"
             ];
+            var batchIds = ["TX01-20260421-01", "TX01-20260421-02"];
 
             for(let i=1; i<=20; i++) {
                 let isWarning = (i % 3 !== 0);
                 let desc = descriptions[i % descriptions.length];
+                let batch = batchIds[i <= 10 ? 0 : 1];
                 
                 let restoreTime = "-";
                 if (!isWarning) {
@@ -205,6 +217,7 @@
                 }
 
                 mockData.push({
+                    "BatchId": batch,
                     "OccurrenceTime": `2026/05/15 10:15:${(10 + i).toString().padStart(2, '0')}`,
                     "RestoreTime": restoreTime,
                     "Description": desc + " cao bất thường",
@@ -225,6 +238,7 @@
                     { "data": null, "render": function (data, type, row, meta) {
                         return meta.row + 1;
                     }},
+                    { "data": "BatchId" },
                     { "data": "OccurrenceTime" },
                     { "data": "RestoreTime" },
                     { "data": "Description", "className": "text-left" },

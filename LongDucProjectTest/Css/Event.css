@@ -1,13 +1,13 @@
 ﻿/* ================= EVENT PAGE LAYOUT ================= */
 .event-top-grid {
     display: grid;
-    grid-template-columns: 1fr 600px;
+    grid-template-columns: 1fr 550px;
     gap: 20px;
 }
 
 .event-bottom-grid {
     display: grid;
-    grid-template-columns: 1fr 600px;
+    grid-template-columns: 1fr 550px;
     gap: 20px;
 }
 

@@ -156,7 +156,7 @@
 ### 2.8. TỔNG QUAN MẺ — **THAY ĐỔI BỐ CỤC**
 
 **Hiện tại:** 2 phần tách riêng:
-1. Bảng "Tổng số mẻ sản xuất trong ngày" (bảng dọc)
+1. Bảng "Tổng số batch sản xuất trong ngày" (bảng dọc)
 2. Panel "Thông tin sản phẩm" + "BOM sản xuất"
 
 **Mục tiêu:** Panel "Tổng quan mẻ" gọn ở góc phải dưới:
@@ -172,7 +172,7 @@
 | **Nút KẾT THÚC MẺ** | Nút đỏ lớn |
 
 **Công việc:**
-- [ ] Thay thế bảng "Tổng số mẻ sản xuất trong ngày" bằng panel "Tổng quan mẻ"
+- [ ] Thay thế bảng "Tổng số batch sản xuất trong ngày" bằng panel "Tổng quan mẻ"
 - [ ] Gom thông tin sản phẩm vào panel này
 - [ ] Thêm nút "KẾT THÚC MẺ" (đỏ, to, góc phải dưới)
 - [ ] Bỏ/ẩn panel "BOM sản xuất" (hoặc chuyển sang tab khác)
@@ -260,7 +260,7 @@
 ### Phase 4: Xóa section KHÔNG CẦN
 - [ ] **[XÓA]** Section "Thời gian dữ liệu" (8 small cards)
 - [ ] **[XÓA/ẨN]** Panel BOM sản xuất (hoặc chuyển tab)
-- [ ] **[XÓA]** Panel "Tổng số mẻ sản xuất trong ngày" (thay bằng Tổng quan mẻ)
+- [ ] **[XÓA]** Panel "Tổng số batch sản xuất trong ngày" (thay bằng Tổng quan mẻ)
 
 ### Phase 5: JavaScript & Realtime
 - [ ] Cập nhật `OverviewRealtime.js` cho các ID mới

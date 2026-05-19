@@ -5,6 +5,7 @@ var EventPage = (function () {
         status: "COMPLETED",
         statusLabel: "Chu kỳ hoàn tất thành công",
         batchId: "TX01-20260421-01",
+        productName: "TX01 A",
         endTime: "10:20:15",
         formula: "TX01 - Formula A",
         totalTime: "2h 15m 59s",
@@ -102,11 +103,12 @@ var EventPage = (function () {
             '<div class="evt-cycle-sublabel">' + d.statusLabel + '</div></div></div>' +
             '<div class="evt-cycle-details">' +
             buildDetail("Batch ID", d.batchId) +
-            buildDetail("Thời gian kết thúc", d.endTime) +
+            buildDetail("Tên sản phẩm", d.productName) +
             buildDetail("Công thức", d.formula) +
-            buildDetail("Tổng thời gian", d.totalTime) +
             buildDetail("Khối lượng", d.weight) +
             buildDetail("Thời gian bắt đầu", d.startTime) +
+            buildDetail("Thời gian kết thúc", d.endTime) +
+            buildDetail("Tổng thời gian", d.totalTime) +
             '</div>';
 
         document.getElementById('cycleSummaryContainer').innerHTML = html;
