@@ -530,18 +530,18 @@
 
 /* Positions for tank temp cards based on sodobontron.jpeg */
 .top-temp {
-    top: 24.2%;
-    right: -4%;
+    top: 26.5%;
+    right: -16%;
 }
 
 .mid-temp {
-    top: 40.5%;
-    right: -4%;
+    top: 45.5%;
+    right: -16%;
 }
 
 .bot-temp {
-    top: 57.3%;
-    right: -4%;
+    top: 64%;
+    right: -16%;
 }
 
 @media (max-width: 1500px) {
@@ -1001,18 +1001,18 @@
 }
 
 .eq-pump {
-    top: 102%;
-    left: 6%;
+    top: 96%;
+    left: 9%;
 }
 
 .eq-mixer {
-    top: 35%;
-    left: 51%;
+    top: 32%;
+    left: 50%;
     transform: translateX(-50%);
 }
 
 .eq-valve {
-    bottom: 3%;
+    bottom: 9%;
     left: 83%;
     transform: translateX(-50%);
 }

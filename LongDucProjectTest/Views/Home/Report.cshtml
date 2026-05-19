@@ -121,12 +121,12 @@
                 <input type="text" id="endtime" name="endtime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
             </div>
             <div class="filter-group" style="margin-left: 10px;">
-                <span class="filter-label">Chọn mẻ</span>
+                <span class="filter-label">Chọn batch</span>
                 <select id="batchId" class="filter-input" style="min-width: 120px;">
                     <option value="0">-- Tất cả --</option>
-                    <option value="1">Mẻ 1</option>
-                    <option value="2">Mẻ 2</option>
-                    <option value="3">Mẻ 3</option>
+                    <option value="1">TX01-20260421-01</option>
+                    <option value="2">TX01-20260421-02</option>
+                    <option value="3">TX01-20260421-03</option>
                 </select>
             </div>
             <button onclick="reloadTable()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>

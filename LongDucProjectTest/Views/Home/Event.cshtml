@@ -11,149 +11,96 @@
 @section Styles {
     <link rel="stylesheet" href="~/AdminLTE-master/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
     <link rel="stylesheet" href="~/Css/Overview.css" asp-append-version="true" />
-    <style>
-        .filter-bar {
-            background: #1e293b;
-            border-radius: 8px;
-            padding: 15px 20px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .filter-label {
-            color: #94a3b8;
-            font-weight: 500;
-            font-size: 14px;
-        }
-        .filter-input {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(59, 130, 246, 0.25);
-            color: #00e5ff;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 14px;
-            outline: none;
-        }
-        .filter-input:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 1px #3b82f6;
-        }
-        .btn-custom {
-            padding: 6px 16px;
-            border-radius: 4px;
-            font-weight: 500;
-            font-size: 14px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-submit {
-            background: rgba(59, 130, 246, 0.2);
-            color: #3b82f6;
-            border: 1px solid rgba(59, 130, 246, 0.4);
-        }
-        .btn-submit:hover {
-            background: rgba(59, 130, 246, 0.3);
-        }
-        .btn-export {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10b981;
-            border: 1px solid rgba(16, 185, 129, 0.4);
-        }
-        .btn-export:hover {
-            background: rgba(16, 185, 129, 0.4);
-        }
-        .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, 
-        .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing, 
-        .dataTables_wrapper .dataTables_paginate, .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
-            color: #a9b7cb !important;
-        }
-        .dataTables_wrapper .dataTables_length select, .dataTables_wrapper .dataTables_filter input {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(59, 130, 246, 0.25);
-            color: #00e5ff;
-            border-radius: 4px;
-        }
-        table.dataTable tbody tr {
-            background-color: transparent !important;
-        }
-        table.dataTable tbody tr td {
-            color: #e2e8f0 !important;
-        }
-        table.dataTable tbody tr.odd {
-            background-color: rgba(255, 255, 255, 0.02) !important;
-        }
-        table.dataTable tbody tr:hover {
-            background-color: rgba(59, 130, 246, 0.1) !important;
-        }
-        .batch-table th {
-            font-size: 13px !important;
-        }
-        .text-left {
-            text-align: left !important;
-        }
-    </style>
+    <link rel="stylesheet" href="~/Css/Event.css" asp-append-version="true" />
 }
 
 <div class="overview-dashboard">
-    <!-- BATCH STATISTICS PANEL -->
-    <div class="history-panel" style="width: 100%;">
-        <div class="panel-header" style="margin-bottom: 15px;">
-            <h3>Bảng sự kiện</h3>
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+        <div class="filter-group">
+            <span class="filter-label">Chọn ngày</span>
+            <input type="text" id="starttime" name="starttime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
         </div>
-        
-        <!-- FILTER BAR -->
-        <div class="filter-bar">
-            <div class="filter-group">
-                <span class="filter-label">Chọn ngày</span>
-                <input type="text" id="starttime" name="starttime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
+        <div class="filter-group" style="margin-left: 10px;">
+            <span class="filter-label">Chọn batch</span>
+            <select id="batchId" class="filter-input" style="min-width: 120px;">
+                <option value="1">TX01-20260421-01</option>
+                <option value="2">TX01-20260421-02</option>
+                <option value="3">TX01-20260421-03</option>
+            </select>
+        </div>
+        <button onclick="Submit()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>
+        <div style="margin-left: auto; display: flex; gap: 10px;">
+            <button onclick="ExportExcel()" class="btn-custom btn-export"><i class="fas fa-file-excel"></i> Export Excel</button>
+            <button onclick="ExportCSV()" class="btn-custom btn-export"><i class="fas fa-file-csv"></i> Export CSV</button>
+        </div>
+    </div>
+
+    <!-- TOP ROW: CYCLE SUMMARY + ANOMALY SUMMARY -->
+    <div class="event-top-grid">
+        <!-- LEFT: TỔNG KẾT CHU KỲ -->
+        <div class="history-panel evt-summary-panel">
+            <div class="panel-header" style="margin-bottom: 15px;">
+                <h3>Tổng kết chu kỳ</h3>
             </div>
-            <div class="filter-group" style="margin-left: 10px;">
-                <span class="filter-label">Chọn mẻ</span>
-                <select id="batchId" class="filter-input" style="min-width: 120px;">
-                    <option value="1">Mẻ 1</option>
-                    <option value="2">Mẻ 2</option>
-                    <option value="3">Mẻ 3</option>
-                </select>
+            <div class="evt-summary-content" id="cycleSummaryContainer"></div>
+        </div>
+
+        <!-- RIGHT: TỔNG HỢP BẤT THƯỜNG -->
+        <div class="history-panel evt-anomaly-panel">
+            <div class="panel-header" style="margin-bottom: 10px;">
+                <h3>Tổng hợp bất thường</h3>
             </div>
-            <button onclick="Submit()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>
-            
-            <div style="margin-left: auto; display: flex; gap: 10px;">
-                <button onclick="ExportExcel()" class="btn-custom btn-export"><i class="fas fa-file-excel"></i> Export Excel</button>
-                <button onclick="ExportCSV()" class="btn-custom btn-export"><i class="fas fa-file-csv"></i> Export CSV</button>
+            <div class="evt-anomaly-content" id="anomalySummaryContainer"></div>
+        </div>
+    </div>
+
+    <!-- BOTTOM ROW: PHASE LOG + EVENT DETAILS -->
+    <div class="event-bottom-grid">
+        <!-- LEFT: NHẬT KÝ THEO GIAI ĐOẠN -->
+        <div class="history-panel evt-phase-panel">
+            <div class="panel-header" style="margin-bottom: 15px;">
+                <h3>Nhật ký theo giai đoạn</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="batch-table evt-phase-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;"></th>
+                            <th class="th-process">Công đoạn</th>
+                            <th>T.g bắt đầu</th>
+                            <th>T.g kết thúc</th>
+                            <th>Trạng thái</th>
+                            <th>Thời lượng</th>
+                            <th>Bất thường</th>
+                        </tr>
+                    </thead>
+                    <tbody id="phaseLogBody"></tbody>
+                </table>
             </div>
         </div>
-        <div class="table-responsive" style="margin-top: 15px;">
-            <table id="eventTable" class="batch-table" style="width:100%">
-                <thead>
-                    <tr>
-                        <th class="th-time">Ngày</th>
-                        <th class="th-process">Công đoạn</th>
-                        <th class="th-standard">TC cài đặt</th>
-                        <th class="th-start">T.g bắt đầu</th>
-                        <th class="th-end">T.g kết thúc</th>
-                        <th class="th-duration">Thời gian</th>
-                        <th class="th-temp">NĐ bồn trên</th>
-                        <th class="th-temp">NĐ bồn giữa</th>
-                        <th class="th-temp">NĐ bồn dưới</th>
-                        <th class="th-status">Trạng thái</th>
-                        <th class="th-alerts">Cảnh báo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
+
+        <!-- RIGHT: CHI TIẾT SỰ KIỆN -->
+        <div class="history-panel evt-detail-panel">
+            <div class="panel-header" style="margin-bottom: 15px;">
+                <h3>Chi tiết sự kiện</h3>
+            </div>
+            <div class="evt-filter-tabs" id="eventFilterTabs"></div>
+            <div class="table-responsive" style="margin-top: 15px;">
+                <table class="batch-table evt-detail-table">
+                    <thead>
+                        <tr>
+                            <th>Thời gian</th>
+                            <th>Công đoạn</th>
+                            <th>Sự kiện</th>
+                            <th>Mức độ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventDetailBody"></tbody>
+                </table>
+            </div>
+            <!-- GHI CHÚ -->
+            <div class="evt-note" id="eventNote"></div>
         </div>
     </div>
 </div>
@@ -161,11 +108,9 @@
 @section Scripts {
     <script src="~/AdminLTE-master/plugins/datatables/jquery.dataTables.min.js"></script>
     <script src="~/AdminLTE-master/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+    <script src="~/JavaScript/Event/EventPage.js"></script>
     <script>
-        var eventDt;
-
-        $(document).ready(function() {
-            // Init daterangepicker
+        $(document).ready(function () {
             $('.datepicker').daterangepicker({
                 singleDatePicker: true,
                 autoApply: true,
@@ -176,199 +121,21 @@
                 }
             });
 
-            // Init DataTable with mock data
-            initDataTable('#eventTable');
+            EventPage.init();
         });
 
-        function initDataTable(selector) {
-            // Mock Data for demonstration
-            var mockData = [
-                {
-                    "Time": "2026-05-15",
-                    "Process": "Cấp liệu",
-                    "Standard": "720s",
-                    "StartTime": "8:15:00",
-                    "EndTime": "8:29:00",
-                    "Duration": "840s",
-                    "TempTop": "30-32°C",
-                    "TempMid": "30-32°C",
-                    "TempBot": "30-32°C",
-                    "Status": "Hoàn thành",
-                    "Alerts": "Vượt quá thời gian cài đặt 120s",
-                    "RowClass": "row-completed"
-                },
-                {
-                    "Time": "2026-05-15",
-                    "Process": "Trộn 1",
-                    "Standard": "780s",
-                    "StartTime": "8:29:00",
-                    "EndTime": "8:42:00",
-                    "Duration": "780s",
-                    "TempTop": "30-32°C",
-                    "TempMid": "32-35°C",
-                    "TempBot": "32-35°C",
-                    "Status": "Hoàn thành",
-                    "Alerts": "-",
-                    "RowClass": "row-completed"
-                },
-                {
-                    "Time": "2026-05-15",
-                    "Process": "Xả đáy",
-                    "Standard": "600s",
-                    "StartTime": "8:42:00",
-                    "EndTime": "8:55:00",
-                    "Duration": "-",
-                    "TempTop": "<span class='text-cyan'>30-32°C</span>",
-                    "TempMid": "<span class='text-cyan'>32-35°C</span>",
-                    "TempBot": "<span class='text-cyan'>32-36°C</span>",
-                    "Status": "Đang thực hiện",
-                    "Alerts": "-",
-                    "RowClass": "row-active"
-                },
-                {
-                    "Time": "2026-05-15",
-                    "Process": "Rung xả đáy",
-                    "Standard": "600s",
-                    "StartTime": "8:42:00",
-                    "EndTime": "9:05:00",
-                    "Duration": "-",
-                    "TempTop": "<span class='text-cyan'>30-32°C</span>",
-                    "TempMid": "<span class='text-cyan'>32-35°C</span>",
-                    "TempBot": "<span class='text-cyan'>32-36°C</span>",
-                    "Status": "Đang thực hiện",
-                    "Alerts": "-",
-                    "RowClass": "row-active"
-                },
-                {
-                    "Time": "2026-05-15",
-                    "Process": "Hút xả đáy",
-                    "Standard": "720s",
-                    "StartTime": "8:42:00",
-                    "EndTime": "9:17:00",
-                    "Duration": "-",
-                    "TempTop": "<span class='text-cyan'>30-32°C</span>",
-                    "TempMid": "<span class='text-cyan'>32-35°C</span>",
-                    "TempBot": "<span class='text-cyan'>32-36°C</span>",
-                    "Status": "Đang thực hiện",
-                    "Alerts": "-",
-                    "RowClass": "row-active"
-                },
-                {
-                    "Time": "2026-05-15",
-                    "Process": "Trộn 2",
-                    "Standard": "1200s",
-                    "StartTime": "-",
-                    "EndTime": "-",
-                    "Duration": "-",
-                    "TempTop": "29-32°C",
-                    "TempMid": "32-35°C",
-                    "TempBot": "32-35°C",
-                    "Status": "Chưa thực hiện",
-                    "Alerts": "-",
-                    "RowClass": ""
-                },
-                {
-                    "Time": "2026-05-15",
-                    "Process": "Xả hàng",
-                    "Standard": "1500s",
-                    "StartTime": "-",
-                    "EndTime": "-",
-                    "Duration": "-",
-                    "TempTop": "29-32°C",
-                    "TempMid": "32-35°C",
-                    "TempBot": "32-35°C",
-                    "Status": "Chưa thực hiện",
-                    "Alerts": "-",
-                    "RowClass": ""
-                },
-                {
-                    "Time": "2026-05-15",
-                    "Process": "Rung xả hàng",
-                    "Standard": "180s",
-                    "StartTime": "-",
-                    "EndTime": "-",
-                    "Duration": "-",
-                    "TempTop": "28-32°C",
-                    "TempMid": "32-35°C",
-                    "TempBot": "32-36°C",
-                    "Status": "Chưa thực hiện",
-                    "Alerts": "-",
-                    "RowClass": ""
-                }
-            ];
-
-            eventDt = $(selector).DataTable({
-                "data": mockData,
-                "createdRow": function(row, data, dataIndex) {
-                    if(data.RowClass) {
-                        $(row).addClass(data.RowClass);
-                    }
-                },
-                "columns": [
-                    { "data": "Time" },
-                    { "data": "Process", "className": "td-process" },
-                    { "data": "Standard", "className": "td-standard" },
-                    { "data": "StartTime", "className": "td-start" },
-                    { "data": "EndTime", "className": "td-end" },
-                    { "data": "Duration", "className": "td-duration", "render": function(data, type, row) {
-                        if(data === '840s') return '<span class="text-warning">' + data + '</span>';
-                        return data;
-                    }},
-                    { "data": "TempTop", "className": "td-temp" },
-                    { "data": "TempMid", "className": "td-temp" },
-                    { "data": "TempBot", "className": "td-temp" },
-                    { "data": "Status", "className": "td-status", "render": function(data) {
-                        if(data === 'Hoàn thành') return '<span class="status-badge completed">' + data + '</span>';
-                        if(data === 'Đang thực hiện') return '<span class="status-badge in-progress">' + data + '</span>';
-                        return '<span class="status-badge pending">' + data + '</span>';
-                    }},
-                    { "data": "Alerts", "className": "td-alerts text-left", "render": function(data) {
-                        if(data !== '-') return '<div class="text-warning"><i class="fas fa-exclamation-triangle"></i> ' + data + '</div>';
-                        return data;
-                    }}
-                ],
-                "ordering": false,
-                "paging": false,
-                "info": false,
-                "language": {
-                    "search": "Tìm kiếm:",
-                    "lengthMenu": "Hiển thị _MENU_ bản ghi",
-                    "info": "Hiển thị _START_ đến _END_ của _TOTAL_ bản ghi",
-                    "infoEmpty": "Hiển thị 0 đến 0 của 0 bản ghi",
-                    "infoFiltered": "(lọc từ _MAX_ bản ghi)",
-                    "paginate": {
-                        "first": "Đầu",
-                        "last": "Cuối",
-                        "next": "Sau",
-                        "previous": "Trước"
-                    }
-                }
-            });
-        }
-
-        function Submit() {
-            // Because it's mock data, we just redraw
-            eventDt.clear().rows.add(eventDt.data()).draw();
-        }
+        function Submit() { EventPage.init(); }
 
         function ExportExcel() {
             var starttime = $('#starttime').val() + " 00:00:00";
-            var endtime = $('#endtime').val() + " 23:59:59";
             var batchId = $('#batchId').val();
-            var searchValue = eventDt.search();
-            
-            var url = "/Event/ExportEventExcel?starttime=" + starttime + "&endtime=" + endtime + "&batchId=" + batchId + "&searchValue=" + searchValue;
-            window.location.href = url;
+            window.location.href = "/Event/ExportEventExcel?starttime=" + starttime + "&batchId=" + batchId;
         }
 
         function ExportCSV() {
             var starttime = $('#starttime').val() + " 00:00:00";
-            var endtime = $('#endtime').val() + " 23:59:59";
             var batchId = $('#batchId').val();
-            var searchValue = eventDt.search();
-            
-            var url = "/Event/ExportEventCSV?starttime=" + starttime + "&endtime=" + endtime + "&batchId=" + batchId + "&searchValue=" + searchValue;
-            window.location.href = url;
+            window.location.href = "/Event/ExportEventCSV?starttime=" + starttime + "&batchId=" + batchId;
         }
     </script>
 }
