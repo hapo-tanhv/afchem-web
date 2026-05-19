@@ -403,7 +403,7 @@
                         <span class="header-accent" style="background: #f59e0b;"></span>
                         <h3 style="margin-bottom: 0;">ALARM / CẢNH BÁO</h3>
                     </div>
-                    <a href="#" style="color: #3b82f6; font-size: 13px; text-decoration: none;">Xem tất cả &rarr;</a>
+                    <a href="/Home/Alarm" style="color: #3b82f6; font-size: 13px; text-decoration: none;">Xem tất cả &rarr;</a>
                 </div>
                 
                 <div class="alarm-list" id="alarmListContainer" style="margin-top: 15px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; padding-right: 5px;">
@@ -598,7 +598,7 @@
         {
             process: "Rung xả hàng", standard: "180s", start: "09:48:15", end: "-", duration: "-",
             tempTop: "28-32°C", tempMid: "32-35°C", tempBot: "32-36°C",
-            status: "pending", statusText: "Đang thực hiện", alerts: []
+            status: "in-progress", statusText: "Đang thực hiện", alerts: []
         }
     ];
 
@@ -710,19 +710,19 @@
             const badgeBorder = isAlarm ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)';
             const iconClass = isAlarm ? 'alarm' : 'warning';
             
-            html += `<div class="alarm-item" style="display: flex; align-items: flex-start; gap: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <div class="alarm-icon ${iconClass}" style="color: ${color}; font-size: 20px; padding-top: 2px;">
+            html += `<div class="alarm-item" style="display: flex; align-items: flex-start; gap: 10px; padding-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <div class="alarm-icon ${iconClass}" style="color: ${color}; font-size: 18px; padding-top: 6px;">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
                 <div class="alarm-content" style="flex: 1;">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="color: #94a3b8; font-size: 13px;">${alarm.time}</span>
-                            <span style="color: #fff; font-weight: 600; font-size: 14px;">${alarm.title}</span>
+                            <span style="color: #94a3b8; font-size: 12px;">${alarm.time}</span>
+                            <span style="color: #fff; font-weight: 600; font-size: 12px; max-width: 130px;">${alarm.title}</span>
                         </div>
-                        <span class="alarm-badge ${iconClass}" style="background: ${badgeBg}; color: ${color}; border: 1px solid ${badgeBorder}; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700;">${alarm.type}</span>
+                        <span class="alarm-badge ${iconClass}" style="background: ${badgeBg}; color: ${color}; border: 1px solid ${badgeBorder}; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; width: 72px; text-align: center;">${alarm.type}</span>
                     </div>
-                    <div style="color: #94a3b8; font-size: 13px;">${alarm.message}</div>
+                    <div style="color: #94a3b8; font-size: 12px;">${alarm.message}</div>
                 </div>
             </div>`;
         });
