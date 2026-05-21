@@ -1,4 +1,4 @@
-using Hino.Getdata.Common;
+﻿using Hino.Getdata.Common;
 using LongDucProjectTest.Controllers;
 using System;
 using System.Collections.Generic;
@@ -6,6 +6,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using Hino.DatabaseConnector;
+using System.Data;
+using System.Globalization;
+using LongDucProjectTest.Service;
 
 namespace LongDucProject.Controllers
 {
@@ -143,66 +147,321 @@ namespace LongDucProject.Controllers
         [HttpPost]
         public JsonResult GetReportData(string starttime, string endtime, string batchId, int draw, int start, int length)
         {
-            // TODO: Replace with actual query to `alarmreport` or respective report table
-            var Alarm = new Hino.Getdata.Common.AlarmCommon();
-            var resultList = Alarm.GetAlarmLog(starttime, endtime);
-            var list = resultList != null ? resultList.ToList() : new List<Hino.Parameter.Common.AlarmParameter>();
-
-            var searchValue = Request.Form["search[value]"];
-            if (!string.IsNullOrEmpty(searchValue))
+            try
             {
-                list = list.Where(x => 
-                    (x.Description != null && x.Description.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) || 
-                    (x.TagNo != null && x.TagNo.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
-                ).ToList();
+                var connector = new MySQLConnect()
+                {
+                    ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
+                };
+
+                int parsedBatchId = 0;
+                bool hasBatchFilter = int.TryParse(batchId, out parsedBatchId) && parsedBatchId > 0;
+
+                DateTime startDate = DateTime.Today;
+                DateTime endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
+
+                if (!string.IsNullOrEmpty(starttime))
+                {
+                    if (!DateTime.TryParse(starttime, CultureInfo.InvariantCulture, DateTimeStyles.None, out startDate))
+                    {
+                        DateTime.TryParseExact(starttime, new[] { "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out startDate);
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(endtime))
+                {
+                    if (!DateTime.TryParse(endtime, CultureInfo.InvariantCulture, DateTimeStyles.None, out endDate))
+                    {
+                        DateTime.TryParseExact(endtime, new[] { "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out endDate);
+                    }
+                    if (endDate.TimeOfDay == TimeSpan.Zero)
+                    {
+                        endDate = endDate.Date.AddDays(1).AddSeconds(-1);
+                    }
+                }
+
+                string baseQuery = "FROM alarmreport a INNER JOIN batches b ON a.batchId = b.id WHERE 1=1";
+                string filterQuery = $" AND a.DateTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.DateTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
+
+                if (hasBatchFilter)
+                {
+                    filterQuery += $" AND a.batchId = {parsedBatchId}";
+                }
+
+                string searchValue = Request.Form["search[value]"];
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    filterQuery += $" AND (b.name LIKE '%{searchValue}%' OR a.ApSuat LIKE '%{searchValue}%' OR a.NhietDoMoiTruong LIKE '%{searchValue}%' OR a.NhietDoBonTronTren LIKE '%{searchValue}%')";
+                }
+
+                string countQuery = $"SELECT COUNT(*) {baseQuery} {filterQuery}";
+                int recordsFiltered = Convert.ToInt32(connector.ExecuteScalarQuery(countQuery));
+                int recordsTotal = recordsFiltered;
+
+                string dataQuery = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime DESC, a.ID DESC LIMIT {length} OFFSET {start}";
+
+                var data = new List<object>();
+                var dt = connector.ExecuteQuery(dataQuery);
+                if (dt != null)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        var dateTimeVal = row["DateTime"] != DBNull.Value ? Convert.ToDateTime(row["DateTime"]) : DateTime.MinValue;
+                        string dateStr = dateTimeVal != DateTime.MinValue ? dateTimeVal.ToString("yyyy/MM/dd") : "-";
+                        string timeStr = dateTimeVal != DateTime.MinValue ? dateTimeVal.ToString("HH:mm:ss") : "-";
+
+                        double tgCapLieu = TryGetDouble(row["ThoiGianCapLieu"]);
+                        double tgTron1 = TryGetDouble(row["ThoiGianTron1"]);
+                        double tgXaDay = TryGetDouble(row["ThoiGianXaDay"]);
+                        double tgRungXaDay = TryGetDouble(row["ThoiGianRungXaDay"]);
+                        double tgHutXaDay = TryGetDouble(row["ThoiGianHutXaDay"]);
+                        double tgTron2 = TryGetDouble(row["ThoiGianTron2"]);
+                        double tgXaHang = TryGetDouble(row["ThoiGianXaHang"]);
+                        double tgRungXaHang = TryGetDouble(row["ThoiGianRungXaHang"]);
+
+                        double tongTgTron = tgCapLieu + tgTron1 + tgXaDay + tgRungXaDay + tgHutXaDay + tgTron2 + tgXaHang + tgRungXaHang;
+
+                        data.Add(new
+                        {
+                            Date = dateStr,
+                            Time = timeStr,
+                            QuyTrinh = row["QuyTrinh"] != DBNull.Value ? Convert.ToInt32(row["QuyTrinh"]) : 0,
+                            CongDoan = row["CongDoanMay"] != DBNull.Value ? Convert.ToInt32(row["CongDoanMay"]) : 0,
+                            TgCapLieu = tgCapLieu,
+                            TgTron1 = tgTron1,
+                            TgXaDay = tgXaDay,
+                            TgRungXaDay = tgRungXaDay,
+                            TgHutXaDay = tgHutXaDay,
+                            TgTron2 = tgTron2,
+                            TgXaHang = tgXaHang,
+                            TgRungXaHang = tgRungXaHang,
+                            TongTgTron = tongTgTron,
+                            ApSuat = TryGetDouble(row["ApSuat"]),
+                            NhietDoMT = TryGetDouble(row["NhietDoMoiTruong"]),
+                            DoAmMT = TryGetDouble(row["DoAmMoiTruong"]),
+                            NhietNapBon = TryGetDouble(row["NhietDoBonTronTren"]),
+                            NhietGiuaBon = TryGetDouble(row["NhietDoBonTronGiua"]),
+                            NhietDayBon = TryGetDouble(row["NhietDoBonTronDuoi"])
+                        });
+                    }
+                }
+
+                return Json(new
+                {
+                    draw = draw,
+                    recordsTotal = recordsTotal,
+                    recordsFiltered = recordsFiltered,
+                    data = data
+                });
             }
-
-            int recordsTotal = list.Count;
-            var data = list.Skip(start).Take(length).ToList();
-
-            return Json(new {
-                draw = draw,
-                recordsTotal = recordsTotal,
-                recordsFiltered = recordsTotal,
-                data = data
-            });
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    draw = draw,
+                    recordsTotal = 0,
+                    recordsFiltered = 0,
+                    data = new List<object>(),
+                    error = ex.Message
+                });
+            }
         }
 
         [HttpGet]
         public FileResult ExportReportExcel(string starttime, string endtime, string batchId, string searchValue)
         {
-            var Alarm = new Hino.Getdata.Common.AlarmCommon();
-            var resultList = Alarm.GetAlarmLog(starttime, endtime);
-            var list = resultList != null ? resultList.ToList() : new List<Hino.Parameter.Common.AlarmParameter>();
+            var connector = new MySQLConnect()
+            {
+                ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
+            };
+
+            int parsedBatchId = 0;
+            bool hasBatchFilter = int.TryParse(batchId, out parsedBatchId) && parsedBatchId > 0;
+
+            DateTime startDate = DateTime.Today;
+            DateTime endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
+
+            if (!string.IsNullOrEmpty(starttime))
+            {
+                if (!DateTime.TryParse(starttime, CultureInfo.InvariantCulture, DateTimeStyles.None, out startDate))
+                {
+                    DateTime.TryParseExact(starttime, new[] { "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out startDate);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(endtime))
+            {
+                if (!DateTime.TryParse(endtime, CultureInfo.InvariantCulture, DateTimeStyles.None, out endDate))
+                {
+                    DateTime.TryParseExact(endtime, new[] { "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out endDate);
+                }
+                if (endDate.TimeOfDay == TimeSpan.Zero)
+                {
+                    endDate = endDate.Date.AddDays(1).AddSeconds(-1);
+                }
+            }
+
+            string baseQuery = "FROM alarmreport a INNER JOIN batches b ON a.batchId = b.id WHERE 1=1";
+            string filterQuery = $" AND a.DateTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.DateTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
+
+            if (hasBatchFilter)
+            {
+                filterQuery += $" AND a.batchId = {parsedBatchId}";
+            }
 
             if (!string.IsNullOrEmpty(searchValue))
             {
-                list = list.Where(x => 
-                    (x.Description != null && x.Description.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) || 
-                    (x.TagNo != null && x.TagNo.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
-                ).ToList();
+                filterQuery += $" AND (b.name LIKE '%{searchValue}%' OR a.ApSuat LIKE '%{searchValue}%' OR a.NhietDoMoiTruong LIKE '%{searchValue}%' OR a.NhietDoBonTronTren LIKE '%{searchValue}%')";
             }
 
-            byte[] fileBytes = LongDucProjectTest.Service.ExportUtility.ExportToExcel(list, "Report");
+            string query = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime DESC, a.ID DESC";
+
+            var list = new List<ReportExportDto>();
+            var dt = connector.ExecuteQuery(query);
+            if (dt != null)
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    var dateTimeVal = row["DateTime"] != DBNull.Value ? Convert.ToDateTime(row["DateTime"]) : DateTime.MinValue;
+                    string dateStr = dateTimeVal != DateTime.MinValue ? dateTimeVal.ToString("yyyy/MM/dd") : "-";
+                    string timeStr = dateTimeVal != DateTime.MinValue ? dateTimeVal.ToString("HH:mm:ss") : "-";
+
+                    double tgCapLieu = TryGetDouble(row["ThoiGianCapLieu"]);
+                    double tgTron1 = TryGetDouble(row["ThoiGianTron1"]);
+                    double tgXaDay = TryGetDouble(row["ThoiGianXaDay"]);
+                    double tgRungXaDay = TryGetDouble(row["ThoiGianRungXaDay"]);
+                    double tgHutXaDay = TryGetDouble(row["ThoiGianHutXaDay"]);
+                    double tgTron2 = TryGetDouble(row["ThoiGianTron2"]);
+                    double tgXaHang = TryGetDouble(row["ThoiGianXaHang"]);
+                    double tgRungXaHang = TryGetDouble(row["ThoiGianRungXaHang"]);
+
+                    double tongTgTron = tgCapLieu + tgTron1 + tgXaDay + tgRungXaDay + tgHutXaDay + tgTron2 + tgXaHang + tgRungXaHang;
+
+                    list.Add(new ReportExportDto
+                    {
+                        Ngay = dateStr,
+                        Gio = timeStr,
+                        QuyTrinh = row["QuyTrinh"] != DBNull.Value ? Convert.ToInt32(row["QuyTrinh"]) : 0,
+                        CongDoan = row["CongDoanMay"] != DBNull.Value ? Convert.ToInt32(row["CongDoanMay"]) : 0,
+                        TgCapLieu = tgCapLieu,
+                        TgTron1 = tgTron1,
+                        TgXaDay = tgXaDay,
+                        TgRungXaDay = tgRungXaDay,
+                        TgHutXaDay = tgHutXaDay,
+                        TgTron2 = tgTron2,
+                        TgXaHang = tgXaHang,
+                        TgRungXaHang = tgRungXaHang,
+                        TongTgTron = tongTgTron,
+                        ApSuat = TryGetDouble(row["ApSuat"]),
+                        NhietDoMT = TryGetDouble(row["NhietDoMoiTruong"]),
+                        DoAmMT = TryGetDouble(row["DoAmMoiTruong"]),
+                        NhietNapBon = TryGetDouble(row["NhietDoBonTronTren"]),
+                        NhietGiuaBon = TryGetDouble(row["NhietDoBonTronGiua"]),
+                        NhietDayBon = TryGetDouble(row["NhietDoBonTronDuoi"])
+                    });
+                }
+            }
+
+            byte[] fileBytes = ExportUtility.ExportToExcel(list, "Report");
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Report_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
         }
 
         [HttpGet]
         public FileResult ExportReportCsv(string starttime, string endtime, string batchId, string searchValue)
         {
-            var Alarm = new Hino.Getdata.Common.AlarmCommon();
-            var resultList = Alarm.GetAlarmLog(starttime, endtime);
-            var list = resultList != null ? resultList.ToList() : new List<Hino.Parameter.Common.AlarmParameter>();
+            var connector = new MySQLConnect()
+            {
+                ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
+            };
+
+            int parsedBatchId = 0;
+            bool hasBatchFilter = int.TryParse(batchId, out parsedBatchId) && parsedBatchId > 0;
+
+            DateTime startDate = DateTime.Today;
+            DateTime endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
+
+            if (!string.IsNullOrEmpty(starttime))
+            {
+                if (!DateTime.TryParse(starttime, CultureInfo.InvariantCulture, DateTimeStyles.None, out startDate))
+                {
+                    DateTime.TryParseExact(starttime, new[] { "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out startDate);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(endtime))
+            {
+                if (!DateTime.TryParse(endtime, CultureInfo.InvariantCulture, DateTimeStyles.None, out endDate))
+                {
+                    DateTime.TryParseExact(endtime, new[] { "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out endDate);
+                }
+                if (endDate.TimeOfDay == TimeSpan.Zero)
+                {
+                    endDate = endDate.Date.AddDays(1).AddSeconds(-1);
+                }
+            }
+
+            string baseQuery = "FROM alarmreport a INNER JOIN batches b ON a.batchId = b.id WHERE 1=1";
+            string filterQuery = $" AND a.DateTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.DateTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
+
+            if (hasBatchFilter)
+            {
+                filterQuery += $" AND a.batchId = {parsedBatchId}";
+            }
 
             if (!string.IsNullOrEmpty(searchValue))
             {
-                list = list.Where(x => 
-                    (x.Description != null && x.Description.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) || 
-                    (x.TagNo != null && x.TagNo.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
-                ).ToList();
+                filterQuery += $" AND (b.name LIKE '%{searchValue}%' OR a.ApSuat LIKE '%{searchValue}%' OR a.NhietDoMoiTruong LIKE '%{searchValue}%' OR a.NhietDoBonTronTren LIKE '%{searchValue}%')";
             }
 
-            byte[] fileBytes = LongDucProjectTest.Service.ExportUtility.ExportToCsv(list);
+            string query = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime DESC, a.ID DESC";
+
+            var list = new List<ReportExportDto>();
+            var dt = connector.ExecuteQuery(query);
+            if (dt != null)
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    var dateTimeVal = row["DateTime"] != DBNull.Value ? Convert.ToDateTime(row["DateTime"]) : DateTime.MinValue;
+                    string dateStr = dateTimeVal != DateTime.MinValue ? dateTimeVal.ToString("yyyy/MM/dd") : "-";
+                    string timeStr = dateTimeVal != DateTime.MinValue ? dateTimeVal.ToString("HH:mm:ss") : "-";
+
+                    double tgCapLieu = TryGetDouble(row["ThoiGianCapLieu"]);
+                    double tgTron1 = TryGetDouble(row["ThoiGianTron1"]);
+                    double tgXaDay = TryGetDouble(row["ThoiGianXaDay"]);
+                    double tgRungXaDay = TryGetDouble(row["ThoiGianRungXaDay"]);
+                    double tgHutXaDay = TryGetDouble(row["ThoiGianHutXaDay"]);
+                    double tgTron2 = TryGetDouble(row["ThoiGianTron2"]);
+                    double tgXaHang = TryGetDouble(row["ThoiGianXaHang"]);
+                    double tgRungXaHang = TryGetDouble(row["ThoiGianRungXaHang"]);
+
+                    double tongTgTron = tgCapLieu + tgTron1 + tgXaDay + tgRungXaDay + tgHutXaDay + tgTron2 + tgXaHang + tgRungXaHang;
+
+                    list.Add(new ReportExportDto
+                    {
+                        Ngay = dateStr,
+                        Gio = timeStr,
+                        QuyTrinh = row["QuyTrinh"] != DBNull.Value ? Convert.ToInt32(row["QuyTrinh"]) : 0,
+                        CongDoan = row["CongDoanMay"] != DBNull.Value ? Convert.ToInt32(row["CongDoanMay"]) : 0,
+                        TgCapLieu = tgCapLieu,
+                        TgTron1 = tgTron1,
+                        TgXaDay = tgXaDay,
+                        TgRungXaDay = tgRungXaDay,
+                        TgHutXaDay = tgHutXaDay,
+                        TgTron2 = tgTron2,
+                        TgXaHang = tgXaHang,
+                        TgRungXaHang = tgRungXaHang,
+                        TongTgTron = tongTgTron,
+                        ApSuat = TryGetDouble(row["ApSuat"]),
+                        NhietDoMT = TryGetDouble(row["NhietDoMoiTruong"]),
+                        DoAmMT = TryGetDouble(row["DoAmMoiTruong"]),
+                        NhietNapBon = TryGetDouble(row["NhietDoBonTronTren"]),
+                        NhietGiuaBon = TryGetDouble(row["NhietDoBonTronGiua"]),
+                        NhietDayBon = TryGetDouble(row["NhietDoBonTronDuoi"])
+                    });
+                }
+            }
+
+            byte[] fileBytes = ExportUtility.ExportToCsv(list);
             return File(fileBytes, "text/csv", $"Report_{DateTime.Now:yyyyMMddHHmmss}.csv");
         }
 
@@ -304,5 +563,36 @@ namespace LongDucProject.Controllers
 
             return View();
         }
+
+        private static double TryGetDouble(object value)
+        {
+            if (value == null || value == DBNull.Value) return 0;
+            double res;
+            if (double.TryParse(value.ToString(), out res)) return res;
+            return 0;
+        }
+    }
+
+    public class ReportExportDto
+    {
+        public string Ngay { get; set; }
+        public string Gio { get; set; }
+        public int QuyTrinh { get; set; }
+        public int CongDoan { get; set; }
+        public double TgCapLieu { get; set; }
+        public double TgTron1 { get; set; }
+        public double TgXaDay { get; set; }
+        public double TgRungXaDay { get; set; }
+        public double TgHutXaDay { get; set; }
+        public double TgTron2 { get; set; }
+        public double TgXaHang { get; set; }
+        public double TgRungXaHang { get; set; }
+        public double TongTgTron { get; set; }
+        public double ApSuat { get; set; }
+        public double NhietDoMT { get; set; }
+        public double DoAmMT { get; set; }
+        public double NhietNapBon { get; set; }
+        public double NhietGiuaBon { get; set; }
+        public double NhietDayBon { get; set; }
     }
 }

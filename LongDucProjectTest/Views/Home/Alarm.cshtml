@@ -138,10 +138,7 @@
             <div class="filter-group" style="margin-left: 10px;">
                 <span class="filter-label">Chọn batch</span>
                 <select id="batchId" class="filter-input" style="min-width: 120px;">
-                    <option value="0">-- Tất cả --</option>
-                    <option value="1">TX01-20260421-01</option>
-                    <option value="2">TX01-20260421-02</option>
-                    <option value="3">TX01-20260421-03</option>
+                    <option value="0">-- Đang tải --</option>
                 </select>
             </div>
             <button onclick="reloadTables()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>
@@ -189,44 +186,43 @@
                 }
             });
 
-            // Init DataTables
-            realtimeDt = initDataTable('#realtimeTable', '/Alarm/GetAlarmsData');
+            // Load batches dynamically
+            $.ajax({
+                url: '/Alarm/GetBatches',
+                type: 'GET',
+                success: function (data) {
+                    var select = $('#batchId');
+                    select.empty();
+                    select.append('<option value="0">-- Tất cả --</option>');
+                    if (data && data.length > 0) {
+                        data.forEach(function (item) {
+                            select.append('<option value="' + item.id + '">' + item.name + '</option>');
+                        });
+                    }
+                    // Init DataTables after batches are loaded
+                    realtimeDt = initDataTable('#realtimeTable', '/Alarm/GetAlarmsData');
+                },
+                error: function (xhr, status, error) {
+                    console.error('Failed to load batches:', error);
+                    // Fallback init
+                    realtimeDt = initDataTable('#realtimeTable', '/Alarm/GetAlarmsData');
+                }
+            });
         });
 
         function initDataTable(selector, url) {
-            // Mock Data for demonstration
-            var mockData = [];
-            var descriptions = [
-                "Cảnh báo nhiệt độ bồn trên",
-                "Cảnh báo nhiệt độ bồn giữa",
-                "Cảnh báo nhiệt độ bồn dưới",
-                "Cảnh báo áp suất"
-            ];
-            var batchIds = ["TX01-20260421-01", "TX01-20260421-02"];
-
-            for(let i=1; i<=20; i++) {
-                let isWarning = (i % 3 !== 0);
-                let desc = descriptions[i % descriptions.length];
-                let batch = batchIds[i <= 10 ? 0 : 1];
-                
-                let restoreTime = "-";
-                if (!isWarning) {
-                    let randomMin = Math.floor(Math.random() * 59);
-                    let randomSec = Math.floor(Math.random() * 59);
-                    restoreTime = `2026/05/15 10:${randomMin.toString().padStart(2, '0')}:${randomSec.toString().padStart(2, '0')}`;
-                }
-
-                mockData.push({
-                    "BatchId": batch,
-                    "OccurrenceTime": `2026/05/15 10:15:${(10 + i).toString().padStart(2, '0')}`,
-                    "RestoreTime": restoreTime,
-                    "Description": desc + " cao bất thường",
-                    "Status": isWarning ? "Cảnh báo" : "Đã khôi phục"
-                });
-            }
-
             return $(selector).DataTable({
-                "data": mockData,
+                "processing": true,
+                "serverSide": true,
+                "ajax": {
+                    "url": url,
+                    "type": "POST",
+                    "data": function (d) {
+                        d.starttime = $('#starttime').val() + " 00:00:00";
+                        d.endtime = $('#endtime').val() + " 23:59:59";
+                        d.batchId = $('#batchId').val();
+                    }
+                },
                 "createdRow": function(row, data, dataIndex) {
                     if (data.Status === 'Cảnh báo') {
                         $(row).addClass('row-warning');
@@ -236,7 +232,7 @@
                 },
                 "columns": [
                     { "data": null, "render": function (data, type, row, meta) {
-                        return meta.row + 1;
+                        return meta.settings._iDisplayStart + meta.row + 1;
                     }},
                     { "data": "BatchId" },
                     { "data": "OccurrenceTime" },
@@ -264,15 +260,16 @@
         }
 
         function reloadTables() {
-            // Because it's mock data, we just redraw
-            realtimeDt.clear().rows.add(realtimeDt.data()).draw();
+            if (realtimeDt) {
+                realtimeDt.ajax.reload();
+            }
         }
 
         function ExportExcel() {
             var starttime = $('#starttime').val() + " 00:00:00";
             var endtime = $('#endtime').val() + " 23:59:59";
             var batchId = $('#batchId').val();
-            var searchValue = realtimeDt.search();
+            var searchValue = realtimeDt ? realtimeDt.search() : "";
 
             var url = "/Alarm/ExportAlarmsExcel?";
             var params = new URLSearchParams({
@@ -288,7 +285,7 @@
             var starttime = $('#starttime').val() + " 00:00:00";
             var endtime = $('#endtime').val() + " 23:59:59";
             var batchId = $('#batchId').val();
-            var searchValue = realtimeDt.search();
+            var searchValue = realtimeDt ? realtimeDt.search() : "";
 
             var url = "/Alarm/ExportAlarmsCsv?";
             var params = new URLSearchParams({

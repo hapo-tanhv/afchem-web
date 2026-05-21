@@ -22,11 +22,9 @@
             <input type="text" id="starttime" name="starttime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
         </div>
         <div class="filter-group" style="margin-left: 10px;">
-            <span class="filter-label">Chọn batch</span>
-            <select id="batchId" class="filter-input" style="min-width: 120px;">
-                <option value="1">TX01-20260421-01</option>
-                <option value="2">TX01-20260421-02</option>
-                <option value="3">TX01-20260421-03</option>
+            <span class="filter-label">Chọn mẻ (Batch)</span>
+            <select id="batchId" class="filter-input" style="min-width: 180px;">
+                <option value="">Đang tải...</option>
             </select>
         </div>
         <button onclick="Submit()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>
@@ -124,18 +122,18 @@
             EventPage.init();
         });
 
-        function Submit() { EventPage.init(); }
+        function Submit() {
+            EventPage.loadEventData();
+        }
 
         function ExportExcel() {
-            var starttime = $('#starttime').val() + " 00:00:00";
             var batchId = $('#batchId').val();
-            window.location.href = "/Event/ExportEventExcel?starttime=" + starttime + "&batchId=" + batchId;
+            window.location.href = "/Event/ExportEventExcel?batchId=" + batchId;
         }
 
         function ExportCSV() {
-            var starttime = $('#starttime').val() + " 00:00:00";
             var batchId = $('#batchId').val();
-            window.location.href = "/Event/ExportEventCSV?starttime=" + starttime + "&batchId=" + batchId;
+            window.location.href = "/Event/ExportEventCSV?batchId=" + batchId;
         }
     </script>
 }

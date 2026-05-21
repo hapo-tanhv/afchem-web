@@ -96,6 +96,52 @@ document.addEventListener("DOMContentLoaded", function () {
         setTimeout(generateFakeData, 500);
     }
 
+    // Polling current batch stats from real database every 30 seconds
+    function fetchCurrentBatchStats() {
+        $.ajax({
+            url: '/Overview/GetCurrentBatchStats',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                if (data && data.steps) {
+                    if (typeof renderBatchTable === 'function') {
+                        renderBatchTable(data.steps);
+                    }
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error fetching current batch stats:', error);
+            }
+        });
+    }
+
+    // Polling recent alarms from real database every 2 seconds for high-speed realtime display
+    function fetchRecentAlarms() {
+        $.ajax({
+            url: '/Overview/GetRecentAlarms',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                if (data && !data.error) {
+                    if (typeof renderAlarmList === 'function') {
+                        renderAlarmList(data);
+                    }
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error fetching recent alarms:', error);
+            }
+        });
+    }
+
+    // Call immediately on load
+    fetchCurrentBatchStats();
+    fetchRecentAlarms();
+
+    // Set polling intervals
+    setInterval(fetchCurrentBatchStats, 30000); // 30 seconds for table stats
+    setInterval(fetchRecentAlarms, 2000);       // 2 seconds for active alarms
+
     var atscadaTask = document.querySelector('atscada-task');
     if (atscadaTask && atscadaTask.dataTask) {
         var dataTask = atscadaTask.dataTask;

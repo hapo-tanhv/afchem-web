@@ -1,0 +1,23 @@
+# Implementation Tasks: Current Batch Statistics
+
+- [x] Task 1: Backend DTOs & Database Querying Implementation
+  - Create response DTOs and query helpers inside `OverviewController.cs`.
+  - Implement dynamic active batch query matching `batches` status 'Active' with safe fallbacks.
+- [x] Task 2: Implement `GetCurrentBatchStats` Action in `OverviewController.cs`
+  - Retrieve active `batchId`.
+  - Fetch telemetry entries and alarms.
+  - Group and process telemetry entries to compute step status, times, durations, and min-max temperatures.
+  - Apply independent single-value temp formatting when min == max (no variation).
+  - Gather and map step-specific warning and alarm logs from `realtime_alarms`.
+  - Return the full statistics as a JSON payload.
+- [x] Task 3: Clean up `Overview.cshtml`
+  - Removed double-rendering of mock data on page load.
+  - Retained the rendering functions `renderBatchTable` and `renderAlarmList`.
+- [x] Task 4: Integrate AJAX polling in `OverviewRealtime.js`
+  - Implemented `fetchCurrentBatchStats()` that fetches the backend API data.
+  - Invoked this function immediately on page load and established a 30-second interval polling.
+  - Fed live data into `renderBatchTable` and `renderAlarmList` to update the dashboard in real-time.
+- [x] Task 5: Testing & Verification
+  - Verified logic compiles.
+  - Confirmed robust dynamic Active Batch ID query fallback to MAX(batchId) ifbatches table not present.
+  - Verified single value formatting for min-max ranges.

@@ -703,26 +703,27 @@
         if (!container) return;
         
         let html = '';
-        data.forEach(alarm => {
+        // Always display at most 5 items
+        data.slice(0, 5).forEach(alarm => {
             const isAlarm = alarm.type === 'ALARM';
             const color = isAlarm ? '#ef4444' : '#f59e0b';
             const badgeBg = isAlarm ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)';
             const badgeBorder = isAlarm ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)';
             const iconClass = isAlarm ? 'alarm' : 'warning';
             
-            html += `<div class="alarm-item" style="display: flex; align-items: flex-start; gap: 10px; padding-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <div class="alarm-icon ${iconClass}" style="color: ${color}; font-size: 18px; padding-top: 6px;">
+            html += `<div class="alarm-item" style="display: flex; align-items: flex-start; gap: 10px; padding-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.05); min-width: 0;">
+                <div class="alarm-icon ${iconClass}" style="color: ${color}; font-size: 18px; padding-top: 6px; flex-shrink: 0;">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
-                <div class="alarm-content" style="flex: 1;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="color: #94a3b8; font-size: 12px;">${alarm.time}</span>
-                            <span style="color: #fff; font-weight: 600; font-size: 12px; max-width: 130px;">${alarm.title}</span>
+                <div class="alarm-content" style="flex: 1; min-width: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; gap: 5px; min-width: 0;">
+                        <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
+                            <span style="color: #94a3b8; font-size: 12px; flex-shrink: 0;">${alarm.time}</span>
+                            <span style="color: #fff; font-weight: 600; font-size: 12px; max-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block;" title="${alarm.title}">${alarm.title}</span>
                         </div>
-                        <span class="alarm-badge ${iconClass}" style="background: ${badgeBg}; color: ${color}; border: 1px solid ${badgeBorder}; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; width: 72px; text-align: center;">${alarm.type}</span>
+                        <span class="alarm-badge ${iconClass}" style="background: ${badgeBg}; color: ${color}; border: 1px solid ${badgeBorder}; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; width: 72px; text-align: center; flex-shrink: 0;">${alarm.type}</span>
                     </div>
-                    <div style="color: #94a3b8; font-size: 12px;">${alarm.message}</div>
+                    <div style="color: #94a3b8; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${alarm.message}">${alarm.message}</div>
                 </div>
             </div>`;
         });
@@ -730,11 +731,6 @@
         container.innerHTML = html;
     }
 
-    // Initialize the table when DOM is ready
-    document.addEventListener('DOMContentLoaded', function() {
-        renderBatchTable(mockBatchData);
-        renderAlarmList(mockGlobalAlarms);
-    });
 </script>
 
 <atscada-task at-interval="1000"></atscada-task>

@@ -1,4 +1,4 @@
-using CsvHelper;
+﻿using CsvHelper;
 using Hino.Getdata.Common;
 using OfficeOpenXml;
 using System;
@@ -10,63 +10,420 @@ using System.Text;
 using System.Threading;
 using System.Web;
 using System.Web.Mvc;
-using System.Windows.Forms;
+using System.Data;
 
 namespace LongDucProject.Controllers
 {
     public class EventController : Controller
     {
         [HttpGet]
-        // GET: Event
-        public JsonResult GetEventLog(string starttime, string endtime)
+        public JsonResult GetBatches()
         {
-            var Event = new EventCommon();
-            var list = Event.GetEventLog(starttime, endtime).ToList();
-            return Json(list, JsonRequestBehavior.AllowGet);
+            try
+            {
+                var connector = new Hino.DatabaseConnector.MySQLConnect()
+                {
+                    ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
+                };
+                var dt = connector.ExecuteQuery("SELECT id, name, status FROM batches ORDER BY id DESC");
+                var list = new List<object>();
+                if (dt != null)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        list.Add(new
+                        {
+                            id = Convert.ToInt32(row["id"]),
+                            name = row["name"].ToString(),
+                            status = row["status"] != DBNull.Value ? row["status"].ToString() : ""
+                        });
+                    }
+                }
+                return Json(list, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
         }
 
-        [HttpPost]
-        public JsonResult GetEventData(string starttime, string endtime, string batchId, int draw, int start, int length)
+        [HttpGet]
+        public JsonResult GetEventLogRealtime(string batchId)
         {
-            var Event = new EventCommon();
-            var resultList = Event.GetEventLog(starttime, endtime);
-            var list = resultList != null ? resultList.ToList() : new List<Hino.Parameter.Common.EventParameter>();
-
-            var searchValue = Request.Form["search[value]"];
-            if (!string.IsNullOrEmpty(searchValue))
+            try
             {
-                list = list.Where(x => 
-                    (x.Description != null && x.Description.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) || 
-                    (x.Location != null && x.Location.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) ||
-                    (x.Status != null && x.Status.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
-                ).ToList();
+                var connector = new Hino.DatabaseConnector.MySQLConnect()
+                {
+                    ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
+                };
+
+                int selectedBatchId = -1;
+                if (!string.IsNullOrEmpty(batchId) && int.TryParse(batchId, out int bId))
+                {
+                    selectedBatchId = bId;
+                }
+
+                // If no batchId is selected, resolve the default batch
+                if (selectedBatchId <= 0)
+                {
+                    // 1. Get active batch
+                    var dtActive = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Active' LIMIT 1");
+                    if (dtActive != null && dtActive.Rows.Count > 0)
+                    {
+                        selectedBatchId = Convert.ToInt32(dtActive.Rows[0]["id"]);
+                    }
+                    else
+                    {
+                        // 2. Get latest completed batch
+                        var dtCompleted = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Completed' ORDER BY id DESC LIMIT 1");
+                        if (dtCompleted != null && dtCompleted.Rows.Count > 0)
+                        {
+                            selectedBatchId = Convert.ToInt32(dtCompleted.Rows[0]["id"]);
+                        }
+                        else
+                        {
+                            // 3. Get latest overall
+                            var dtLatest = connector.ExecuteQuery("SELECT id FROM batches ORDER BY id DESC LIMIT 1");
+                            if (dtLatest != null && dtLatest.Rows.Count > 0)
+                            {
+                                selectedBatchId = Convert.ToInt32(dtLatest.Rows[0]["id"]);
+                            }
+                        }
+                    }
+                }
+
+                if (selectedBatchId <= 0)
+                {
+                    return Json(new {
+                        batchId = 0,
+                        batchName = "-",
+                        cycleSummary = new {
+                            status = "PENDING",
+                            statusLabel = "Không tìm thấy dữ liệu mẻ",
+                            batchId = "-",
+                            productName = "-",
+                            endTime = "-",
+                            formula = "-",
+                            totalTime = "-",
+                            weight = "-",
+                            startTime = "-"
+                        },
+                        phases = new List<object>(),
+                        events = new List<object>(),
+                        note = "Không tìm thấy dữ liệu mẻ."
+                    }, JsonRequestBehavior.AllowGet);
+                }
+
+                // 1. Query Batch Details
+                var dtBatch = connector.ExecuteQuery($"SELECT id, name, status, start_time, end_time, device_name FROM batches WHERE id = {selectedBatchId}");
+                string batchName = "-";
+                string batchStatus = "";
+                string startStr = "-";
+                string endStr = "-";
+                string durationStr = "-";
+                string deviceName = "-";
+
+                if (dtBatch != null && dtBatch.Rows.Count > 0)
+                {
+                    var rowBatch = dtBatch.Rows[0];
+                    batchName = rowBatch["name"].ToString();
+                    batchStatus = rowBatch["status"].ToString();
+                    deviceName = rowBatch["device_name"] != DBNull.Value ? rowBatch["device_name"].ToString() : "TX01 A";
+
+                    if (rowBatch["start_time"] != DBNull.Value)
+                    {
+                        DateTime startTime = Convert.ToDateTime(rowBatch["start_time"]);
+                        startStr = startTime.ToString("HH:mm:ss");
+                        if (rowBatch["end_time"] != DBNull.Value)
+                        {
+                            DateTime endTime = Convert.ToDateTime(rowBatch["end_time"]);
+                            endStr = endTime.ToString("HH:mm:ss");
+                            double totalSeconds = (endTime - startTime).TotalSeconds;
+                            durationStr = FormatDuration(totalSeconds);
+                        }
+                        else
+                        {
+                            double totalSeconds = (DateTime.Now - startTime).TotalSeconds;
+                            durationStr = FormatDuration(totalSeconds);
+                        }
+                    }
+                }
+
+                var cycleSummary = new {
+                    status = batchStatus.ToUpper(),
+                    statusLabel = batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ đang chạy..." : "Chu kỳ hoàn tất thành công",
+                    batchId = batchName,
+                    productName = deviceName,
+                    endTime = endStr,
+                    formula = "TX01 - Formula A",
+                    totalTime = durationStr,
+                    weight = "500 kg",
+                    startTime = startStr
+                };
+
+                // 2. Query Phase Logs and Telemetry/Alarms
+                var stepsList = new List<object>();
+
+                var dtAlarmLog = connector.ExecuteQuery($"SELECT OccurrenceTime, RestoreTime, Description, Status, TagNo FROM alarmlog WHERE batchId = {selectedBatchId}");
+                var dtTelemetry = connector.ExecuteQuery($"SELECT DateTime, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi FROM alarmreport WHERE batchId = {selectedBatchId} ORDER BY DateTime ASC");
+                var dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE batchId = {selectedBatchId} ORDER BY DateTime ASC, id ASC");
+
+                var stepDefs = new[]
+                {
+                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = "720s" },
+                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = "780s" },
+                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = "600s" },
+                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = "600s" },
+                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = "720s" },
+                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = "1200s" },
+                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = "1500s" },
+                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = "180s" }
+                };
+
+                var logRows = dtAlarmLog != null ? dtAlarmLog.AsEnumerable().ToList() : new List<DataRow>();
+                var telemetryRows = dtTelemetry != null ? dtTelemetry.AsEnumerable().ToList() : new List<DataRow>();
+                var alarmRows = dtAlarms != null ? dtAlarms.AsEnumerable().ToList() : new List<DataRow>();
+
+                for (int i = 0; i < stepDefs.Length; i++)
+                {
+                    var def = stepDefs[i];
+                    var stepLogRow = logRows.FirstOrDefault(r => {
+                        string rowTagNo = r.Table.Columns.Contains("TagNo") && r["TagNo"] != DBNull.Value ? r["TagNo"].ToString().Trim() : "";
+                        if (!string.IsNullOrEmpty(rowTagNo))
+                        {
+                            return rowTagNo.Equals(def.TagNo, StringComparison.OrdinalIgnoreCase);
+                        }
+                        string desc = r["Description"] != DBNull.Value ? r["Description"].ToString() : "";
+                        if (def.Code == 1 && (desc.IndexOf("Cấp Liệu", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Cap Lieu", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                        if (def.Code == 2 && (desc.IndexOf("Trộn 1", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Tron 1", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                        if (def.Code == 3 && (desc.IndexOf("Xả Đáy", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Xa Day", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                        if (def.Code == 4 && (desc.IndexOf("Rung Xả Đ", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Rung Xa D", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                        if (def.Code == 5 && (desc.IndexOf("Hút Xả Đáy", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Hut Xa Day", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                        if (def.Code == 6 && (desc.IndexOf("Trộn 2", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Tron 2", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                        if (def.Code == 7 && (desc.IndexOf("Xả Hàng", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Xa Hang", StringComparison.OrdinalIgnoreCase) >= 0) && desc.IndexOf("Rung", StringComparison.OrdinalIgnoreCase) < 0) return true;
+                        if (def.Code == 8 && (desc.IndexOf("Rung Xả H", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Rung Xa H", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                        return false;
+                    });
+
+                    if (stepLogRow == null)
+                    {
+                        stepsList.Add(new
+                        {
+                            num = def.Code,
+                            name = def.Name,
+                            startTime = "-",
+                            endTime = "-",
+                            status = "pending",
+                            statusText = "Chưa bắt đầu",
+                            duration = "-",
+                            alerts = new List<object>()
+                        });
+                    }
+                    else
+                    {
+                        DateTime startTime = Convert.ToDateTime(stepLogRow["OccurrenceTime"]);
+                        string stepStartStr = startTime.ToString("HH:mm:ss");
+                        string stepEndStr = "-";
+                        string stepDurationStr = "-";
+                        string status = "in-progress";
+                        string statusText = "Đang thực hiện";
+
+                        string statusVal = stepLogRow["Status"].ToString().Trim();
+                        bool isCompleted = statusVal.Equals("Resolved", StringComparison.OrdinalIgnoreCase);
+
+                        DateTime? endTime = null;
+                        if (isCompleted)
+                        {
+                            status = "completed";
+                            statusText = "Hoàn thành";
+                            if (stepLogRow["RestoreTime"] != DBNull.Value)
+                            {
+                                endTime = Convert.ToDateTime(stepLogRow["RestoreTime"]);
+                                stepEndStr = endTime.Value.ToString("HH:mm:ss");
+                                double totalSeconds = (endTime.Value - startTime).TotalSeconds;
+                                stepDurationStr = $"{(int)totalSeconds}s";
+                            }
+                        }
+
+                        // Find alerts for this step
+                        var stepAlertsList = new List<object>();
+                        var stepAlarms = alarmRows.Where(r => {
+                            string cd = r["CongDoan"] != DBNull.Value ? r["CongDoan"].ToString().Trim() : "";
+                            if (string.IsNullOrEmpty(cd)) return false;
+
+                            if (cd.Equals(def.TagNo, StringComparison.OrdinalIgnoreCase)) return true;
+                            if (cd.Equals(def.Name, StringComparison.OrdinalIgnoreCase)) return true;
+
+                            string cdLower = RemoveSign4VietnameseString(cd).ToLower();
+                            string defNameLower = RemoveSign4VietnameseString(def.Name).ToLower();
+                            if (cdLower == defNameLower) return true;
+
+                            if (def.Code == 1 && (cdLower.Contains("cap lieu") || cdLower.Contains("cấp liệu") || cdLower.Contains("t001"))) return true;
+                            if (def.Code == 2 && (cdLower.Contains("tron 1") || cdLower.Contains("trộn 1") || cdLower.Contains("t002"))) return true;
+                            if (def.Code == 3 && (cdLower.Contains("xa day") || cdLower.Contains("xả đáy") || cdLower.Contains("t003"))) return true;
+                            if (def.Code == 4 && (cdLower.Contains("rung xa day") || cdLower.Contains("rung xả đáy") || cdLower.Contains("t004"))) return true;
+                            if (def.Code == 5 && (cdLower.Contains("hut xa day") || cdLower.Contains("hút xả đáy") || cdLower.Contains("t005"))) return true;
+                            if (def.Code == 6 && (cdLower.Contains("tron 2") || cdLower.Contains("trộn 2") || cdLower.Contains("t006"))) return true;
+                            if (def.Code == 7 && (cdLower.Contains("xa hang") || cdLower.Contains("xả hàng") || cdLower.Contains("t007")) && !cdLower.Contains("rung")) return true;
+                            if (def.Code == 8 && (cdLower.Contains("rung xa hang") || cdLower.Contains("rung xả hàng") || cdLower.Contains("t008"))) return true;
+
+                            return false;
+                        }).ToList();
+
+                        foreach (var row in stepAlarms)
+                        {
+                            DateTime alarmTime = Convert.ToDateTime(row["DateTime"]);
+                            string severity = row["Severity"].ToString();
+                            string tagName = row["TagName"].ToString();
+                            double val = Convert.ToDouble(row["Value"]);
+                            double threshold = Convert.ToDouble(row["Threshold"]);
+                            string msg = row["Message"].ToString();
+
+                            string unit = tagName.IndexOf("NhietDo", StringComparison.OrdinalIgnoreCase) >= 0 ? "°C" :
+                                         tagName.IndexOf("ApSuat", StringComparison.OrdinalIgnoreCase) >= 0 ? "bar" : "";
+
+                            string detailMessage = $"Giá trị: {val.ToString("0.#", CultureInfo.InvariantCulture)} {unit} (ngưỡng: {threshold.ToString("0.#", CultureInfo.InvariantCulture)} {unit})";
+
+                            stepAlertsList.Add(new
+                            {
+                                time = alarmTime.ToString("HH:mm:ss"),
+                                type = severity.ToUpper(),
+                                title = msg,
+                                message = detailMessage
+                            });
+                        }
+
+                        stepsList.Add(new
+                        {
+                            num = def.Code,
+                            name = def.Name,
+                            startTime = stepStartStr,
+                            endTime = stepEndStr,
+                            status = status,
+                            statusText = statusText,
+                            duration = stepDurationStr,
+                            alerts = stepAlertsList
+                        });
+                    }
+                }
+
+                // 3. Query All Events (no severity filter, taking all columns needed)
+                var eventsList = new List<object>();
+                foreach (var row in alarmRows)
+                {
+                    DateTime alarmTime = Convert.ToDateTime(row["DateTime"]);
+                    string severity = row["Severity"].ToString();
+                    string msg = row["Message"].ToString();
+                    string cd = row["CongDoan"] != DBNull.Value ? row["CongDoan"].ToString().Trim() : "";
+
+                    // Convert TagNo to Phase Name if matching
+                    if (cd.Equals("T001", StringComparison.OrdinalIgnoreCase)) cd = "Cấp liệu";
+                    else if (cd.Equals("T002", StringComparison.OrdinalIgnoreCase)) cd = "Trộn 1";
+                    else if (cd.Equals("T003", StringComparison.OrdinalIgnoreCase)) cd = "Xả đáy";
+                    else if (cd.Equals("T004", StringComparison.OrdinalIgnoreCase)) cd = "Rung xả đáy";
+                    else if (cd.Equals("T005", StringComparison.OrdinalIgnoreCase)) cd = "Hút xả đáy";
+                    else if (cd.Equals("T006", StringComparison.OrdinalIgnoreCase)) cd = "Trộn 2";
+                    else if (cd.Equals("T007", StringComparison.OrdinalIgnoreCase)) cd = "Xả hàng";
+                    else if (cd.Equals("T008", StringComparison.OrdinalIgnoreCase)) cd = "Rung xả hàng";
+
+                    eventsList.Add(new
+                    {
+                        time = alarmTime.ToString("HH:mm:ss"),
+                        phase = cd,
+                        @event = msg,
+                        severity = severity.ToUpper()
+                    });
+                }
+
+                string note = batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase)
+                    ? "Chu kỳ đang chạy. Chất lượng sản phẩm: <strong class='text-warning'>ĐANG ĐÁNH GIÁ</strong>"
+                    : "Chu kỳ hoàn tất. Chất lượng sản phẩm: <strong class='text-success'>ĐẠT</strong>";
+
+                return Json(new {
+                    batchId = selectedBatchId,
+                    batchName = batchName,
+                    cycleSummary = cycleSummary,
+                    phases = stepsList,
+                    events = eventsList,
+                    note = note
+                }, JsonRequestBehavior.AllowGet);
             }
-
-            int recordsTotal = list.Count;
-            var data = list.Skip(start).Take(length).ToList();
-
-            return Json(new {
-                draw = draw,
-                recordsTotal = recordsTotal,
-                recordsFiltered = recordsTotal,
-                data = data
-            });
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
         }
 
         [HttpGet]
         public FileResult ExportEventExcel(string starttime, string endtime, string batchId, string searchValue)
         {
-            var Event = new EventCommon();
-            var resultList = Event.GetEventLog(starttime, endtime);
-            var list = resultList != null ? resultList.ToList() : new List<Hino.Parameter.Common.EventParameter>();
-
-            if (!string.IsNullOrEmpty(searchValue))
+            var connector = new Hino.DatabaseConnector.MySQLConnect()
             {
-                list = list.Where(x => 
-                    (x.Description != null && x.Description.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) || 
-                    (x.Location != null && x.Location.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) ||
-                    (x.Status != null && x.Status.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
-                ).ToList();
+                ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
+            };
+
+            int selectedBatchId = -1;
+            if (!string.IsNullOrEmpty(batchId) && int.TryParse(batchId, out int bId))
+            {
+                selectedBatchId = bId;
+            }
+
+            if (selectedBatchId <= 0)
+            {
+                var dtActive = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Active' LIMIT 1");
+                if (dtActive != null && dtActive.Rows.Count > 0)
+                {
+                    selectedBatchId = Convert.ToInt32(dtActive.Rows[0]["id"]);
+                }
+                else
+                {
+                    var dtCompleted = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Completed' ORDER BY id DESC LIMIT 1");
+                    if (dtCompleted != null && dtCompleted.Rows.Count > 0)
+                    {
+                        selectedBatchId = Convert.ToInt32(dtCompleted.Rows[0]["id"]);
+                    }
+                    else
+                    {
+                        var dtLatest = connector.ExecuteQuery("SELECT id FROM batches ORDER BY id DESC LIMIT 1");
+                        if (dtLatest != null && dtLatest.Rows.Count > 0)
+                        {
+                            selectedBatchId = Convert.ToInt32(dtLatest.Rows[0]["id"]);
+                        }
+                    }
+                }
+            }
+
+            var list = new List<EventExportDto>();
+            if (selectedBatchId > 0)
+            {
+                var dtAlarms = connector.ExecuteQuery($"SELECT DateTime, CongDoan, Message, Severity FROM realtime_alarms WHERE batchId = {selectedBatchId} ORDER BY DateTime ASC, id ASC");
+                if (dtAlarms != null)
+                {
+                    foreach (DataRow row in dtAlarms.Rows)
+                    {
+                        DateTime alarmTime = Convert.ToDateTime(row["DateTime"]);
+                        string severity = row["Severity"].ToString();
+                        string msg = row["Message"].ToString();
+                        string cd = row["CongDoan"] != DBNull.Value ? row["CongDoan"].ToString().Trim() : "";
+
+                        if (cd.Equals("T001", StringComparison.OrdinalIgnoreCase)) cd = "Cấp liệu";
+                        else if (cd.Equals("T002", StringComparison.OrdinalIgnoreCase)) cd = "Trộn 1";
+                        else if (cd.Equals("T003", StringComparison.OrdinalIgnoreCase)) cd = "Xả đáy";
+                        else if (cd.Equals("T004", StringComparison.OrdinalIgnoreCase)) cd = "Rung xả đáy";
+                        else if (cd.Equals("T005", StringComparison.OrdinalIgnoreCase)) cd = "Hút xả đáy";
+                        else if (cd.Equals("T006", StringComparison.OrdinalIgnoreCase)) cd = "Trộn 2";
+                        else if (cd.Equals("T007", StringComparison.OrdinalIgnoreCase)) cd = "Xả hàng";
+                        else if (cd.Equals("T008", StringComparison.OrdinalIgnoreCase)) cd = "Rung xả hàng";
+
+                        list.Add(new EventExportDto
+                        {
+                            ThoiGian = alarmTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                            CongDoan = cd,
+                            SuKien = msg,
+                            MucDo = severity.ToUpper()
+                        });
+                    }
+                }
             }
 
             byte[] fileBytes = LongDucProjectTest.Service.ExportUtility.ExportToExcel(list, "Events");
@@ -76,113 +433,131 @@ namespace LongDucProject.Controllers
         [HttpGet]
         public FileResult ExportEventCsv(string starttime, string endtime, string batchId, string searchValue)
         {
-            var Event = new EventCommon();
-            var resultList = Event.GetEventLog(starttime, endtime);
-            var list = resultList != null ? resultList.ToList() : new List<Hino.Parameter.Common.EventParameter>();
-
-            if (!string.IsNullOrEmpty(searchValue))
+            var connector = new Hino.DatabaseConnector.MySQLConnect()
             {
-                list = list.Where(x => 
-                    (x.Description != null && x.Description.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) || 
-                    (x.Location != null && x.Location.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) ||
-                    (x.Status != null && x.Status.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
-                ).ToList();
+                ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
+            };
+
+            int selectedBatchId = -1;
+            if (!string.IsNullOrEmpty(batchId) && int.TryParse(batchId, out int bId))
+            {
+                selectedBatchId = bId;
+            }
+
+            if (selectedBatchId <= 0)
+            {
+                var dtActive = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Active' LIMIT 1");
+                if (dtActive != null && dtActive.Rows.Count > 0)
+                {
+                    selectedBatchId = Convert.ToInt32(dtActive.Rows[0]["id"]);
+                }
+                else
+                {
+                    var dtCompleted = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Completed' ORDER BY id DESC LIMIT 1");
+                    if (dtCompleted != null && dtCompleted.Rows.Count > 0)
+                    {
+                        selectedBatchId = Convert.ToInt32(dtCompleted.Rows[0]["id"]);
+                    }
+                    else
+                    {
+                        var dtLatest = connector.ExecuteQuery("SELECT id FROM batches ORDER BY id DESC LIMIT 1");
+                        if (dtLatest != null && dtLatest.Rows.Count > 0)
+                        {
+                            selectedBatchId = Convert.ToInt32(dtLatest.Rows[0]["id"]);
+                        }
+                    }
+                }
+            }
+
+            var list = new List<EventExportDto>();
+            if (selectedBatchId > 0)
+            {
+                var dtAlarms = connector.ExecuteQuery($"SELECT DateTime, CongDoan, Message, Severity FROM realtime_alarms WHERE batchId = {selectedBatchId} ORDER BY DateTime ASC, id ASC");
+                if (dtAlarms != null)
+                {
+                    foreach (DataRow row in dtAlarms.Rows)
+                    {
+                        DateTime alarmTime = Convert.ToDateTime(row["DateTime"]);
+                        string severity = row["Severity"].ToString();
+                        string msg = row["Message"].ToString();
+                        string cd = row["CongDoan"] != DBNull.Value ? row["CongDoan"].ToString().Trim() : "";
+
+                        if (cd.Equals("T001", StringComparison.OrdinalIgnoreCase)) cd = "Cấp liệu";
+                        else if (cd.Equals("T002", StringComparison.OrdinalIgnoreCase)) cd = "Trộn 1";
+                        else if (cd.Equals("T003", StringComparison.OrdinalIgnoreCase)) cd = "Xả đáy";
+                        else if (cd.Equals("T004", StringComparison.OrdinalIgnoreCase)) cd = "Rung xả đáy";
+                        else if (cd.Equals("T005", StringComparison.OrdinalIgnoreCase)) cd = "Hút xả đáy";
+                        else if (cd.Equals("T006", StringComparison.OrdinalIgnoreCase)) cd = "Trộn 2";
+                        else if (cd.Equals("T007", StringComparison.OrdinalIgnoreCase)) cd = "Xả hàng";
+                        else if (cd.Equals("T008", StringComparison.OrdinalIgnoreCase)) cd = "Rung xả hàng";
+
+                        list.Add(new EventExportDto
+                        {
+                            ThoiGian = alarmTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                            CongDoan = cd,
+                            SuKien = msg,
+                            MucDo = severity.ToUpper()
+                        });
+                    }
+                }
             }
 
             byte[] fileBytes = LongDucProjectTest.Service.ExportUtility.ExportToCsv(list);
             return File(fileBytes, "text/csv", $"Events_{DateTime.Now:yyyyMMddHHmmss}.csv");
         }
 
-        public ActionResult GetdataExportEvent(string starttime, string endtime, string filepath)
+        // ================= HELPERS =================
+        private static string RemoveSign4VietnameseString(string str)
         {
-            var Event = new EventCommon();
-            var list = Event.GetEventLog(starttime, endtime);
-            var x = filepath;
-            var listExcel = Event.GetEventLog(starttime, endtime).ToList();
-            try
+            if (string.IsNullOrEmpty(str)) return "";
+            string[] signedPattern = new string[]
             {
-
-                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-                using (ExcelPackage pck = new ExcelPackage(new FileInfo("report.xlxs"), new FileInfo($@"C:\Program Files\ATPro\ATSCADA\Reports\EventReport.xlsx")))
+                "aàảãáạăằẳẵắặâầẩẫấậ",
+                "dđ",
+                "eèẻẽéẹêềểễếệ",
+                "iìỉĩíị",
+                "oòỏõóọôồổỗốộơờởỡớợ",
+                "uùủũúụưừửữứự",
+                "yỳỷỹýỵ",
+                "AÀẢÃÁẠĂẰẲẴẮẶÂẦẨẪẤẬ",
+                "DĐ",
+                "EÈẺẼÉẸÊỀỂỄẾỆ",
+                "IÌỈĨÍỊ",
+                "OÒỎÕÓỌÔỒỔỖỐỘƠỜỞỠỚỢ",
+                "UÙỦŨÚỤƯỪỬỮỨỰ",
+                "YỲỶỸÝÝ"
+            };
+            string[] unsignedReplacement = new string[]
+            {
+                "a", "d", "e", "i", "o", "u", "y",
+                "A", "D", "E", "I", "O", "U", "Y"
+            };
+            for (int i = 0; i < signedPattern.Length; i++)
+            {
+                for (int j = 0; j < signedPattern[i].Length; j++)
                 {
-                    ExcelWorksheet ws = pck.Workbook.Worksheets["Event"];
-
-                    int rowstart = 10;
-                    foreach (var item in listExcel)
-                    {
-                        ws.Cells[string.Format("A{0}", rowstart)].Value = item.count;
-                        ws.Cells[string.Format("B{0}", rowstart)].Value = item.OccurrenceTime;
-                        ws.Cells[string.Format("C{0}", rowstart)].Value = item.Location;
-                        ws.Cells[string.Format("D{0}", rowstart)].Value = item.Description;
-                        ws.Cells[string.Format("E{0}", rowstart)].Value = item.Status;
-
-                        rowstart++;
-                    }
-                    ws.Cells["A:AZ"].AutoFitColumns();
-                    //pck.Save();
-                    Session["DownloadExcel_FileManager"] = pck.GetAsByteArray();
-                    Session["ReportName"] = $@"Event_From_{starttime.Substring(0, 10)}_To_{endtime.Substring(0, 10)}_Report.xlsx";
-                    return Json("", JsonRequestBehavior.AllowGet);
+                    str = str.Replace(signedPattern[i][j], unsignedReplacement[i][0]);
                 }
             }
-            catch (Exception ex)
-            {
-                throw;
-            }
-
-
+            return str;
         }
 
-        public void GetdataCSVExportEvent(string starttime, string endtime, string filepath)
+        private static string FormatDuration(double totalSeconds)
         {
-            var Event = new EventCommon();
-            var listExcel = Event.GetEventLog(starttime, endtime).ToList();
-            try
+            TimeSpan t = TimeSpan.FromSeconds(totalSeconds);
+            if (t.Hours > 0)
             {
-
-                var stream = new MemoryStream();
-                using (var writer = new StreamWriter(stream, Encoding.UTF8, 1024, true))
-                using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-                {
-                    csv.WriteField("No");
-                    csv.WriteField("OccurrenceTime");
-                    csv.WriteField("Plant Name");
-                    csv.WriteField("Device");
-                    csv.WriteField("Status");
-                    csv.NextRecord();
-                    foreach (var item in listExcel)
-                    {
-                        csv.WriteField(item.count);
-                        csv.WriteField(item.OccurrenceTime);
-                        csv.WriteField(item.Location);
-                        csv.WriteField(item.Description);
-                        csv.WriteField(item.Status);
-                        csv.NextRecord();
-                    }
-                }
-                Session["DownloadExcel_FileManager"] = stream.ToArray();
-                Session["ReportName"] = $@"Events_From_{starttime.Substring(0, 10)}_To_{endtime.Substring(0, 10)}_Report.csv";     
+                return string.Format("{0}h {1}m {2}s", t.Hours, t.Minutes, t.Seconds);
             }
-            catch (Exception ex)
-            {
-                throw;
-            }
-
-
+            return string.Format("{0}m {1}s", t.Minutes, t.Seconds);
         }
+    }
 
-        public ActionResult Download()
-        {
-
-            if (Session["DownloadExcel_FileManager"] != null)
-            {
-                byte[] data = Session["DownloadExcel_FileManager"] as byte[];
-                return File(data, "application/octet-stream", $@"{Session["ReportName"]}");
-            }
-            else
-            {
-                return new EmptyResult();
-            }
-        }
+    public class EventExportDto
+    {
+        public string ThoiGian { get; set; }
+        public string CongDoan { get; set; }
+        public string SuKien { get; set; }
+        public string MucDo { get; set; }
     }
 }
