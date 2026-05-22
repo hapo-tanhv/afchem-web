@@ -104,43 +104,43 @@
             <h3>Trạng thái quy trình</h3>
         </div>
         <div class="process-timeline-container">
-            <ul class="process-steps">
-                <li class="step completed">
+            <ul class="process-steps" id="processTimeline">
+                <li class="step" data-step="1">
                     <div class="step-icon"><i class="fas fa-check"></i></div>
                     <div class="step-label">1</div>
                     <div class="step-name">Cấp liệu</div>
                 </li>
-                <li class="step completed">
+                <li class="step" data-step="2">
                     <div class="step-icon"><i class="fas fa-check"></i></div>
                     <div class="step-label">2</div>
                     <div class="step-name">Trộn 1</div>
                 </li>
-                <li class="step completed">
+                <li class="step" data-step="3">
                     <div class="step-icon"><i class="fas fa-check"></i></div>
                     <div class="step-label">3</div>
                     <div class="step-name">Xả đáy</div>
                 </li>
-                <li class="step completed">
+                <li class="step" data-step="4">
                     <div class="step-icon"><i class="fas fa-check"></i></div>
                     <div class="step-label">4</div>
                     <div class="step-name">Rung xả đáy</div>
                 </li>
-                <li class="step completed">
+                <li class="step" data-step="5">
                     <div class="step-icon"><i class="fas fa-check"></i></div>
                     <div class="step-label">5</div>
                     <div class="step-name">Hút xả đáy</div>
                 </li>
-                <li class="step completed">
+                <li class="step" data-step="6">
                     <div class="step-icon"><i class="fas fa-check"></i></div>
                     <div class="step-label">6</div>
                     <div class="step-name">Trộn 2</div>
                 </li>
-                <li class="step completed">
+                <li class="step" data-step="7">
                     <div class="step-icon"><i class="fas fa-check"></i></div>
                     <div class="step-label">7</div>
                     <div class="step-name">Xả hàng</div>
                 </li>
-                <li class="step active">
+                <li class="step" data-step="8">
                     <div class="step-icon"></div>
                     <div class="step-label">8</div>
                     <div class="step-name">Rung xả hàng</div>
@@ -149,25 +149,25 @@
             <div class="step-stats">
                 <div class="stat-box">
                     <div class="stat-title">Bước hiện tại</div>
-                    <div class="stat-val text-cyan">7 / 8</div>
+                    <div class="stat-val text-cyan" id="statCurrentStep">- / -</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-title">Thời gian chuẩn</div>
-                    <div class="stat-val">180 <small>s</small></div>
+                    <div class="stat-val"><span id="statStandardTime">180</span> <small>s</small></div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-title">Thời gian đã chạy</div>
-                    <div class="stat-val">120 <small>s</small></div>
+                    <div class="stat-val"><span id="statElapsedTime">0</span> <small>s</small></div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-title">Thời gian còn lại</div>
-                    <div class="stat-val">60 <small>s</small></div>
+                    <div class="stat-val"><span id="statRemainingTime">180</span> <small>s</small></div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-title">Tiến độ bước</div>
-                    <div class="stat-val text-cyan">87.5%</div>
-                    <div class="progress-bar-small"><div class="progress-fill" style="width: 87.5%;"></div></div>
-                </div>3
+                    <div class="stat-val text-cyan" id="statProgressPercent">0%</div>
+                    <div class="progress-bar-small"><div class="progress-fill" id="statProgressFill" style="width: 0%;"></div></div>
+                </div>
             </div>
         </div>
     </div>
@@ -188,7 +188,7 @@
                         <div class="param-card-icon icon-blue"><i class="fas fa-stopwatch"></i></div>
                         <div class="param-card-info">
                             <div class="param-card-title">Thời gian cấp liệu</div>
-                            <div class="param-card-value">1426 <small>s</small></div>
+                            <div class="param-card-value"><span id="feedingTime">1426</span> <small>s</small></div>
                             <div class="param-card-std">Tiêu chuẩn: <span>1426 <small>s</small></span></div>
                         </div>
                     </div>
@@ -196,7 +196,7 @@
                         <div class="param-card-icon icon-cyan"><i class="fas fa-stopwatch"></i></div>
                         <div class="param-card-info">
                             <div class="param-card-title">Thời gian trộn 1</div>
-                            <div class="param-card-value">885 <small>s</small></div>
+                            <div class="param-card-value"><span id="mix1Time">885</span> <small>s</small></div>
                             <div class="param-card-std">Tiêu chuẩn: <span>885 <small>s</small></span></div>
                         </div>
                     </div>
@@ -204,7 +204,7 @@
                         <div class="param-card-icon icon-orange"><i class="fas fa-stopwatch"></i></div>
                         <div class="param-card-info">
                             <div class="param-card-title">Thời gian xả đáy</div>
-                            <div class="param-card-value">16 <small>s</small></div>
+                            <div class="param-card-value"><span id="bottomDischargeTime">16</span> <small>s</small></div>
                             <div class="param-card-std">Tiêu chuẩn: <span>496 <small>s</small></span></div>
                         </div>
                     </div>
@@ -212,7 +212,7 @@
                         <div class="param-card-icon icon-purple"><i class="fas fa-stopwatch"></i></div>
                         <div class="param-card-info">
                             <div class="param-card-title">Thời gian rung xả đáy</div>
-                            <div class="param-card-value">16 <small>s</small></div>
+                            <div class="param-card-value"><span id="bottomDischargeVibrationTime">16</span> <small>s</small></div>
                             <div class="param-card-std">Tiêu chuẩn: <span>16 <small>s</small></span></div>
                         </div>
                     </div>
@@ -270,7 +270,7 @@
                         <div class="param-card-icon icon-cyan"><i class="fas fa-stopwatch"></i></div>
                         <div class="param-card-info">
                             <div class="param-card-title">Thời gian hút xả đáy</div>
-                            <div class="param-card-value">16 <small>s</small></div>
+                            <div class="param-card-value"><span id="bottomSuctionDischargeTime">16</span> <small>s</small></div>
                             <div class="param-card-std">Tiêu chuẩn: <span>586 <small>s</small></span></div>
                         </div>
                     </div>
@@ -278,7 +278,7 @@
                         <div class="param-card-icon icon-green"><i class="fas fa-stopwatch"></i></div>
                         <div class="param-card-info">
                             <div class="param-card-title">Thời gian trộn 2</div>
-                            <div class="param-card-value">4 <small>s</small></div>
+                            <div class="param-card-value"><span id="mix2Time">4</span> <small>s</small></div>
                             <div class="param-card-std">Tiêu chuẩn: <span>1174 <small>s</small></span></div>
                         </div>
                     </div>
@@ -286,7 +286,7 @@
                         <div class="param-card-icon icon-green"><i class="fas fa-stopwatch"></i></div>
                         <div class="param-card-info">
                             <div class="param-card-title">Thời gian xả hàng</div>
-                            <div class="param-card-value">2 <small>s</small></div>
+                            <div class="param-card-value"><span id="clearanceSaleTime">2</span> <small>s</small></div>
                             <div class="param-card-std">Tiêu chuẩn: <span>1142 <small>s</small></span></div>
                         </div>
                     </div>
@@ -294,7 +294,7 @@
                         <div class="param-card-icon icon-purple"><i class="fas fa-stopwatch"></i></div>
                         <div class="param-card-info">
                             <div class="param-card-title">Thời gian rung xả hàng</div>
-                            <div class="param-card-value">3 <small>s</small></div>
+                            <div class="param-card-value"><span id="vibrationDischargeTime">3</span> <small>s</small></div>
                             <div class="param-card-std">Tiêu chuẩn: <span>93 <small>s</small></span></div>
                         </div>
                     </div>
@@ -322,7 +322,7 @@
                         <div class="param-card-icon icon-blue"><i class="fas fa-tint"></i></div>
                         <div class="param-card-info">
                             <div class="param-card-title">Độ ẩm môi trường</div>
-                            <div class="param-card-value"><span id="Humidity">60.2</span> <small>%RH</small></div>
+                            <div class="param-card-value"><span id="Humidity">60.2</span> <small>%</small></div>
                             <div class="param-card-std">Tiêu chuẩn: <span>30-70 %</span></div>
                         </div>
                     </div>

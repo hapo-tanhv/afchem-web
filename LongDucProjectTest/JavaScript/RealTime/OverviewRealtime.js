@@ -1,9 +1,10 @@
 ﻿var activepower;
 var temperature;
 var pressure;
-var USE_FAKE_DATA = true; // Set to true to use fake data, false to use real SCADA data
+var USE_FAKE_DATA = false; // Set to true to use fake data, false to use real SCADA data
 
 document.addEventListener("DOMContentLoaded", function () {
+    var activeStepTimer = null;
     // FAKE DATA - Generate random values for testing
     function generateFakeData() {
         if (!USE_FAKE_DATA) return; // Skip if using real data
@@ -11,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             activepower = Math.floor(Math.random() * 90) + 10; // 10-100 kW
             temperature = Math.floor(Math.random() * 50) + 25;    // 25-75 °C
-            pressure = Math.floor(Math.random() * 200) + 200;    // 200-400 Pa
+            pressure = Math.floor(Math.random() * 10) + 10;    // 10-20 Pa
 
             // Separate values for line chart (realistic temperature ranges)
             var ambientTemp = 24 + Math.random() * 8; // 24-32°C
@@ -21,7 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (window.speedChartInstance && window.speedChartInstance.series && window.speedChartInstance.series[0]) {
                 window.speedChartInstance.series[0].update({ data: [activepower] });
                 // Update plotBands dynamically based on current value
-                updateChartWithDynamicBands(window.speedChartInstance, activepower, 3000, {
+                updateChartWithDynamicBands(window.speedChartInstance, activepower, 5000, {
                     color1: '#EF4444',
                     color2: 'rgba(239, 68, 68, 0.1)'
                 });
@@ -29,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (window.tempChartInstance && window.tempChartInstance.series && window.tempChartInstance.series[0]) {
                 window.tempChartInstance.series[0].update({ data: [temperature] });
                 // Update plotBands dynamically based on current value
-                updateChartWithDynamicBands(window.tempChartInstance, temperature, 3000, {
+                updateChartWithDynamicBands(window.tempChartInstance, temperature, 5000, {
                     color1: '#7373f3',
                     color2: 'rgba(239, 68, 68, 0.1)'
                 });
@@ -37,7 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (window.pressureChartInstance && window.pressureChartInstance.series && window.pressureChartInstance.series[0]) {
                 window.pressureChartInstance.series[0].update({ data: [pressure] });
                 // Update plotBands dynamically based on current value
-                updateChartWithDynamicBands(window.pressureChartInstance, pressure, 3000, {
+                updateChartWithDynamicBands(window.pressureChartInstance, pressure, 5000, {
                     color1: '#a2f7f7',
                     color2: 'rgba(239, 68, 68, 0.1)'
                 });
@@ -108,6 +109,122 @@ document.addEventListener("DOMContentLoaded", function () {
                         renderBatchTable(data.steps);
                     }
                 }
+                
+                if (data && data.batchInfo) {
+                    var batchInfo = data.batchInfo;
+                    
+                    // Update header elements
+                    var batchNumEl = document.getElementById("headerBatchNumber");
+                    if (batchNumEl) batchNumEl.innerHTML = batchInfo.batchName || "-";
+                    
+                    var stepEl = document.getElementById("step");
+                    if (stepEl) stepEl.innerHTML = batchInfo.headerStepName || "";
+                    
+                    var statusEl = document.getElementById("headerMachineStatus");
+                    if (statusEl) {
+                        statusEl.innerHTML = batchInfo.machineStatus;
+                        if (batchInfo.machineStatus === "RUNNING") {
+                            statusEl.style.color = "#22c55e";
+                        } else {
+                            statusEl.style.color = "#3b82f6";
+                        }
+                    }
+                    
+                    var runningTimeEl = document.getElementById("headerRunningTime");
+                    if (runningTimeEl) runningTimeEl.innerHTML = batchInfo.headerRunningTime || "0s";
+                    
+                    var alarmCountEl = document.getElementById("alarmCount");
+                    if (alarmCountEl) alarmCountEl.innerHTML = batchInfo.alarmCount !== undefined ? batchInfo.alarmCount : "0";
+
+                    // Update timeline steps classes
+                    updateTimelineUI(batchInfo.activeStepCode, batchInfo.machineStatus);
+
+                    // Set up values for step statistics panel
+                    if (activeStepTimer) {
+                        clearInterval(activeStepTimer);
+                        activeStepTimer = null;
+                    }
+
+                    var serverTimeMs = new Date(batchInfo.serverTime.replace(/-/g, '/')).getTime();
+                    var localTimeMs = Date.now();
+                    var clientServerTimeOffset = localTimeMs - serverTimeMs;
+                    
+                    var activeStepStartTime = null;
+                    if (batchInfo.activeStepStartTime) {
+                        activeStepStartTime = new Date(batchInfo.activeStepStartTime.replace(/-/g, '/')).getTime();
+                    }
+
+                    function updateStepStatsUI() {
+                        var elapsed = 0;
+                        
+                        if (batchInfo.machineStatus === "COMPLETED") {
+                            var currentStepEl = document.getElementById("statCurrentStep");
+                            if (currentStepEl) currentStepEl.innerHTML = "8 / 8";
+                            
+                            var stdTimeEl = document.getElementById("statStandardTime");
+                            if (stdTimeEl) stdTimeEl.innerHTML = "180";
+                            
+                            var elapsedVal = 180;
+                            if (data.steps && data.steps.length > 7) {
+                                var step8 = data.steps[7];
+                                if (step8 && step8.duration && step8.duration !== "-") {
+                                    elapsedVal = parseInt(step8.duration) || 180;
+                                }
+                            }
+                            
+                            var elapsedEl = document.getElementById("statElapsedTime");
+                            if (elapsedEl) elapsedEl.innerHTML = elapsedVal;
+                            
+                            var remaining = Math.max(0, 180 - elapsedVal);
+                            var remainingEl = document.getElementById("statRemainingTime");
+                            if (remainingEl) remainingEl.innerHTML = remaining;
+                            
+                            var progressPercent = 100;
+                            var progressPercentEl = document.getElementById("statProgressPercent");
+                            if (progressPercentEl) progressPercentEl.innerHTML = progressPercent + "%";
+                            
+                            var progressFillEl = document.getElementById("statProgressFill");
+                            if (progressFillEl) {
+                                progressFillEl.style.width = progressPercent + "%";
+                            }
+                        } else {
+                            var currentStepEl = document.getElementById("statCurrentStep");
+                            if (currentStepEl) {
+                                currentStepEl.innerHTML = batchInfo.activeStepCode ? (batchInfo.activeStepCode + " / 8") : "";
+                            }
+                            
+                            var stdTimeEl = document.getElementById("statStandardTime");
+                            if (stdTimeEl) stdTimeEl.innerHTML = "180";
+                            
+                            if (activeStepStartTime) {
+                                var currentAdjustedTime = Date.now() - clientServerTimeOffset;
+                                elapsed = Math.floor((currentAdjustedTime - activeStepStartTime) / 1000);
+                                if (elapsed < 0) elapsed = 0;
+                            }
+                            
+                            var elapsedEl = document.getElementById("statElapsedTime");
+                            if (elapsedEl) elapsedEl.innerHTML = elapsed;
+                            
+                            var remaining = Math.max(0, 180 - elapsed);
+                            var remainingEl = document.getElementById("statRemainingTime");
+                            if (remainingEl) remainingEl.innerHTML = remaining;
+                            
+                            var activeStepCode = batchInfo.activeStepCode || 0;
+                            var progressPercent = Math.round((activeStepCode / 8) * 100);
+                            var progressPercentEl = document.getElementById("statProgressPercent");
+                            if (progressPercentEl) progressPercentEl.innerHTML = progressPercent + "%";
+                            
+                            var progressFillEl = document.getElementById("statProgressFill");
+                            if (progressFillEl) {
+                                progressFillEl.style.width = progressPercent + "%";
+                            }
+                        }
+                    }
+
+                    // Run stats UI update immediately and set 1s interval
+                    updateStepStatsUI();
+                    activeStepTimer = setInterval(updateStepStatsUI, 1000);
+                }
             },
             error: function (xhr, status, error) {
                 console.error('Error fetching current batch stats:', error);
@@ -142,43 +259,119 @@ document.addEventListener("DOMContentLoaded", function () {
     setInterval(fetchCurrentBatchStats, 30000); // 30 seconds for table stats
     setInterval(fetchRecentAlarms, 2000);       // 2 seconds for active alarms
 
+    var latestNhietDoMoiTruong = 0;
+    var latestNhietDoBonTronGiua = 0;
+    var latestApSuat = 0;
+
     var atscadaTask = document.querySelector('atscada-task');
     if (atscadaTask && atscadaTask.dataTask) {
         var dataTask = atscadaTask.dataTask;
         var dataCollection = dataTask.dataCollection;
 
         // Read scada tag data
-        dataCollection.add(`AFChemPLC.NhietDoMay`);
-        dataCollection.add(`AFChemPLC.NhietDoMoiTruong`);
-        dataCollection.add(`AFChemPLC.ApSuat`);
-        dataCollection.add(`AFChemPLC.QuyTrinh`);
-        dataCollection.add(`AFChemPLC.CongDoanMay`);
-        dataCollection.add(`AFChemPLC.NhietDoGiuaBuongTron`);
-        dataCollection.add(`AFChemPLC.DoAmMoiTruong`);
+        dataCollection.add(`AFChemTX01.NhietDoMoiTruong`);
+        dataCollection.add(`AFChemTX01.ApSuat`);
+        dataCollection.add(`AFChemTX01.DoAmMoiTruong`);
+        dataCollection.add(`AFChemTX01.NhietDoBonTronTren`);
+        dataCollection.add(`AFChemTX01.NhietDoBonTronGiua`);
+        dataCollection.add(`AFChemTX01.NhietDoBonTronDuoi`);
+        dataCollection.add(`AFChemTX01.ThoiGianCapLieu`);
+        dataCollection.add(`AFChemTX01.ThoiGianTron1`);
+        dataCollection.add(`AFChemTX01.ThoiGianXaDay`);
+        dataCollection.add(`AFChemTX01.ThoiGianRungXaDay`);
+        dataCollection.add(`AFChemTX01.ThoiGianHutXaDay`);
+        dataCollection.add(`AFChemTX01.ThoiGianTron2`);
+        dataCollection.add(`AFChemTX01.ThoiGianXaHang`);
+        dataCollection.add(`AFChemTX01.ThoiGianRungXaHang`);
 
         // Thêm tag nếu cần (các tag mới sẽ được cập nhật ở phase sau nếu kết nối PLC thật)
 
         if (!USE_FAKE_DATA) {
-            updateTag(dataCollection.get(`AFChemPLC.NhietDoMoiTruong`), document.querySelector('#AmbientTemp'));
-            updateTag(dataCollection.get(`AFChemPLC.DoAmMoiTruong`), document.querySelector('#Humidity'));
-            updateTag(dataCollection.get(`AFChemPLC.NhietDoGiuaBuongTron`), document.querySelector('#MixerMidTemp'));
-            updateTag(dataCollection.get(`AFChemPLC.NhietDoGiuaBuongTron`), document.querySelector('#TankDiagramTemp'));
-            updateTag(dataCollection.get(`AFChemPLC.ApSuat`), document.querySelector('#TankDiagramPressure'));
+            updateTag(dataCollection.get(`AFChemTX01.NhietDoMoiTruong`), document.querySelector('#AmbientTemp'), function(val) {
+                latestNhietDoMoiTruong = val;
+            });
+            updateTag(dataCollection.get(`AFChemTX01.DoAmMoiTruong`), document.querySelector('#Humidity'));
+            updateTag(dataCollection.get(`AFChemTX01.NhietDoBonTronTren`), document.querySelector('#TankDiagramTempTop'));
+            updateTag(dataCollection.get(`AFChemTX01.NhietDoBonTronGiua`), document.querySelector('#TankDiagramTemp'), function(val) {
+                latestNhietDoBonTronGiua = val;
+            });
+            updateTag(dataCollection.get(`AFChemTX01.NhietDoBonTronDuoi`), document.querySelector('#TankDiagramTempBot'));
+            updateTag(dataCollection.get(`AFChemTX01.ApSuat`), document.querySelector('#TankDiagramPressure'), function(val) {
+                latestApSuat = val;
+            });
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCapLieu`), document.querySelector('#feedingTime'));
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianTron1`), document.querySelector('#mix1Time'));
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianXaDay`), document.querySelector('#bottomDischargeTime'));
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaDay`), document.querySelector('#bottomDischargeVibrationTime'));
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianHutXaDay`), document.querySelector('#bottomSuctionDischargeTime'));
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianTron2`), document.querySelector('#mix2Time'));
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianXaHang`), document.querySelector('#clearanceSaleTime'));
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaHang`), document.querySelector('#vibrationDischargeTime'));
+
+            // Periodically update charts every 5 seconds (with debounce / performance throttling)
+            function updateRealCharts() {
+                // Update Gauge Charts
+                if (window.speedChartInstance && window.speedChartInstance.series && window.speedChartInstance.series[0]) {
+                    var val = Number(latestNhietDoMoiTruong) || 0;
+                    window.speedChartInstance.series[0].update({ data: [val] });
+                    updateChartWithDynamicBands(window.speedChartInstance, val, 100, {
+                        color1: '#EF4444',
+                        color2: 'rgba(239, 68, 68, 0.1)'
+                    });
+                }
+                
+                if (window.tempChartInstance && window.tempChartInstance.series && window.tempChartInstance.series[0]) {
+                    var val = Number(latestNhietDoBonTronGiua) || 0;
+                    window.tempChartInstance.series[0].update({ data: [val] });
+                    updateChartWithDynamicBands(window.tempChartInstance, val, 75, {
+                        color1: '#7373f3',
+                        color2: 'rgba(239, 68, 68, 0.1)'
+                    });
+                }
+                
+                if (window.pressureChartInstance && window.pressureChartInstance.series && window.pressureChartInstance.series[0]) {
+                    var val = Number(latestApSuat) || 0;
+                    window.pressureChartInstance.series[0].update({ data: [val] });
+                    updateChartWithDynamicBands(window.pressureChartInstance, val, 20, {
+                        color1: '#a2f7f7',
+                        color2: 'rgba(239, 68, 68, 0.1)'
+                    });
+                }
+                
+                // Update Line Chart
+                if (window.lineChartInstance) {
+                    updateLineChart(Number(latestNhietDoMoiTruong) || 0, Number(latestNhietDoBonTronGiua) || 0, Number(latestApSuat) || 0);
+                }
+            }
+            
+            // Run immediately after 1 second to ensure tags are resolved and charts are fully loaded
+            setTimeout(updateRealCharts, 1000);
+            
+            // Poll charts updates every 5 seconds
+            setInterval(updateRealCharts, 5000);
         }
 
         dataTask.start();
     }
 });
 
-function updateTag(dataTag, element) {
+function updateTag(dataTag, element, onValueChangeCallback) {
     if (dataTag && element) {
         dataTag.dispatcher.on('valueChanged', (data) => {
             if (data.e.newValue !== undefined) {
-                element.innerHTML = data.e.newValue;
+                var val = data.e.newValue;
+                element.innerHTML = val;
+                if (typeof onValueChangeCallback === 'function') {
+                    onValueChangeCallback(val);
+                }
             }
         });
         if (dataTag.Value !== undefined) {
-            element.innerHTML = data.e.newValue;
+            var val = dataTag.Value;
+            element.innerHTML = val;
+            if (typeof onValueChangeCallback === 'function') {
+                onValueChangeCallback(val);
+            }
         }
     }
 }
@@ -323,28 +516,10 @@ function TemperatureChart() {
 
 // Line chart with 2 Y-axes for temperature and pressure
 function LineChart() {
-    // Initial fake data for demonstration
-    var now = new Date();
-    var dataPoints = 20; // Number of data points to show
-
-    // Generate initial data
     var ambientTempData = [];
     var machineTempData = [];
     var pressureData = [];
     var categories = [];
-
-    for (var i = dataPoints; i > 0; i--) {
-        var time = new Date(now.getTime() - i * 5000);
-        categories.push(
-            (time.getMinutes() < 10 ? '0' : '') + time.getMinutes() + ':' +
-            (time.getSeconds() < 10 ? '0' : '') + time.getSeconds()
-        );
-
-        // Generate fake data with realistic values
-        ambientTempData.push(28 + Math.random() * 8 - 4); // 24-32°C
-        machineTempData.push(35 + Math.random() * 15 - 7.5); // 27.5-42.5°C
-        pressureData.push(980 + Math.random() * 40 - 20); // 960-1000 hPa
-    }
 
     return Highcharts.chart('container_line', {
         chart: {
@@ -449,19 +624,21 @@ function updateLineChart(ambientTemp, machineTemp, pressure) {
     if (!window.lineChartInstance || !window.lineChartInstance.series) return;
 
     var chart = window.lineChartInstance;
-    var shift = chart.series[0].data.length > 30; // Keep last 30 points
+    var shift = chart.series[0].data.length >= 30; // Keep last 30 points
 
-    // Get current time for x-axis
+    // Get current time for x-axis in HH:mm:ss format
     var now = new Date();
-    var timeStr = (now.getMinutes() < 10 ? '0' : '') + now.getMinutes() + ':' + (now.getSeconds() < 10 ? '0' : '') + now.getSeconds();
+    var timeStr = (now.getHours() < 10 ? '0' : '') + now.getHours() + ':' +
+                  (now.getMinutes() < 10 ? '0' : '') + now.getMinutes() + ':' +
+                  (now.getSeconds() < 10 ? '0' : '') + now.getSeconds();
 
-    // Add new data points
-    chart.series[0].addPoint([timeStr, ambientTemp], true, shift);
-    chart.series[1].addPoint([timeStr, machineTemp], true, shift);
-    chart.series[2].addPoint([timeStr, pressure], true, shift);
+    // Add new data points (numeric values only to correctly map with indexed categories)
+    chart.series[0].addPoint(Number(ambientTemp) || 0, true, shift);
+    chart.series[1].addPoint(Number(machineTemp) || 0, true, shift);
+    chart.series[2].addPoint(Number(pressure) || 0, true, shift);
 
     // Update categories (x-axis)
-    var categories = chart.xAxis[0].categories;
+    var categories = chart.xAxis[0].categories || [];
     categories.push(timeStr);
     if (categories.length > 30) {
         categories.shift();
@@ -473,14 +650,14 @@ function PressureChart() {
     return Highcharts.chart('container-pressure', Highcharts.merge(gaugeOptions, {
         yAxis: {
             min: 0,
-            max: 1500,
-            tickPositions: [0, 1500],
+            max: 20,
+            tickPositions: [0, 20],
             plotBands: [{
                 id: 'green-band',
                 from: 0, to: 0, color: '#a2f7f7', thickness: 15
             }, {
                 id: 'red-band',
-                from: 0, to: 1500, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
+                from: 0, to: 20, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
             }],
             labels: {
                 rotation: 'auto',
@@ -534,4 +711,34 @@ function updateChartWithDynamicBands(chartInstance, value, max, config) {
 
     // Redraw the entire chart
     chartInstance.redraw();
+}
+
+// Function to update timeline step items styling
+function updateTimelineUI(activeStepCode, machineStatus) {
+    var timeline = document.getElementById("processTimeline");
+    if (!timeline) return;
+    
+    var steps = timeline.querySelectorAll(".step");
+    steps.forEach(function(stepEl) {
+        var stepNum = parseInt(stepEl.getAttribute("data-step"));
+        var iconEl = stepEl.querySelector(".step-icon");
+        
+        // Remove all state classes
+        stepEl.classList.remove("completed", "active");
+        
+        if (machineStatus === "COMPLETED") {
+            stepEl.classList.add("completed");
+            if (iconEl) iconEl.innerHTML = '<i class="fas fa-check"></i>';
+        } else {
+            if (stepNum < activeStepCode) {
+                stepEl.classList.add("completed");
+                if (iconEl) iconEl.innerHTML = '<i class="fas fa-check"></i>';
+            } else if (stepNum === activeStepCode) {
+                stepEl.classList.add("active");
+                if (iconEl) iconEl.innerHTML = '';
+            } else {
+                if (iconEl) iconEl.innerHTML = '';
+            }
+        }
+    });
 }

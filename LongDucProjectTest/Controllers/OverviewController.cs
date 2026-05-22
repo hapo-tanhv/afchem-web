@@ -275,12 +275,45 @@ namespace LongDucProject.Controllers
                     ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
                 };
 
-                // 1. Get active batch
-                var dtActive = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Active' LIMIT 1");
+                // 1. Get selected batch info
+                DataTable dtBatch = null;
+                var dtActive = connector.ExecuteQuery("SELECT id, name, status, start_time, end_time FROM batches WHERE status = 'Active' LIMIT 1");
                 int batchId = -1;
+                string batchName = "";
+                string batchStatus = "";
+                string batchStart = "";
+                string batchEnd = "";
+
                 if (dtActive != null && dtActive.Rows.Count > 0)
                 {
-                    batchId = Convert.ToInt32(dtActive.Rows[0]["id"]);
+                    dtBatch = dtActive;
+                }
+                else
+                {
+                    // Fallback to the most recently completed batch
+                    var dtCompleted = connector.ExecuteQuery("SELECT id, name, status, start_time, end_time FROM batches WHERE status = 'Completed' ORDER BY id DESC LIMIT 1");
+                    if (dtCompleted != null && dtCompleted.Rows.Count > 0)
+                    {
+                        dtBatch = dtCompleted;
+                    }
+                    else
+                    {
+                        // Final fallback to the latest batch of any status
+                        var dtLatest = connector.ExecuteQuery("SELECT id, name, status, start_time, end_time FROM batches ORDER BY id DESC LIMIT 1");
+                        if (dtLatest != null && dtLatest.Rows.Count > 0)
+                        {
+                            dtBatch = dtLatest;
+                        }
+                    }
+                }
+
+                if (dtBatch != null && dtBatch.Rows.Count > 0)
+                {
+                    batchId = Convert.ToInt32(dtBatch.Rows[0]["id"]);
+                    batchName = dtBatch.Rows[0]["name"] != DBNull.Value ? dtBatch.Rows[0]["name"].ToString() : "";
+                    batchStatus = dtBatch.Rows[0]["status"] != DBNull.Value ? dtBatch.Rows[0]["status"].ToString() : "";
+                    batchStart = dtBatch.Rows[0]["start_time"] != DBNull.Value ? Convert.ToDateTime(dtBatch.Rows[0]["start_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
+                    batchEnd = dtBatch.Rows[0]["end_time"] != DBNull.Value ? Convert.ToDateTime(dtBatch.Rows[0]["end_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
                 }
 
                 // 2. Fetch alarmlog for active batch
@@ -327,6 +360,9 @@ namespace LongDucProject.Controllers
                     : new List<DataRow>();
                 var telemetryRows = dtTelemetry != null ? dtTelemetry.AsEnumerable().ToList() : new List<DataRow>();
                 var alarmRows = dtAlarms != null ? dtAlarms.AsEnumerable().ToList() : new List<DataRow>();
+
+                // Thresholds building removed as Time-Lag Compensation handles leakage without alarm thresholds
+
 
                 foreach (var def in stepDefs)
                 {
@@ -404,9 +440,10 @@ namespace LongDucProject.Controllers
                             }
                         }
 
-                        // Filter telemetry logs for this step's time range
+                        // Filter telemetry logs for this step's time range with Time-Lag Compensation (Option A)
+                        int telemetryOffsetSeconds = -20;
                         var stepTelemetry = telemetryRows.Where(r => {
-                            DateTime dt = Convert.ToDateTime(r["DateTime"]);
+                            DateTime dt = Convert.ToDateTime(r["DateTime"]).AddSeconds(telemetryOffsetSeconds);
                             if (endTime.HasValue)
                             {
                                 return dt >= startTime && dt <= endTime.Value;
@@ -417,6 +454,69 @@ namespace LongDucProject.Controllers
                             }
                         }).ToList();
 
+                        // Fallback for extremely short steps (e.g. 16s) to prevent data loss
+                        if (stepTelemetry.Count == 0)
+                        {
+                            stepTelemetry = telemetryRows.Where(r => {
+                                DateTime dt = Convert.ToDateTime(r["DateTime"]);
+                                if (endTime.HasValue)
+                                {
+                                    return dt >= startTime && dt <= endTime.Value;
+                                }
+                                else
+                                {
+                                    return dt >= startTime;
+                                }
+                            }).ToList();
+                        }
+
+                        // Find alerts for this step using Option C (both code mapping and time-range overlap)
+                        var stepAlertsList = new List<object>();
+                        var stepAlarms = alarmRows.Where(r => {
+                            // Check if alarm time falls within step range
+                            DateTime alarmTime = Convert.ToDateTime(r["DateTime"]);
+                            bool timeInStep = false;
+                            if (endTime.HasValue)
+                            {
+                                timeInStep = alarmTime >= startTime && alarmTime <= endTime.Value;
+                            }
+                            else
+                            {
+                                timeInStep = alarmTime >= startTime;
+                            }
+
+                            string cd = r["CongDoan"] != DBNull.Value ? r["CongDoan"].ToString().Trim() : "";
+                            bool codeMatches = false;
+                            if (!string.IsNullOrEmpty(cd))
+                            {
+                                // 1. Match by TagNo (T001 - T008)
+                                if (cd.Equals(def.TagNo, StringComparison.OrdinalIgnoreCase)) codeMatches = true;
+
+                                // 2. Match by Name (Cấp liệu, Trộn 1...)
+                                else if (cd.Equals(def.Name, StringComparison.OrdinalIgnoreCase)) codeMatches = true;
+
+                                // 3. Robust check: compare unaccented / lower-case variations
+                                else
+                                {
+                                    string cdLower = RemoveSign4VietnameseString(cd).ToLower();
+                                    string defNameLower = RemoveSign4VietnameseString(def.Name).ToLower();
+                                    if (cdLower == defNameLower) codeMatches = true;
+
+                                    // 4. Support partial keyword matching or alternate mapping (e.g. "Cap lieu" -> "cap lieu")
+                                    else if (def.Code == 1 && (cdLower.Contains("cap lieu") || cdLower.Contains("cấp liệu") || cdLower.Contains("t001"))) codeMatches = true;
+                                    else if (def.Code == 2 && (cdLower.Contains("tron 1") || cdLower.Contains("trộn 1") || cdLower.Contains("t002"))) codeMatches = true;
+                                    else if (def.Code == 3 && (cdLower.Contains("xa day") || cdLower.Contains("xả đáy") || cdLower.Contains("t003"))) codeMatches = true;
+                                    else if (def.Code == 4 && (cdLower.Contains("rung xa day") || cdLower.Contains("rung xả đáy") || cdLower.Contains("t004"))) codeMatches = true;
+                                    else if (def.Code == 5 && (cdLower.Contains("hut xa day") || cdLower.Contains("hút xả đáy") || cdLower.Contains("t005"))) codeMatches = true;
+                                    else if (def.Code == 6 && (cdLower.Contains("tron 2") || cdLower.Contains("trộn 2") || cdLower.Contains("t006"))) codeMatches = true;
+                                    else if (def.Code == 7 && (cdLower.Contains("xa hang") || cdLower.Contains("xả hàng") || cdLower.Contains("t007")) && !cdLower.Contains("rung")) codeMatches = true;
+                                    else if (def.Code == 8 && (cdLower.Contains("rung xa hang") || cdLower.Contains("rung xả hàng") || cdLower.Contains("t008"))) codeMatches = true;
+                                }
+                            }
+
+                            return codeMatches || timeInStep;
+                        }).ToList();
+
                         // Calculate temperatures (Bồn trên, Bồn giữa, Bồn dưới)
                         var topTemps = new List<double>();
                         var midTemps = new List<double>();
@@ -424,44 +524,70 @@ namespace LongDucProject.Controllers
 
                         foreach (var row in stepTelemetry)
                         {
-                            if (row["NhietDoBonTronTren"] != DBNull.Value) topTemps.Add(Convert.ToDouble(row["NhietDoBonTronTren"]));
-                            if (row["NhietDoBonTronGiua"] != DBNull.Value) midTemps.Add(Convert.ToDouble(row["NhietDoBonTronGiua"]));
-                            if (row["NhietDoBonTronDuoi"] != DBNull.Value) botTemps.Add(Convert.ToDouble(row["NhietDoBonTronDuoi"]));
+                            if (row["NhietDoBonTronTren"] != DBNull.Value)
+                            {
+                                topTemps.Add(Convert.ToDouble(row["NhietDoBonTronTren"]));
+                            }
+                            if (row["NhietDoBonTronGiua"] != DBNull.Value)
+                            {
+                                midTemps.Add(Convert.ToDouble(row["NhietDoBonTronGiua"]));
+                            }
+                            if (row["NhietDoBonTronDuoi"] != DBNull.Value)
+                            {
+                                botTemps.Add(Convert.ToDouble(row["NhietDoBonTronDuoi"]));
+                            }
                         }
 
-                        string tempTopStr = FormatTempRange(topTemps);
-                        string tempMidStr = FormatTempRange(midTemps);
-                        string tempBotStr = FormatTempRange(botTemps);
+                        // Inject real-time alarm peak values into temperature calculation (Chiều xuôi)
+                        foreach (var row in stepAlarms)
+                        {
+                            string tagName = row["TagName"] != DBNull.Value ? row["TagName"].ToString() : "";
+                            if (row["Value"] != DBNull.Value)
+                            {
+                                double val = Convert.ToDouble(row["Value"]);
+                                if (tagName.IndexOf("NhietDoBonTronTren", StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    topTemps.Add(val);
+                                }
+                                else if (tagName.IndexOf("NhietDoBonTronGiua", StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    midTemps.Add(val);
+                                }
+                                else if (tagName.IndexOf("NhietDoBonTronDuoi", StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    botTemps.Add(val);
+                                }
+                            }
+                        }
 
-                        // Find alerts for this step
-                        var stepAlertsList = new List<object>();
-                        var stepAlarms = alarmRows.Where(r => {
-                            string cd = r["CongDoan"] != DBNull.Value ? r["CongDoan"].ToString().Trim() : "";
-                            if (string.IsNullOrEmpty(cd)) return false;
+                        double? topThreshold = null;
+                        double? midThreshold = null;
+                        double? botThreshold = null;
 
-                            // 1. Match by TagNo (T001 - T008)
-                            if (cd.Equals(def.TagNo, StringComparison.OrdinalIgnoreCase)) return true;
+                        foreach (var row in stepAlarms)
+                        {
+                            string tagName = row["TagName"] != DBNull.Value ? row["TagName"].ToString() : "";
+                            if (row["Threshold"] != DBNull.Value)
+                            {
+                                double thresh = Convert.ToDouble(row["Threshold"]);
+                                if (tagName.IndexOf("NhietDoBonTronTren", StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    topThreshold = thresh;
+                                }
+                                else if (tagName.IndexOf("NhietDoBonTronGiua", StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    midThreshold = thresh;
+                                }
+                                else if (tagName.IndexOf("NhietDoBonTronDuoi", StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    botThreshold = thresh;
+                                }
+                            }
+                        }
 
-                            // 2. Match by Name (Cấp liệu, Trộn 1...)
-                            if (cd.Equals(def.Name, StringComparison.OrdinalIgnoreCase)) return true;
-
-                            // 3. Robust check: compare unaccented / lower-case variations
-                            string cdLower = RemoveSign4VietnameseString(cd).ToLower();
-                            string defNameLower = RemoveSign4VietnameseString(def.Name).ToLower();
-                            if (cdLower == defNameLower) return true;
-
-                            // 4. Support partial keyword matching or alternate mapping (e.g. "Cap lieu" -> "cap lieu")
-                            if (def.Code == 1 && (cdLower.Contains("cap lieu") || cdLower.Contains("cấp liệu") || cdLower.Contains("t001"))) return true;
-                            if (def.Code == 2 && (cdLower.Contains("tron 1") || cdLower.Contains("trộn 1") || cdLower.Contains("t002"))) return true;
-                            if (def.Code == 3 && (cdLower.Contains("xa day") || cdLower.Contains("xả đáy") || cdLower.Contains("t003"))) return true;
-                            if (def.Code == 4 && (cdLower.Contains("rung xa day") || cdLower.Contains("rung xả đáy") || cdLower.Contains("t004"))) return true;
-                            if (def.Code == 5 && (cdLower.Contains("hut xa day") || cdLower.Contains("hút xả đáy") || cdLower.Contains("t005"))) return true;
-                            if (def.Code == 6 && (cdLower.Contains("tron 2") || cdLower.Contains("trộn 2") || cdLower.Contains("t006"))) return true;
-                            if (def.Code == 7 && (cdLower.Contains("xa hang") || cdLower.Contains("xả hàng") || cdLower.Contains("t007")) && !cdLower.Contains("rung")) return true;
-                            if (def.Code == 8 && (cdLower.Contains("rung xa hang") || cdLower.Contains("rung xả hàng") || cdLower.Contains("t008"))) return true;
-
-                            return false;
-                        }).ToList();
+                        string tempTopStr = FormatTempRange(topTemps, topThreshold);
+                        string tempMidStr = FormatTempRange(midTemps, midThreshold);
+                        string tempBotStr = FormatTempRange(botTemps, botThreshold);
 
                         foreach (var row in stepAlarms)
                         {
@@ -507,6 +633,153 @@ namespace LongDucProject.Controllers
                     }
                 }
 
+                // 6. Determine the active step and calculate header/panel metrics
+                DataRow activeStepRow = null;
+                var activeLogRows = logRows.Where(r => r["Status"] != DBNull.Value && r["Status"].ToString().Trim().Equals("Alarm", StringComparison.OrdinalIgnoreCase)).ToList();
+                
+                int activeStepCode = 0;
+                string activeStepName = "";
+                DateTime? activeStepStartTime = null;
+
+                // Find the first active step in standard order if possible
+                if (activeLogRows.Count > 0)
+                {
+                    foreach (var def in stepDefs)
+                    {
+                        var match = activeLogRows.FirstOrDefault(r => {
+                            string rowTagNo = r.Table.Columns.Contains("TagNo") && r["TagNo"] != DBNull.Value ? r["TagNo"].ToString().Trim() : "";
+                            if (!string.IsNullOrEmpty(rowTagNo))
+                            {
+                                return rowTagNo.Equals(def.TagNo, StringComparison.OrdinalIgnoreCase);
+                            }
+                            string desc = r["Description"] != DBNull.Value ? r["Description"].ToString() : "";
+                            if (def.Code == 1 && (desc.IndexOf("Cấp Liệu", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Cap Lieu", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 2 && (desc.IndexOf("Trộn 1", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Tron 1", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 3 && (desc.IndexOf("Xả Đáy", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Xa Day", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 4 && (desc.IndexOf("Rung Xả Đ", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Rung Xa D", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 5 && (desc.IndexOf("Hút Xả Đáy", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Hut Xa Day", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 6 && (desc.IndexOf("Trộn 2", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Tron 2", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 7 && (desc.IndexOf("Xả Hàng", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Xa Hang", StringComparison.OrdinalIgnoreCase) >= 0) && desc.IndexOf("Rung", StringComparison.OrdinalIgnoreCase) < 0) return true;
+                            if (def.Code == 8 && (desc.IndexOf("Rung Xả H", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Rung Xa H", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            return false;
+                        });
+
+                        if (match != null)
+                        {
+                            activeStepRow = match;
+                            activeStepCode = def.Code;
+                            activeStepName = def.Name;
+                            activeStepStartTime = Convert.ToDateTime(match["OccurrenceTime"]);
+                            break;
+                        }
+                    }
+                }
+
+                // If batch is completed and no active batch, set activeStepCode to 8 and activeStepName to ""
+                string headerStepName = activeStepName;
+                if (batchStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+                {
+                    activeStepCode = 8;
+                    headerStepName = "";
+                    
+                    // Fallback: search for step 8 OccurrenceTime to allow client-side elapsed time logic
+                    var step8Row = logRows.FirstOrDefault(r => {
+                        string rowTagNo = r.Table.Columns.Contains("TagNo") && r["TagNo"] != DBNull.Value ? r["TagNo"].ToString().Trim() : "";
+                        if (!string.IsNullOrEmpty(rowTagNo))
+                        {
+                            return rowTagNo.Equals("T008", StringComparison.OrdinalIgnoreCase);
+                        }
+                        string desc = r["Description"] != DBNull.Value ? r["Description"].ToString() : "";
+                        return desc.IndexOf("Rung Xả H", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Rung Xa H", StringComparison.OrdinalIgnoreCase) >= 0;
+                    });
+                    if (step8Row != null)
+                    {
+                        activeStepStartTime = Convert.ToDateTime(step8Row["OccurrenceTime"]);
+                    }
+                }
+                else if (batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) && !activeStepStartTime.HasValue)
+                {
+                    // If batch is Active but no active step has been found in alarmlog yet,
+                    // set activeStepStartTime to the batch start time (so running/elapsed time calculation ticks from it),
+                    // but keep activeStepCode = 0 and activeStepName = "" (display blank).
+                    if (dtBatch.Rows[0]["start_time"] != DBNull.Value)
+                    {
+                        activeStepStartTime = Convert.ToDateTime(dtBatch.Rows[0]["start_time"]);
+                    }
+                }
+
+                // Calculate running time:
+                // - If batch is completed: end_time - start_time of batch
+                // - If batch is active: activeStepStartTime - start_time of batch (or 0 if no active step yet)
+                double runningSeconds = 0;
+                if (batchStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (dtBatch.Rows[0]["end_time"] != DBNull.Value && dtBatch.Rows[0]["start_time"] != DBNull.Value)
+                    {
+                        runningSeconds = (Convert.ToDateTime(dtBatch.Rows[0]["end_time"]) - Convert.ToDateTime(dtBatch.Rows[0]["start_time"])).TotalSeconds;
+                    }
+                }
+                else if (batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (dtBatch.Rows[0]["start_time"] != DBNull.Value)
+                    {
+                        DateTime bStart = Convert.ToDateTime(dtBatch.Rows[0]["start_time"]);
+                        if (activeStepStartTime.HasValue)
+                        {
+                            runningSeconds = (activeStepStartTime.Value - bStart).TotalSeconds;
+                        }
+                        else
+                        {
+                            runningSeconds = 0;
+                        }
+                    }
+                }
+
+                // Calculate alarm count excluding INFO severity
+                int alarmCount = 0;
+                if (batchId != -1)
+                {
+                    var dtAlarmCount = connector.ExecuteQuery($"SELECT COUNT(*) FROM realtime_alarms WHERE batchId = {batchId} AND Severity != 'INFO'");
+                    if (dtAlarmCount != null && dtAlarmCount.Rows.Count > 0)
+                    {
+                        alarmCount = Convert.ToInt32(dtAlarmCount.Rows[0][0]);
+                    }
+                }
+
+                // Helper to format TimeSpan as Xh Ym Zs
+                string headerRunningTimeStr = "0s";
+                if (runningSeconds >= 0)
+                {
+                    TimeSpan t = TimeSpan.FromSeconds(runningSeconds);
+                    if (t.TotalHours >= 1)
+                    {
+                        headerRunningTimeStr = $"{(int)t.TotalHours}h {t.Minutes}m {t.Seconds}s";
+                    }
+                    else if (t.TotalMinutes >= 1)
+                    {
+                        headerRunningTimeStr = $"{t.Minutes}m {t.Seconds}s";
+                    }
+                    else
+                    {
+                        headerRunningTimeStr = $"{t.Seconds}s";
+                    }
+                }
+
+                var batchInfo = new
+                {
+                    batchId = batchId,
+                    batchName = batchName,
+                    batchStatus = batchStatus,
+                    machineStatus = batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) ? "RUNNING" : "COMPLETED",
+                    activeStepCode = activeStepCode,
+                    activeStepName = activeStepName,
+                    headerStepName = headerStepName,
+                    activeStepStartTime = activeStepStartTime?.ToString("yyyy-MM-dd HH:mm:ss"),
+                    headerRunningTime = headerRunningTimeStr,
+                    alarmCount = alarmCount,
+                    serverTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                };
+
                 // Prevent duplicate global alarms and sort descending by database id, then take top 5
                 var sortedGlobalAlarms = globalAlarms.Cast<dynamic>()
                     .GroupBy(a => new { a.time, a.title })
@@ -515,7 +788,7 @@ namespace LongDucProject.Controllers
                     .Take(5)
                     .ToList();
 
-                return Json(new { steps = stepsList, globalAlarms = sortedGlobalAlarms }, JsonRequestBehavior.AllowGet);
+                return Json(new { steps = stepsList, globalAlarms = sortedGlobalAlarms, batchInfo = batchInfo }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {
@@ -539,6 +812,24 @@ namespace LongDucProject.Controllers
                 if (dtActive != null && dtActive.Rows.Count > 0)
                 {
                     batchId = Convert.ToInt32(dtActive.Rows[0]["id"]);
+                }
+                else
+                {
+                    // Fallback to the most recently completed batch
+                    var dtCompleted = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Completed' ORDER BY id DESC LIMIT 1");
+                    if (dtCompleted != null && dtCompleted.Rows.Count > 0)
+                    {
+                        batchId = Convert.ToInt32(dtCompleted.Rows[0]["id"]);
+                    }
+                    else
+                    {
+                        // Final fallback to the latest batch of any status
+                        var dtLatest = connector.ExecuteQuery("SELECT id FROM batches ORDER BY id DESC LIMIT 1");
+                        if (dtLatest != null && dtLatest.Rows.Count > 0)
+                        {
+                            batchId = Convert.ToInt32(dtLatest.Rows[0]["id"]);
+                        }
+                    }
                 }
 
                 if (batchId == -1)
@@ -597,7 +888,7 @@ namespace LongDucProject.Controllers
             }
         }
 
-        private string FormatTempRange(List<double> temps)
+        private string FormatTempRange(List<double> temps, double? threshold = null)
         {
             if (temps == null || temps.Count == 0) return "-";
 
@@ -607,13 +898,28 @@ namespace LongDucProject.Controllers
             string minStr = Math.Round(min, 1).ToString("0.#", CultureInfo.InvariantCulture);
             string maxStr = Math.Round(max, 1).ToString("0.#", CultureInfo.InvariantCulture);
 
+            bool isMinExceeded = threshold.HasValue && min >= threshold.Value;
+            bool isMaxExceeded = threshold.HasValue && max >= threshold.Value;
+
+            string formattedMin = isMinExceeded 
+                ? $"<span style='color: #ef4444; font-weight: bold;'>{minStr}</span>" 
+                : minStr;
+
+            string formattedMax = isMaxExceeded 
+                ? $"<span style='color: #ef4444; font-weight: bold;'>{maxStr}</span>" 
+                : maxStr;
+
             if (minStr == maxStr)
             {
-                return $"{minStr}°C";
+                bool eitherExceeded = isMinExceeded || isMaxExceeded;
+                string formattedVal = eitherExceeded 
+                    ? $"<span style='color: #ef4444; font-weight: bold;'>{minStr}</span>" 
+                    : minStr;
+                return $"{formattedVal}°C";
             }
             else
             {
-                return $"{minStr}-{maxStr}°C";
+                return $"{formattedMin}-{formattedMax}°C";
             }
         }
 
