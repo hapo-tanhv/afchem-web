@@ -173,42 +173,151 @@
     <script>
         var realtimeDt;
         var reportDt;
+        var isInitialLoad = true;
 
         $(document).ready(function() {
             // Init daterangepicker
-            $('.datepicker').daterangepicker({
+            var dpLocale = {
+                format: 'YYYY/MM/DD',
+                daysOfWeek: ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
+                monthNames: ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"],
+            };
+
+            $('#starttime').daterangepicker({
                 singleDatePicker: true,
                 autoApply: true,
-                locale: {
-                    format: 'YYYY/MM/DD',
-                    daysOfWeek: ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
-                    monthNames: ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"],
+                locale: dpLocale
+            }).on('apply.daterangepicker', function (ev, picker) {
+                var selectedDate = picker.startDate;
+                var endDrp = $('#endtime').data('daterangepicker');
+                if (endDrp) {
+                    endDrp.minDate = selectedDate;
+                    if (endDrp.startDate.isBefore(selectedDate)) {
+                        endDrp.setStartDate(selectedDate);
+                        endDrp.setEndDate(selectedDate);
+                        $('#endtime').val(selectedDate.format('YYYY/MM/DD'));
+                    }
+                }
+                setTimeout(function() {
+                    loadBatchesRange();
+                }, 50);
+            });
+
+            $('#endtime').daterangepicker({
+                singleDatePicker: true,
+                autoApply: true,
+                locale: dpLocale
+            }).on('apply.daterangepicker', function (ev, picker) {
+                var selectedDate = picker.startDate;
+                var startDrp = $('#starttime').data('daterangepicker');
+                if (startDrp) {
+                    startDrp.maxDate = selectedDate;
+                    if (startDrp.startDate.isAfter(selectedDate)) {
+                        startDrp.setStartDate(selectedDate);
+                        startDrp.setEndDate(selectedDate);
+                        $('#starttime').val(selectedDate.format('YYYY/MM/DD'));
+                    }
+                }
+                setTimeout(function() {
+                    loadBatchesRange();
+                }, 50);
+            });
+
+            // Handle manual keyboard input focusout validation
+            $('#starttime').on('focusout', function () {
+                var startVal = $(this).val() || "";
+                var endVal = $('#endtime').val() || "";
+                var startM = moment(startVal, 'YYYY/MM/DD', true);
+                var endM = moment(endVal, 'YYYY/MM/DD', true);
+                
+                if (startM.isValid() && endM.isValid()) {
+                    if (startM.isAfter(endM)) {
+                        $('#endtime').val(startVal);
+                        var endDrp = $('#endtime').data('daterangepicker');
+                        if (endDrp) {
+                            endDrp.setStartDate(startM);
+                            endDrp.setEndDate(startM);
+                        }
+                    }
+                    var endDrp = $('#endtime').data('daterangepicker');
+                    if (endDrp) {
+                        endDrp.minDate = startM;
+                    }
+                    var startDrp = $(this).data('daterangepicker');
+                    if (startDrp) {
+                        startDrp.setStartDate(startM);
+                        startDrp.setEndDate(startM);
+                    }
+                    loadBatchesRange();
                 }
             });
 
-            // Load batches dynamically
+            $('#endtime').on('focusout', function () {
+                var startVal = $('#starttime').val() || "";
+                var endVal = $(this).val() || "";
+                var startM = moment(startVal, 'YYYY/MM/DD', true);
+                var endM = moment(endVal, 'YYYY/MM/DD', true);
+                
+                if (startM.isValid() && endM.isValid()) {
+                    if (startM.isAfter(endM)) {
+                        $('#starttime').val(endVal);
+                        var startDrp = $('#starttime').data('daterangepicker');
+                        if (startDrp) {
+                            startDrp.setStartDate(endM);
+                            startDrp.setEndDate(endM);
+                        }
+                    }
+                    var startDrp = $('#starttime').data('daterangepicker');
+                    if (startDrp) {
+                        startDrp.maxDate = endM;
+                    }
+                    var endDrp = $(this).data('daterangepicker');
+                    if (endDrp) {
+                        endDrp.setStartDate(endM);
+                        endDrp.setEndDate(endM);
+                    }
+                    loadBatchesRange();
+                }
+            });
+
+            // Init DataTable with live data
+            realtimeDt = initDataTable('#realtimeTable', '/Alarm/GetAlarmsData');
+        });
+
+        function loadBatchesRange(callback) {
+            var starttime = $('#starttime').val() || "";
+            var endtime = $('#endtime').val() || "";
+            var startFormatted = starttime.replace(/\//g, '-');
+            var endFormatted = endtime.replace(/\//g, '-');
+
             $.ajax({
                 url: '/Alarm/GetBatches',
                 type: 'GET',
+                data: { starttime: startFormatted, endtime: endFormatted },
+                dataType: 'json',
                 success: function (data) {
                     var select = $('#batchId');
-                    select.empty();
-                    select.append('<option value="0">-- Tất cả --</option>');
-                    if (data && data.length > 0) {
-                        data.forEach(function (item) {
-                            select.append('<option value="' + item.id + '">' + item.name + '</option>');
-                        });
+                    if (select.length) {
+                        select.empty();
+                        select.append('<option value="0">-- Tất cả --</option>');
+                        if (data && data.length > 0) {
+                            data.forEach(function (item) {
+                                select.append('<option value="' + item.id + '">' + item.name + '</option>');
+                            });
+                        }
                     }
-                    // Init DataTables after batches are loaded
-                    realtimeDt = initDataTable('#realtimeTable', '/Alarm/GetAlarmsData');
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
                 },
                 error: function (xhr, status, error) {
                     console.error('Failed to load batches:', error);
-                    // Fallback init
-                    realtimeDt = initDataTable('#realtimeTable', '/Alarm/GetAlarmsData');
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
                 }
             });
-        });
+        }
 
         function initDataTable(selector, url) {
             return $(selector).DataTable({
@@ -221,6 +330,7 @@
                         d.starttime = $('#starttime').val() + " 00:00:00";
                         d.endtime = $('#endtime').val() + " 23:59:59";
                         d.batchId = $('#batchId').val();
+                        d.isInitialLoad = isInitialLoad;
                     }
                 },
                 "createdRow": function(row, data, dataIndex) {
@@ -255,6 +365,29 @@
                         "next": "Sau",
                         "previous": "Trước"
                     }
+                }
+            }).on('xhr.dt', function (e, settings, json, xhr) {
+                if (isInitialLoad && json && json.resolvedBatchId > 0) {
+                    var startVal = json.batchDateStart;
+                    var endVal = json.batchDateEnd;
+                    $('#starttime').val(startVal);
+                    $('#endtime').val(endVal);
+
+                    var drpStart = $('#starttime').data('daterangepicker');
+                    if (drpStart) {
+                        drpStart.setStartDate(startVal);
+                        drpStart.setEndDate(startVal);
+                    }
+                    var drpEnd = $('#endtime').data('daterangepicker');
+                    if (drpEnd) {
+                        drpEnd.setStartDate(endVal);
+                        drpEnd.setEndDate(endVal);
+                    }
+
+                    loadBatchesRange(function () {
+                        $('#batchId').val(json.resolvedBatchId);
+                    });
+                    isInitialLoad = false;
                 }
             });
         }

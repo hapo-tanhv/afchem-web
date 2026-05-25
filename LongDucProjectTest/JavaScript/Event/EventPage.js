@@ -63,8 +63,14 @@
         }
 
         phases.forEach(function (phase) {
-            var alertCount = phase.alerts ? phase.alerts.length : 0;
-            var hasAlarm = phase.alerts ? phase.alerts.some(function (a) { return a.type === 'ALARM'; }) : false;
+            var filteredAlerts = [];
+            if (phase.alerts) {
+                filteredAlerts = phase.alerts.filter(function (a) {
+                    return a.type === 'ALARM' || a.type === 'WARNING';
+                });
+            }
+            var alertCount = filteredAlerts.length;
+            var hasAlarm = filteredAlerts.some(function (a) { return a.type === 'ALARM'; });
 
             var anomalyHtml;
             if (alertCount === 0) {
@@ -91,7 +97,7 @@
                 html += '<tr class="evt-alarm-detail-row" style="display:none;"><td colspan="7" style="padding:0;">' +
                     '<div class="evt-alarm-detail-content" style="background:' + bgTint + ';">';
 
-                phase.alerts.forEach(function (alert) {
+                filteredAlerts.forEach(function (alert) {
                     var color = alert.type === 'ALARM' ? '#ef4444' : '#f59e0b';
                     var badgeType = alert.type === 'ALARM' ? 'alarm' : 'warning';
                     html += '<div class="evt-alarm-item">' +

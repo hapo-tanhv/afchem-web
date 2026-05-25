@@ -124,9 +124,6 @@
                 <span class="filter-label">Chọn batch</span>
                 <select id="batchId" class="filter-input" style="min-width: 120px;">
                     <option value="0">-- Tất cả --</option>
-                    <option value="1">TX01-20260421-01</option>
-                    <option value="2">TX01-20260421-02</option>
-                    <option value="3">TX01-20260421-03</option>
                 </select>
             </div>
             <button onclick="reloadTable()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>
@@ -174,60 +171,172 @@
     <script src="~/AdminLTE-master/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
     <script>
         var reportDt;
+        var isInitialLoad = true;
 
         $(document).ready(function () {
             // Init daterangepicker
-            $('.datepicker').daterangepicker({
+            var dpLocale = {
+                format: 'YYYY/MM/DD',
+                daysOfWeek: ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
+                monthNames: ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"],
+            };
+
+            $('#starttime').daterangepicker({
                 singleDatePicker: true,
                 autoApply: true,
-                locale: {
-                    format: 'YYYY/MM/DD',
-                    daysOfWeek: ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
-                    monthNames: ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"],
+                locale: dpLocale
+            }).on('apply.daterangepicker', function (ev, picker) {
+                var selectedDate = picker.startDate;
+                var endDrp = $('#endtime').data('daterangepicker');
+                if (endDrp) {
+                    endDrp.minDate = selectedDate;
+                    if (endDrp.startDate.isBefore(selectedDate)) {
+                        endDrp.setStartDate(selectedDate);
+                        endDrp.setEndDate(selectedDate);
+                        $('#endtime').val(selectedDate.format('YYYY/MM/DD'));
+                    }
+                }
+                setTimeout(function() {
+                    loadBatchesRange();
+                }, 50);
+            });
+
+            $('#endtime').daterangepicker({
+                singleDatePicker: true,
+                autoApply: true,
+                locale: dpLocale
+            }).on('apply.daterangepicker', function (ev, picker) {
+                var selectedDate = picker.startDate;
+                var startDrp = $('#starttime').data('daterangepicker');
+                if (startDrp) {
+                    startDrp.maxDate = selectedDate;
+                    if (startDrp.startDate.isAfter(selectedDate)) {
+                        startDrp.setStartDate(selectedDate);
+                        startDrp.setEndDate(selectedDate);
+                        $('#starttime').val(selectedDate.format('YYYY/MM/DD'));
+                    }
+                }
+                setTimeout(function() {
+                    loadBatchesRange();
+                }, 50);
+            });
+
+            // Handle manual keyboard input focusout validation
+            $('#starttime').on('focusout', function () {
+                var startVal = $(this).val() || "";
+                var endVal = $('#endtime').val() || "";
+                var startM = moment(startVal, 'YYYY/MM/DD', true);
+                var endM = moment(endVal, 'YYYY/MM/DD', true);
+                
+                if (startM.isValid() && endM.isValid()) {
+                    if (startM.isAfter(endM)) {
+                        $('#endtime').val(startVal);
+                        var endDrp = $('#endtime').data('daterangepicker');
+                        if (endDrp) {
+                            endDrp.setStartDate(startM);
+                            endDrp.setEndDate(startM);
+                        }
+                    }
+                    var endDrp = $('#endtime').data('daterangepicker');
+                    if (endDrp) {
+                        endDrp.minDate = startM;
+                    }
+                    var startDrp = $(this).data('daterangepicker');
+                    if (startDrp) {
+                        startDrp.setStartDate(startM);
+                        startDrp.setEndDate(startM);
+                    }
+                    loadBatchesRange();
                 }
             });
 
-            // Init DataTable with mock data
+            $('#endtime').on('focusout', function () {
+                var startVal = $('#starttime').val() || "";
+                var endVal = $(this).val() || "";
+                var startM = moment(startVal, 'YYYY/MM/DD', true);
+                var endM = moment(endVal, 'YYYY/MM/DD', true);
+                
+                if (startM.isValid() && endM.isValid()) {
+                    if (startM.isAfter(endM)) {
+                        $('#starttime').val(endVal);
+                        var startDrp = $('#starttime').data('daterangepicker');
+                        if (startDrp) {
+                            startDrp.setStartDate(endM);
+                            startDrp.setEndDate(endM);
+                        }
+                    }
+                    var startDrp = $('#starttime').data('daterangepicker');
+                    if (startDrp) {
+                        startDrp.maxDate = endM;
+                    }
+                    var endDrp = $(this).data('daterangepicker');
+                    if (endDrp) {
+                        endDrp.setStartDate(endM);
+                        endDrp.setEndDate(endM);
+                    }
+                    loadBatchesRange();
+                }
+            });
+
+            // Init DataTable with live data
             initDataTable('#reportTable');
         });
 
-        function initDataTable(selector) {
-            // Mock Data for demonstration based on the provided image
-            var mockData = [];
-            
-            // Generate multiple rows of mock data to demonstrate scrolling
-            for(let i = 0; i < 20; i++) {
-                let seconds = 13 + i * 30;
-                let minute = 24 + Math.floor(seconds / 60);
-                seconds = seconds % 60;
-                let timeStr = "10:" + minute.toString().padStart(2, '0') + ":" + seconds.toString().padStart(2, '0');
-                let tgCapLieu = 16 + i * 30;
-                
-                mockData.push({
-                    "Date": "2026/05/15",
-                    "Time": timeStr,
-                    "QuyTrinh": 1,
-                    "CongDoan": 1,
-                    "TgCapLieu": tgCapLieu,
-                    "TgTron1": 0,
-                    "TgXaDay": 0,
-                    "TgRungXaDay": 0,
-                    "TgHutXaDay": 0,
-                    "TgTron2": 0,
-                    "TgXaHang": 0,
-                    "TgRungXaHang": 0,
-                    "TongTgTron": tgCapLieu,
-                    "ApSuat": (4.49 + Math.random() * 2).toFixed(2),
-                    "NhietDoMT": 31.5,
-                    "DoAmMT": (64.4 - i * 0.1).toFixed(1),
-                    "NhietNapBon": (31.9 + Math.random() * 0.2).toFixed(1),
-                    "NhietGiuaBon": (32.1 - Math.random() * 0.5).toFixed(1),
-                    "NhietDayBon": (31.7 - Math.random() * 0.5).toFixed(1)
-                });
-            }
+        function loadBatchesRange(callback) {
+            var starttime = $('#starttime').val() || "";
+            var endtime = $('#endtime').val() || "";
+            var startFormatted = starttime.replace(/\//g, '-');
+            var endFormatted = endtime.replace(/\//g, '-');
 
+            $.ajax({
+                url: '/Home/GetBatches',
+                type: 'GET',
+                data: { starttime: startFormatted, endtime: endFormatted },
+                dataType: 'json',
+                success: function (data) {
+                    var select = $('#batchId');
+                    if (select.length) {
+                        select.empty();
+                        select.append('<option value="0">-- Tất cả --</option>');
+                        if (data && data.length) {
+                            data.forEach(function (batch) {
+                                var label = batch.name;
+                                if (batch.status === 'Active') {
+                                    label += ' (Active)';
+                                } else if (batch.status === 'Completed') {
+                                    label += ' (Completed)';
+                                }
+                                select.append('<option value="' + batch.id + '">' + label + '</option>');
+                            });
+                        }
+                    }
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Lỗi khi tải danh sách batches:", error);
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                }
+            });
+        }
+
+        function initDataTable(selector) {
             reportDt = $(selector).DataTable({
-                "data": mockData,
+                "processing": true,
+                "serverSide": true,
+                "ajax": {
+                    "url": "/Home/GetReportData",
+                    "type": "POST",
+                    "data": function (d) {
+                        d.starttime = $('#starttime').val() || "";
+                        d.endtime = $('#endtime').val() || "";
+                        d.batchId = $('#batchId').val() || "0";
+                        d.isInitialLoad = isInitialLoad;
+                    }
+                },
                 "columns": [
                     { "data": "Date" },
                     { "data": "Time" },
@@ -266,12 +375,34 @@
                         "previous": "Trước"
                     }
                 }
+            }).on('xhr.dt', function (e, settings, json, xhr) {
+                if (isInitialLoad && json && json.resolvedBatchId > 0) {
+                    var startVal = json.batchDateStart;
+                    var endVal = json.batchDateEnd;
+                    $('#starttime').val(startVal);
+                    $('#endtime').val(endVal);
+
+                    var drpStart = $('#starttime').data('daterangepicker');
+                    if (drpStart) {
+                        drpStart.setStartDate(startVal);
+                        drpStart.setEndDate(startVal);
+                    }
+                    var drpEnd = $('#endtime').data('daterangepicker');
+                    if (drpEnd) {
+                        drpEnd.setStartDate(endVal);
+                        drpEnd.setEndDate(endVal);
+                    }
+
+                    loadBatchesRange(function () {
+                        $('#batchId').val(json.resolvedBatchId);
+                    });
+                    isInitialLoad = false;
+                }
             });
         }
 
         function reloadTable() {
-            // Because it's mock data, we just redraw
-            reportDt.clear().rows.add(reportDt.data()).draw();
+            reportDt.ajax.reload();
         }
 
         function ExportExcel() {
@@ -279,7 +410,7 @@
             var endtime = $('#endtime').val() + " 23:59:59";
             var batchId = $('#batchId').val();
             var searchValue = reportDt.search();
-            
+
             var url = "/Home/ExportReportExcel?starttime=" + starttime + "&endtime=" + endtime + "&batchId=" + batchId + "&searchValue=" + searchValue;
             window.location.href = url;
         }
@@ -289,7 +420,7 @@
             var endtime = $('#endtime').val() + " 23:59:59";
             var batchId = $('#batchId').val();
             var searchValue = reportDt.search();
-            
+
             var url = "/Home/ExportReportCSV?starttime=" + starttime + "&endtime=" + endtime + "&batchId=" + batchId + "&searchValue=" + searchValue;
             window.location.href = url;
         }

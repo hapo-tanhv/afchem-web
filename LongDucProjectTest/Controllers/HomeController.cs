@@ -144,18 +144,15 @@ namespace LongDucProject.Controllers
             return View();
         }
 
-        [HttpPost]
-        public JsonResult GetReportData(string starttime, string endtime, string batchId, int draw, int start, int length)
+        [HttpGet]
+        public JsonResult GetBatches(string starttime, string endtime)
         {
             try
             {
                 var connector = new MySQLConnect()
                 {
-                    ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
+                    ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
                 };
-
-                int parsedBatchId = 0;
-                bool hasBatchFilter = int.TryParse(batchId, out parsedBatchId) && parsedBatchId > 0;
 
                 DateTime startDate = DateTime.Today;
                 DateTime endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
@@ -180,12 +177,135 @@ namespace LongDucProject.Controllers
                     }
                 }
 
-                string baseQuery = "FROM alarmreport a INNER JOIN batches b ON a.batchId = b.id WHERE 1=1";
-                string filterQuery = $" AND a.DateTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.DateTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
-
-                if (hasBatchFilter)
+                string query = $"SELECT id, name, status FROM batches WHERE start_time >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND start_time <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}' ORDER BY id DESC";
+                var dt = connector.ExecuteQuery(query);
+                var list = new List<object>();
+                if (dt != null)
                 {
-                    filterQuery += $" AND a.batchId = {parsedBatchId}";
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        list.Add(new
+                        {
+                            id = Convert.ToInt32(row["id"]),
+                            name = row["name"].ToString(),
+                            status = row["status"] != DBNull.Value ? row["status"].ToString() : ""
+                        });
+                    }
+                }
+                return Json(list, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpPost]
+        public JsonResult GetReportData(string starttime, string endtime, string batchId, int draw, int start, int length, bool? isInitialLoad)
+        {
+            try
+            {
+                var connector = new MySQLConnect()
+                {
+                    ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
+                };
+
+                int parsedBatchId = 0;
+                bool hasBatchFilter = int.TryParse(batchId, out parsedBatchId) && parsedBatchId > 0;
+
+                DateTime startDate = DateTime.Today;
+                DateTime endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
+
+                int resolvedBatchId = 0;
+                string batchDateStart = "";
+                string batchDateEnd = "";
+
+                if (isInitialLoad == true)
+                {
+                    var dtCompleted = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Completed' ORDER BY id DESC LIMIT 1");
+                    if (dtCompleted != null && dtCompleted.Rows.Count > 0)
+                    {
+                        resolvedBatchId = Convert.ToInt32(dtCompleted.Rows[0]["id"]);
+                    }
+                    else
+                    {
+                        var dtActive = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Active' LIMIT 1");
+                        if (dtActive != null && dtActive.Rows.Count > 0)
+                        {
+                            resolvedBatchId = Convert.ToInt32(dtActive.Rows[0]["id"]);
+                        }
+                        else
+                        {
+                            var dtLatest = connector.ExecuteQuery("SELECT id FROM batches ORDER BY id DESC LIMIT 1");
+                            if (dtLatest != null && dtLatest.Rows.Count > 0)
+                            {
+                                resolvedBatchId = Convert.ToInt32(dtLatest.Rows[0]["id"]);
+                            }
+                        }
+                    }
+
+                    if (resolvedBatchId > 0)
+                    {
+                        var dtBatchInfo = connector.ExecuteQuery($"SELECT start_time, end_time FROM batches WHERE id = {resolvedBatchId}");
+                        if (dtBatchInfo != null && dtBatchInfo.Rows.Count > 0)
+                        {
+                            if (dtBatchInfo.Rows[0]["start_time"] != DBNull.Value)
+                            {
+                                startDate = Convert.ToDateTime(dtBatchInfo.Rows[0]["start_time"]);
+                                batchDateStart = startDate.ToString("yyyy/MM/dd");
+                            }
+                            if (dtBatchInfo.Rows[0]["end_time"] != DBNull.Value)
+                            {
+                                endDate = Convert.ToDateTime(dtBatchInfo.Rows[0]["end_time"]);
+                                batchDateEnd = endDate.ToString("yyyy/MM/dd");
+                            }
+                            else
+                            {
+                                endDate = startDate;
+                                batchDateEnd = batchDateStart;
+                            }
+                        }
+                        hasBatchFilter = true;
+                        parsedBatchId = resolvedBatchId;
+                    }
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(starttime))
+                    {
+                        if (!DateTime.TryParse(starttime, CultureInfo.InvariantCulture, DateTimeStyles.None, out startDate))
+                        {
+                            DateTime.TryParseExact(starttime, new[] { "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out startDate);
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(endtime))
+                    {
+                        if (!DateTime.TryParse(endtime, CultureInfo.InvariantCulture, DateTimeStyles.None, out endDate))
+                        {
+                            DateTime.TryParseExact(endtime, new[] { "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out endDate);
+                        }
+                        if (endDate.TimeOfDay == TimeSpan.Zero)
+                        {
+                            endDate = endDate.Date.AddDays(1).AddSeconds(-1);
+                        }
+                    }
+                }
+
+                string baseQuery = "FROM alarmreport a INNER JOIN batches b ON a.batchId = b.id WHERE 1=1";
+                string filterQuery = "";
+
+                if (isInitialLoad == true && resolvedBatchId > 0)
+                {
+                    filterQuery = $" AND a.batchId = {resolvedBatchId}";
+                }
+                else
+                {
+                    filterQuery = $" AND a.DateTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.DateTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
+                    if (hasBatchFilter)
+                    {
+                        filterQuery += $" AND a.batchId = {parsedBatchId}";
+                    }
                 }
 
                 string searchValue = Request.Form["search[value]"];
@@ -251,7 +371,10 @@ namespace LongDucProject.Controllers
                     draw = draw,
                     recordsTotal = recordsTotal,
                     recordsFiltered = recordsFiltered,
-                    data = data
+                    data = data,
+                    resolvedBatchId = resolvedBatchId,
+                    batchDateStart = batchDateStart,
+                    batchDateEnd = batchDateEnd
                 });
             }
             catch (Exception ex)
