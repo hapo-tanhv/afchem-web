@@ -162,20 +162,20 @@ document.addEventListener("DOMContentLoaded", function () {
                             if (currentStepEl) currentStepEl.innerHTML = "8 / 8";
                             
                             var stdTimeEl = document.getElementById("statStandardTime");
-                            if (stdTimeEl) stdTimeEl.innerHTML = "180";
+                            if (stdTimeEl) stdTimeEl.innerHTML = "1800";
                             
-                            var elapsedVal = 180;
+                            var elapsedVal = 1800;
                             if (data.steps && data.steps.length > 7) {
                                 var step8 = data.steps[7];
                                 if (step8 && step8.duration && step8.duration !== "-") {
-                                    elapsedVal = parseInt(step8.duration) || 180;
+                                    elapsedVal = parseInt(step8.duration) || 1800;
                                 }
                             }
                             
                             var elapsedEl = document.getElementById("statElapsedTime");
                             if (elapsedEl) elapsedEl.innerHTML = elapsedVal;
                             
-                            var remaining = Math.max(0, 180 - elapsedVal);
+                            var remaining = Math.max(0, 1800 - elapsedVal);
                             var remainingEl = document.getElementById("statRemainingTime");
                             if (remainingEl) remainingEl.innerHTML = remaining;
                             
@@ -194,7 +194,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             }
                             
                             var stdTimeEl = document.getElementById("statStandardTime");
-                            if (stdTimeEl) stdTimeEl.innerHTML = "180";
+                            if (stdTimeEl) stdTimeEl.innerHTML = "1800";
                             
                             if (activeStepStartTime) {
                                 var currentAdjustedTime = Date.now() - clientServerTimeOffset;
@@ -205,7 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             var elapsedEl = document.getElementById("statElapsedTime");
                             if (elapsedEl) elapsedEl.innerHTML = elapsed;
                             
-                            var remaining = Math.max(0, 180 - elapsed);
+                            var remaining = Math.max(0, 1800 - elapsed);
                             var remainingEl = document.getElementById("statRemainingTime");
                             if (remainingEl) remainingEl.innerHTML = remaining;
                             

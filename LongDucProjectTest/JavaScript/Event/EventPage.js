@@ -189,36 +189,55 @@
 
     // ========== AJAX LOADING ==========
 
-    function loadBatches(callback) {
+    function loadBatches(date, callback) {
+        var params = {};
+        if (date) {
+            params.date = date;
+        }
         $.ajax({
             url: '/Event/GetBatches',
             type: 'GET',
+            data: params,
             dataType: 'json',
             success: function (data) {
                 var select = $('#batchId');
-                if (select.length && data && data.length) {
+                if (select.length) {
                     select.empty();
-                    data.forEach(function (batch) {
-                        var label = batch.name;
-                        if (batch.status === 'Active') {
-                            label += ' (Active)';
-                        } else if (batch.status === 'Completed') {
-                            label += ' (Completed)';
-                        }
-                        select.append('<option value="' + batch.id + '">' + label + '</option>');
-                    });
+                    if (data && data.length) {
+                        data.forEach(function (batch) {
+                            var label = batch.name;
+                            if (batch.status === 'Active') {
+                                label += ' (Active)';
+                            } else if (batch.status === 'Completed') {
+                                label += ' (Completed)';
+                            }
+                            select.append('<option value="' + batch.id + '">' + label + '</option>');
+                        });
+                    } else {
+                        select.append('<option value="">Không có mẻ nào</option>');
+                    }
                 }
-                if (callback) callback();
+                if (typeof callback === 'function') {
+                    callback();
+                }
             },
             error: function (xhr, status, error) {
                 console.error("Lỗi khi tải danh sách batches:", error);
-                if (callback) callback();
+                if (typeof callback === 'function') {
+                    callback();
+                }
             }
         });
     }
 
-    function loadEventData() {
-        var batchId = $('#batchId').val() || "";
+    function loadEventData(isInitialLoad) {
+        var batchId = isInitialLoad ? "" : ($('#batchId').val() || "");
+        var formattedDate = "";
+        
+        if (!isInitialLoad) {
+            var dateVal = $('#starttime').val() || "";
+            formattedDate = dateVal.replace(/\//g, '-');
+        }
         
         // Show loading state
         document.getElementById('cycleSummaryContainer').innerHTML = '<div style="padding: 20px; text-align: center;"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Đang tải dữ liệu...</div>';
@@ -227,17 +246,12 @@
         $.ajax({
             url: '/Event/GetEventLogRealtime',
             type: 'GET',
-            data: { batchId: batchId },
+            data: { batchId: batchId, date: formattedDate },
             dataType: 'json',
             success: function (res) {
                 if (res.error) {
                     alert("Lỗi từ server: " + res.error);
                     return;
-                }
-
-                // If a batch ID was resolved by server, select it in the dropdown
-                if (res.batchId && res.batchId > 0) {
-                    $('#batchId').val(res.batchId);
                 }
 
                 currentEvents = res.events || [];
@@ -248,6 +262,29 @@
                 renderPhaseLog(res.phases);
                 renderEventDetails('all');
                 renderNote(res.note);
+
+                if (isInitialLoad) {
+                    if (res.batchDate) {
+                        var dateVal = res.batchDate.replace(/-/g, '/');
+                        $('#starttime').val(dateVal);
+                        
+                        var drp = $('#starttime').data('daterangepicker');
+                        if (drp) {
+                            drp.setStartDate(dateVal);
+                            drp.setEndDate(dateVal);
+                        }
+                        
+                        loadBatches(res.batchDate, function() {
+                            if (res.batchId && res.batchId > 0) {
+                                $('#batchId').val(res.batchId);
+                            }
+                        });
+                    }
+                } else {
+                    if (res.batchId && res.batchId > 0) {
+                        $('#batchId').val(res.batchId);
+                    }
+                }
             },
             error: function (xhr, status, error) {
                 console.error("Lỗi khi tải dữ liệu sự kiện:", error);
@@ -259,16 +296,15 @@
 
     // ========== INIT ==========
     function init() {
-        // First load batches, then load the data
-        loadBatches(function () {
-            loadEventData();
-        });
+        // Initial load: fetch the latest active/completed batch from the server
+        loadEventData(true);
     }
 
     return {
         init: init,
         togglePhaseAlarm: togglePhaseAlarm,
         filterEvents: filterEvents,
+        loadBatches: loadBatches,
         loadEventData: loadEventData
     };
 

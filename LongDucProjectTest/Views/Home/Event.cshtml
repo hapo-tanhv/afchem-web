@@ -1,139 +1,148 @@
-﻿@{
-    ViewBag.Title = "SOLAR SCADA SYSTEM - EVENT";
-    ViewBag.ButtonEvent = "active";
-    ViewBag.ButtonHome = "";
-    ViewBag.ButtonOverview = "";
-    ViewBag.ButtonAlarm = "";
-    ViewBag.ButtonReport = "";
-    Layout = "~/Views/Shared/_LayoutMain.cshtml";
-}
-
-@section Styles {
-    <link rel="stylesheet" href="~/AdminLTE-master/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
-    <link rel="stylesheet" href="~/Css/Overview.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Css/Event.css" asp-append-version="true" />
-}
-
-<div class="overview-dashboard">
-    <!-- FILTER BAR -->
-    <div class="filter-bar">
-        <div class="filter-group">
-            <span class="filter-label">Chọn ngày</span>
-            <input type="text" id="starttime" name="starttime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
-        </div>
-        <div class="filter-group" style="margin-left: 10px;">
-            <span class="filter-label">Chọn mẻ (Batch)</span>
-            <select id="batchId" class="filter-input" style="min-width: 180px;">
-                <option value="">Đang tải...</option>
-            </select>
-        </div>
-        <button onclick="Submit()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>
-        <div style="margin-left: auto; display: flex; gap: 10px;">
-            <button onclick="ExportExcel()" class="btn-custom btn-export"><i class="fas fa-file-excel"></i> Export Excel</button>
-            <button onclick="ExportCSV()" class="btn-custom btn-export"><i class="fas fa-file-csv"></i> Export CSV</button>
-        </div>
-    </div>
-
-    <!-- TOP ROW: CYCLE SUMMARY + ANOMALY SUMMARY -->
-    <div class="event-top-grid">
-        <!-- LEFT: TỔNG KẾT CHU KỲ -->
-        <div class="history-panel evt-summary-panel">
-            <div class="panel-header" style="margin-bottom: 15px;">
-                <h3>Tổng kết chu kỳ</h3>
-            </div>
-            <div class="evt-summary-content" id="cycleSummaryContainer"></div>
-        </div>
-
-        <!-- RIGHT: TỔNG HỢP BẤT THƯỜNG -->
-        <div class="history-panel evt-anomaly-panel">
-            <div class="panel-header" style="margin-bottom: 10px;">
-                <h3>Tổng hợp bất thường</h3>
-            </div>
-            <div class="evt-anomaly-content" id="anomalySummaryContainer"></div>
-        </div>
-    </div>
-
-    <!-- BOTTOM ROW: PHASE LOG + EVENT DETAILS -->
-    <div class="event-bottom-grid">
-        <!-- LEFT: NHẬT KÝ THEO GIAI ĐOẠN -->
-        <div class="history-panel evt-phase-panel">
-            <div class="panel-header" style="margin-bottom: 15px;">
-                <h3>Nhật ký theo giai đoạn</h3>
-            </div>
-            <div class="table-responsive">
-                <table class="batch-table evt-phase-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 30px;"></th>
-                            <th class="th-process">Công đoạn</th>
-                            <th>T.g bắt đầu</th>
-                            <th>T.g kết thúc</th>
-                            <th>Trạng thái</th>
-                            <th>Thời lượng</th>
-                            <th>Bất thường</th>
-                        </tr>
-                    </thead>
-                    <tbody id="phaseLogBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- RIGHT: CHI TIẾT SỰ KIỆN -->
-        <div class="history-panel evt-detail-panel">
-            <div class="panel-header" style="margin-bottom: 15px;">
-                <h3>Chi tiết sự kiện</h3>
-            </div>
-            <div class="evt-filter-tabs" id="eventFilterTabs"></div>
-            <div class="table-responsive" style="margin-top: 15px;">
-                <table class="batch-table evt-detail-table">
-                    <thead>
-                        <tr>
-                            <th>Thời gian</th>
-                            <th>Công đoạn</th>
-                            <th>Sự kiện</th>
-                            <th>Mức độ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="eventDetailBody"></tbody>
-                </table>
-            </div>
-            <!-- GHI CHÚ -->
-            <div class="evt-note" id="eventNote"></div>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    <script src="~/AdminLTE-master/plugins/datatables/jquery.dataTables.min.js"></script>
-    <script src="~/AdminLTE-master/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
-    <script src="~/JavaScript/Event/EventPage.js"></script>
-    <script>
-        $(document).ready(function () {
-            $('.datepicker').daterangepicker({
-                singleDatePicker: true,
-                autoApply: true,
-                locale: {
-                    format: 'YYYY/MM/DD',
-                    daysOfWeek: ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
-                    monthNames: ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"],
-                }
-            });
-
-            EventPage.init();
-        });
-
-        function Submit() {
-            EventPage.loadEventData();
-        }
-
-        function ExportExcel() {
-            var batchId = $('#batchId').val();
-            window.location.href = "/Event/ExportEventExcel?batchId=" + batchId;
-        }
-
-        function ExportCSV() {
-            var batchId = $('#batchId').val();
-            window.location.href = "/Event/ExportEventCSV?batchId=" + batchId;
-        }
-    </script>
+﻿@{
+    ViewBag.Title = "SOLAR SCADA SYSTEM - EVENT";
+    ViewBag.ButtonEvent = "active";
+    ViewBag.ButtonHome = "";
+    ViewBag.ButtonOverview = "";
+    ViewBag.ButtonAlarm = "";
+    ViewBag.ButtonReport = "";
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/AdminLTE-master/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/Css/Overview.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Css/Event.css" asp-append-version="true" />
+}
+
+<div class="overview-dashboard">
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+        <div class="filter-group">
+            <span class="filter-label">Chọn ngày</span>
+            <input type="text" id="starttime" name="starttime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
+        </div>
+        <div class="filter-group" style="margin-left: 10px;">
+            <span class="filter-label">Chọn mẻ (Batch)</span>
+            <select id="batchId" class="filter-input" style="min-width: 180px;">
+                <option value="">Đang tải...</option>
+            </select>
+        </div>
+        <button onclick="Submit()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>
+        <div style="margin-left: auto; display: flex; gap: 10px;">
+            <button onclick="ExportExcel()" class="btn-custom btn-export"><i class="fas fa-file-excel"></i> Export Excel</button>
+            <button onclick="ExportCSV()" class="btn-custom btn-export"><i class="fas fa-file-csv"></i> Export CSV</button>
+        </div>
+    </div>
+
+    <!-- TOP ROW: CYCLE SUMMARY + ANOMALY SUMMARY -->
+    <div class="event-top-grid">
+        <!-- LEFT: TỔNG KẾT CHU KỲ -->
+        <div class="history-panel evt-summary-panel">
+            <div class="panel-header" style="margin-bottom: 15px;">
+                <h3>Tổng kết chu kỳ</h3>
+            </div>
+            <div class="evt-summary-content" id="cycleSummaryContainer"></div>
+        </div>
+
+        <!-- RIGHT: TỔNG HỢP BẤT THƯỜNG -->
+        <div class="history-panel evt-anomaly-panel">
+            <div class="panel-header" style="margin-bottom: 10px;">
+                <h3>Tổng hợp bất thường</h3>
+            </div>
+            <div class="evt-anomaly-content" id="anomalySummaryContainer"></div>
+        </div>
+    </div>
+
+    <!-- BOTTOM ROW: PHASE LOG + EVENT DETAILS -->
+    <div class="event-bottom-grid">
+        <!-- LEFT: NHẬT KÝ THEO GIAI ĐOẠN -->
+        <div class="history-panel evt-phase-panel">
+            <div class="panel-header" style="margin-bottom: 15px;">
+                <h3>Nhật ký theo giai đoạn</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="batch-table evt-phase-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;"></th>
+                            <th class="th-process">Công đoạn</th>
+                            <th>T.g bắt đầu</th>
+                            <th>T.g kết thúc</th>
+                            <th>Trạng thái</th>
+                            <th>Thời lượng</th>
+                            <th>Bất thường</th>
+                        </tr>
+                    </thead>
+                    <tbody id="phaseLogBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- RIGHT: CHI TIẾT SỰ KIỆN -->
+        <div class="history-panel evt-detail-panel">
+            <div class="panel-header" style="margin-bottom: 15px;">
+                <h3>Chi tiết sự kiện</h3>
+            </div>
+            <div class="evt-filter-tabs" id="eventFilterTabs"></div>
+            <div class="table-responsive" style="margin-top: 15px;">
+                <table class="batch-table evt-detail-table">
+                    <thead>
+                        <tr>
+                            <th>Thời gian</th>
+                            <th>Công đoạn</th>
+                            <th>Sự kiện</th>
+                            <th>Mức độ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventDetailBody"></tbody>
+                </table>
+            </div>
+            <!-- GHI CHÚ -->
+            <div class="evt-note" id="eventNote"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/AdminLTE-master/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/AdminLTE-master/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+    <script src="~/JavaScript/Event/EventPage.js?v=@DateTime.Now.Ticks"></script>
+    <script>
+        $(document).ready(function () {
+            $('.datepicker').daterangepicker({
+                singleDatePicker: true,
+                autoApply: true,
+                locale: {
+                    format: 'YYYY/MM/DD',
+                    daysOfWeek: ["CN", "T2", "T3", "T4", "T5", "T6", "T7"],
+                    monthNames: ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"],
+                }
+            }).on('apply.daterangepicker', function (ev, picker) {
+                var formattedDate = picker.startDate.format('YYYY-MM-DD');
+                EventPage.loadBatches(formattedDate, function () {
+                    EventPage.loadEventData();
+                });
+            });
+
+            EventPage.init();
+        });
+
+        function Submit() {
+            EventPage.loadEventData();
+        }
+
+        function ExportExcel() {
+            var batchId = $('#batchId').val() || "";
+            var dateVal = $('#starttime').val() || "";
+            var formattedDate = dateVal.replace(/\//g, '-');
+            window.location.href = "/Event/ExportEventExcel?batchId=" + batchId + "&starttime=" + formattedDate;
+        }
+
+        function ExportCSV() {
+            var batchId = $('#batchId').val() || "";
+            var dateVal = $('#starttime').val() || "";
+            var formattedDate = dateVal.replace(/\//g, '-');
+            window.location.href = "/Event/ExportEventCsv?batchId=" + batchId + "&starttime=" + formattedDate;
+        }
+    </script>
 }
