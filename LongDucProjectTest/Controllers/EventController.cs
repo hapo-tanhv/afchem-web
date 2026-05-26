@@ -413,7 +413,12 @@ namespace LongDucProject.Controllers
 
         [HttpGet]
         public FileResult ExportEventExcel(string starttime, string endtime, string batchId, string searchValue)
-        {
+        {
+            if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
+            {
+                throw new HttpException(403, "Bạn không có quyền thực hiện hành động này.");
+            }
+
             var connector = new Hino.DatabaseConnector.MySQLConnect()
             {
                 ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
@@ -507,7 +512,12 @@ namespace LongDucProject.Controllers
 
         [HttpGet]
         public FileResult ExportEventCsv(string starttime, string endtime, string batchId, string searchValue)
-        {
+        {
+            if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
+            {
+                throw new HttpException(403, "Bạn không có quyền thực hiện hành động này.");
+            }
+
             var connector = new Hino.DatabaseConnector.MySQLConnect()
             {
                 ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"

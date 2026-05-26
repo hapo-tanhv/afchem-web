@@ -613,7 +613,7 @@
                 <div class="dropdown">
                     <div class="user-profile-toggle" data-toggle="dropdown">
                         <div class="user-meta d-none d-sm-flex">
-                            <span class="u-name">Admin</span>
+                            <span class="u-name">@(Session["UserName"] != null ? Session["UserName"].ToString() : "Admin")</span>
                         </div>
                         <img src="~/AdminLTE-master/dist/img/user2-160x160.jpg" class="u-avatar" alt="User">
                         <i class="fas fa-angle-down" style="color: #a9b7cb; font-size: 11px;"></i>
@@ -662,12 +662,15 @@
                             </a>
                         </li>
 
-                        <li class="nav-item">
-                            <a href="~/Home/UserSetting" class="nav-link @(ViewBag.ButtonUser)">
-                                <i class="nav-icon fas fa-cog"></i>
-                                <p>Cài đặt hệ thống</p>
-                            </a>
-                        </li>
+                        @if (Session["Role"] != null && (int)Session["Role"] == (int)Hino.Getdata.Common.Role.Admin)
+                        {
+                            <li class="nav-item">
+                                <a href="~/Home/UserSetting" class="nav-link @(ViewBag.ButtonUser)">
+                                    <i class="nav-icon fas fa-cog"></i>
+                                    <p>Cài đặt hệ thống</p>
+                                </a>
+                            </li>
+                        }
                     </ul>
                 </nav>
 
@@ -760,16 +763,130 @@
             }
         });
 
-        // Update Clock function
+        // Update Clock function & Current Shift
+        function getCurrentShift() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const timeVal = hours + minutes / 60; // numeric time representation (e.g. 10.5 for 10:30)
+
+            // Shift segments: 8-12, 13-17, 18-22
+            if (timeVal >= 8 && timeVal < 12) {
+                return "08:00 - 12:00";
+            } else if (timeVal >= 13 && timeVal < 17) {
+                return "13:00 - 17:00";
+            } else if (timeVal >= 18 && timeVal < 22) {
+                return "18:00 - 22:00";
+            } else {
+                return "Ngoài ca";
+            }
+        }
+
         function updateClock() {
             const now = new Date();
             const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
             const dateStr = now.toLocaleDateString('en-GB'); // dd/mm/yyyy
             document.getElementById('txtTime').innerText = timeStr;
             document.getElementById('txtDate').innerText = dateStr;
+
+            // Dynamically update the current shift based on time
+            const shiftEl = document.getElementById("headerCurrentShift");
+            if (shiftEl) {
+                shiftEl.innerText = getCurrentShift();
+            }
         }
         setInterval(updateClock, 1000);
         updateClock();
+
+        // Update header stats with data from GetCurrentBatchStats API
+        function updateHeaderStats(data) {
+            if (!data) return;
+
+            // 1. Update Batch Info
+            if (data.batchInfo) {
+                const batchInfo = data.batchInfo;
+                const batchNumEl = document.getElementById("headerBatchNumber");
+                if (batchNumEl) batchNumEl.innerHTML = batchInfo.batchName || "-";
+
+                const stepEl = document.getElementById("step");
+                if (stepEl) stepEl.innerHTML = batchInfo.headerStepName || "";
+
+                const statusEl = document.getElementById("headerMachineStatus");
+                if (statusEl) {
+                    statusEl.innerHTML = batchInfo.machineStatus;
+                    if (batchInfo.machineStatus === "RUNNING") {
+                        statusEl.style.color = "#22c55e";
+                    } else {
+                        statusEl.style.color = "#3b82f6";
+                    }
+                }
+
+                const runningTimeEl = document.getElementById("headerRunningTime");
+                if (runningTimeEl) runningTimeEl.innerHTML = batchInfo.headerRunningTime || "0s";
+
+                const alarmCountEl = document.getElementById("alarmCount");
+                if (alarmCountEl) alarmCountEl.innerHTML = batchInfo.alarmCount !== undefined ? batchInfo.alarmCount : "0";
+            }
+
+            // 2. Calculate and Update Production Output (Current / Target)
+            if (data.dailyBatches) {
+                let totalOutput = 0;
+                let activeStepCode = 0;
+                if (data.batchInfo && data.batchInfo.batchStatus === "Active") {
+                    activeStepCode = data.batchInfo.activeStepCode || 0;
+                }
+
+                data.dailyBatches.forEach(function (batch) {
+                    if (batch.status === "Completed") {
+                        totalOutput += 500; // Completed batch = 500kg
+                    } else if (batch.status === "Active") {
+                        // Active batch: calculate proportional output based on current step (1 to 8 steps)
+                        if (activeStepCode > 0) {
+                            totalOutput += Math.round((activeStepCode / 8) * 500);
+                        }
+                    }
+                });
+
+                const currentOutputEl = document.getElementById("headerCurrentOutput");
+                if (currentOutputEl) {
+                    currentOutputEl.innerHTML = totalOutput;
+                }
+            }
+
+            // 3. Ensure Target Output is always 2000 KG
+            const targetOutputEl = document.getElementById("headerTargetOutput");
+            if (targetOutputEl) {
+                targetOutputEl.innerHTML = "2000";
+            }
+        }
+
+        // Fetch stats from server
+        function fetchHeaderStats() {
+            $.ajax({
+                url: '/Overview/GetCurrentBatchStats',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    updateHeaderStats(data);
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching header stats:', error);
+                }
+            });
+        }
+
+        // Global polling initialization
+        $(document).ready(function() {
+            // Initial load of header stats
+            fetchHeaderStats();
+
+            // Poll every 20 seconds if we are not on the Overview page 
+            // (OverviewRealtime.js handles its own polling and will call updateHeaderStats)
+            const isOverviewPage = document.getElementById('dailyBatchesBody') !== null;
+            if (!isOverviewPage) {
+                setInterval(fetchHeaderStats, 20000);
+            }
+        });
     </script>
     @RenderSection("Scripts", required: false)
 </body>

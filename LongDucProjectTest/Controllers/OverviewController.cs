@@ -775,6 +775,8 @@ namespace LongDucProject.Controllers
                     activeStepName = activeStepName,
                     headerStepName = headerStepName,
                     activeStepStartTime = activeStepStartTime?.ToString("yyyy-MM-dd HH:mm:ss"),
+                    batchStartTime = batchStart, // start_time of the batch
+                    batchTotalSeconds = runningSeconds, // total elapsed seconds if completed
                     headerRunningTime = headerRunningTimeStr,
                     alarmCount = alarmCount,
                     serverTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
@@ -788,7 +790,65 @@ namespace LongDucProject.Controllers
                     .Take(5)
                     .ToList();
 
-                return Json(new { steps = stepsList, globalAlarms = sortedGlobalAlarms, batchInfo = batchInfo }, JsonRequestBehavior.AllowGet);
+                // 5. Fetch daily batches produced today
+                var dailyBatchesList = new List<object>();
+                var dtDaily = connector.ExecuteQuery($"SELECT id, name, status, start_time, end_time FROM batches WHERE DATE(created_at) = '{DateTime.Today.ToString("yyyy-MM-dd")}' OR DATE(start_time) = '{DateTime.Today.ToString("yyyy-MM-dd")}' ORDER BY id ASC");
+                if (dtDaily != null)
+                {
+                    foreach (DataRow row in dtDaily.Rows)
+                    {
+                        int bId = Convert.ToInt32(row["id"]);
+                        string bName = row["name"].ToString();
+                        string bStatus = row["status"] != DBNull.Value ? row["status"].ToString() : "";
+                        
+                        DateTime? firstOccurrence = null;
+                        DateTime? lastRestore = null;
+                        var dtFirst = connector.ExecuteQuery($"SELECT OccurrenceTime FROM alarmlog WHERE batchId = {bId} ORDER BY OccurrenceTime ASC LIMIT 1");
+                        if (dtFirst != null && dtFirst.Rows.Count > 0 && dtFirst.Rows[0][0] != DBNull.Value)
+                        {
+                            firstOccurrence = Convert.ToDateTime(dtFirst.Rows[0][0]);
+                        }
+                        var dtLast = connector.ExecuteQuery($"SELECT RestoreTime FROM alarmlog WHERE batchId = {bId} AND Status = 'Resolved' ORDER BY RestoreTime DESC LIMIT 1");
+                        if (dtLast != null && dtLast.Rows.Count > 0 && dtLast.Rows[0][0] != DBNull.Value)
+                        {
+                            lastRestore = Convert.ToDateTime(dtLast.Rows[0][0]);
+                        }
+                        
+                        string durationStr = "-";
+                        if (bStatus.Equals("Active", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (row["start_time"] != DBNull.Value)
+                            {
+                                DateTime startTimeVal = Convert.ToDateTime(row["start_time"]);
+                                durationStr = $"{startTimeVal.ToString("H:mm")} - {DateTime.Now.ToString("H:mm")}";
+                            }
+                        }
+                        else
+                        {
+                            if (firstOccurrence.HasValue && lastRestore.HasValue)
+                            {
+                                durationStr = $"{firstOccurrence.Value.ToString("H:mm")} - {lastRestore.Value.ToString("H:mm")}";
+                            }
+                            else if (row["start_time"] != DBNull.Value && row["end_time"] != DBNull.Value)
+                            {
+                                DateTime startTimeVal = Convert.ToDateTime(row["start_time"]);
+                                DateTime endTimeVal = Convert.ToDateTime(row["end_time"]);
+                                durationStr = $"{startTimeVal.ToString("H:mm")} - {endTimeVal.ToString("H:mm")}";
+                            }
+                        }
+                        
+                        dailyBatchesList.Add(new
+                        {
+                            id = bId,
+                            name = bName,
+                            weight = "500kg",
+                            duration = durationStr,
+                            status = bStatus
+                        });
+                    }
+                }
+
+                return Json(new { steps = stepsList, globalAlarms = sortedGlobalAlarms, batchInfo = batchInfo, dailyBatches = dailyBatchesList }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {

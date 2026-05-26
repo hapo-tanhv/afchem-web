@@ -1,177 +1,761 @@
-﻿
-@model LongDucProject.Controllers.UserParam
-
-@{
+﻿@{
     ViewBag.Title = "SOLAR SCADA SYSTEM - SETTING";
     ViewBag.ButtonHome = "";
     ViewBag.ButtonOverview = "";
-    ViewBag.ButtonOverviewSignage = "";
     ViewBag.ButtonAlarm = "";
     ViewBag.ButtonEvent = "";
-    ViewBag.ButtonUserSetting = "active";
+    ViewBag.ButtonUser = "active";
     ViewBag.ButtonReport = "";
-    ViewBag.ButtonProject = "";
-    ViewBag.MenuOpenProject = "";
-    ViewBag.DisplayProject = "none";
-
-    ViewBag.ButtonProject1 = ""; // active
-    ViewBag.MenuOpenProject1 = ""; // menu-open
-    ViewBag.DisplayProject1 = "none"; // block/none
-    ViewBag.ButtonProject1Infor = "";
-    ViewBag.ButtonProject1Event = "";
-    ViewBag.ButtonProject1Alarm = "";
-    ViewBag.ButtonProject1Weather = "";
-    ViewBag.ButtonSignage1 = "";
-
-    ViewBag.ButtonProject2 = "";
-    ViewBag.MenuOpenProject2 = "";
-    ViewBag.DisplayProject2 = "none"; // block/none
-    ViewBag.ButtonProject2Infor = "";
-    ViewBag.ButtonProject2Event = "";
-    ViewBag.ButtonProject2Alarm = "";
-    ViewBag.ButtonProject2Weather = "";
-    ViewBag.ButtonSignage2 = "";
-
-    ViewBag.ButtonProject3 = "";
-    ViewBag.MenuOpenProject3 = "";
-    ViewBag.DisplayProject3 = "none"; // block/none
-    ViewBag.ButtonProject3Infor = "";
-    ViewBag.ButtonProject3Event = "";
-    ViewBag.ButtonProject3Alarm = "";
-    ViewBag.ButtonProject3Weather = "";
-    ViewBag.ButtonSignage3 = "";
-
-    ViewBag.ButtonProject4 = "";
-    ViewBag.MenuOpenProject4 = "";
-    ViewBag.DisplayProject4 = "none"; // block/none
-    ViewBag.ButtonProject4Infor = "";
-    ViewBag.ButtonProject4Event = "";
-    ViewBag.ButtonProject4Alarm = "";
-    ViewBag.ButtonProject4Weather = "";
-    ViewBag.ButtonSignage4 = "";
-
-    ViewBag.ButtonProject5 = "";
-    ViewBag.MenuOpenProject5 = "";
-    ViewBag.DisplayProject5 = "none"; // block/none
-    ViewBag.ButtonProject5Infor = "";
-    ViewBag.ButtonProject5Event = "";
-    ViewBag.ButtonProject5Alarm = "";
-    ViewBag.ButtonProject5Weather = "";
-    ViewBag.ButtonSignage5 = "";
-
-    ViewBag.ButtonProject6 = "";
-    ViewBag.MenuOpenProject6 = "";
-    ViewBag.DisplayProject6 = "none"; // block/none
-    ViewBag.ButtonProject6Infor = "";
-    ViewBag.ButtonProject6Event = "";
-    ViewBag.ButtonProject6Alarm = "";
-    ViewBag.ButtonProject6Weather = "";
-    ViewBag.ButtonSignage6 = "";
-
-    ViewBag.ButtonProject7 = "";
-    ViewBag.MenuOpenProject7 = "";
-    ViewBag.DisplayProject7 = "none"; // block/none
-    ViewBag.ButtonProject7Infor = "";
-    ViewBag.ButtonProject7Event = "";
-    ViewBag.ButtonProject7Alarm = "";
-    ViewBag.ButtonProject7Weather = "";
-    ViewBag.ButtonSignage7 = "";
-    
-    
     Layout = "~/Views/Shared/_LayoutMain.cshtml";
 }
 
-<style>
-    body, html {
-        height: 100%;
-        margin: 0;
-    }
+@section Styles {
+    <link rel="stylesheet" href="~/AdminLTE-master/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/Css/Overview.css" asp-append-version="true" />
+    <style>
+        /* Card Panel Styling */
+        .setting-panel {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
 
-    .login-box {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 80vh;
-        max-width: 500px; /* Optional, adjust this value based on your design */
-    }
-</style>
+        /* Panel Header Styling */
+        .panel-header-custom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
 
+        .panel-header-custom h3 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
+        .panel-header-custom h3 i {
+            color: #00e5ff;
+            filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.4));
+        }
 
-<body class="hold-transition login-page">
-    <div class="login-box">
-        <!-- /.login-logo -->
-        <div class="card card-outline card-primary">
-            <div class="card-header text-center" style="background-color:dodgerblue">
-                <a class="h1" style="color:white"><b>Password Setting</b></a>
-            </div>
-            <div class="card-body">
-                <p class="login-box-msg">Can change password at here</p>
-                <div class="login-box-body">
+        /* Buttons Premium Styling */
+        .btn-premium {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 8px 20px;
+            border-radius: 6px;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
 
+        .btn-premium:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.5);
+            background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+        }
 
-                    <div class="input-group mb-3">
-                        <input id="UserName" class="form-control" placeholder="UserName" />
-                        <div class="input-group-append">
-                            <div class="input-group-text">
-                                <span class="fas fa-user"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="input-group mb-3">
-                        <input id="OldPassword" type="password" class="form-control" placeholder="OldPassword" />
-                        <div class="input-group-append">
-                            <div class="input-group-text">
-                                <span class="fas fa-lock"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="input-group mb-3">
-                        <input id="NewPassword" type="password" class="form-control" placeholder="NewPassword" />
-                        <div class="input-group-append">
-                            <div class="input-group-text">
-                                <span class="fas fa-lock"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="input-group mb-3">
-                        <input id="ConfirmPassword" type="password" class="form-control" placeholder="ConfirmPassword" />
-                        <div class="input-group-append">
-                            <div class="input-group-text">
-                                <span class="fas fa-lock"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <button onclick="changePassword()" class="btn btn-primary btn-block">Change password</button>
-                    </div>
+        /* Table Headers Styling */
+        .batch-table th {
+            background-color: rgba(15, 23, 42, 0.8) !important;
+            color: #94a3b8 !important;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.08) !important;
+            padding: 14px 16px !important;
+        }
 
-                </div>
+        /* Table Rows Styling with Hover Accent */
+        .batch-table tbody tr {
+            background-color: rgba(30, 41, 59, 0.3) !important;
+            color: #e2e8f0 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            transition: all 0.2s ease-in-out;
+        }
 
-                <!-- /.social-auth-links -->
+        .batch-table tbody tr:hover {
+            background-color: rgba(59, 130, 246, 0.08) !important;
+            color: #ffffff !important;
+        }
 
-                <p class="mb-1">
+        .batch-table td {
+            padding: 12px 16px !important;
+            vertical-align: middle !important;
+            border-top: none !important;
+        }
 
-                </p>
-                <p class="mb-0">
+        /* Badges Styling */
+        .badge-premium {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+        }
 
-                </p>
-            </div>
-            <!-- /.card-body -->
+        .badge-admin {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-operator {
+            background: rgba(6, 182, 212, 0.15);
+            color: #06b6d4;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+        }
+
+        /* Select Dropdowns and Controls */
+        .role-select-custom {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .role-select-custom:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+        }
+
+        .btn-action-custom {
+            padding: 6px 14px;
+            font-size: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-reset-custom {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-reset-custom:hover {
+            background: rgba(245, 158, 11, 0.25);
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.15);
+        }
+
+        /* Modals Modern Styling */
+        .modal-content-custom {
+            background-color: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header-custom {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header-custom .modal-title {
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .modal-body-custom {
+            padding: 24px;
+        }
+
+        .modal-footer-custom {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .form-group-custom {
+            margin-bottom: 20px;
+        }
+
+        .form-group-custom label {
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-control-custom {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            color: #ffffff;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-control-custom:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+        }
+
+        .form-control-custom:disabled {
+            background: rgba(15, 23, 42, 0.4);
+            border-color: rgba(255, 255, 255, 0.05);
+            color: #64748b;
+            cursor: not-allowed;
+        }
+
+        .btn-cancel-custom {
+            background: rgba(255, 255, 255, 0.05);
+            color: #cbd5e1;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel-custom:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .close-custom {
+            color: #94a3b8;
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .close-custom:hover {
+            color: #ffffff;
+        }
+
+        /* Toast Container */
+        .toast-container-custom {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast-custom {
+            background: #0f172a;
+            border-left: 4px solid #10b981;
+            color: #ffffff;
+            padding: 16px 20px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        .toast-error {
+            border-left-color: #ef4444;
+        }
+
+        @@keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* --- Custom styling for DataTables text, search inputs, dropdowns and pagination --- */
+        
+        .dataTables_wrapper .dataTables_length {
+            color: #cbd5e1 !important;
+            font-size: 14px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        
+        /* Styled select menu for entries */
+        .dataTables_wrapper .dataTables_length select,
+        .dataTables_wrapper .dataTables_length select.custom-select {
+            background-color: #0f172a !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            color: #ffffff !important;
+            border-radius: 6px !important;
+            padding: 4px 28px 4px 10px !important;
+            outline: none !important;
+            margin: 0 6px !important;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='%2394a3b8' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 10px center !important;
+            background-size: 8px 10px !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+        }
+
+        .dataTables_wrapper .dataTables_filter {
+            color: #cbd5e1 !important;
+            font-size: 14px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        /* Styled integrated dark search input */
+        .dataTables_wrapper .dataTables_filter input,
+        .dataTables_wrapper .dataTables_filter input.form-control-sm {
+            background-color: #0f172a !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            color: #ffffff !important;
+            border-radius: 6px !important;
+            padding: 6px 12px !important;
+            outline: none !important;
+            margin-left: 8px !important;
+            transition: all 0.2s ease-in-out;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+            width: 220px !important;
+            height: auto !important;
+        }
+
+        .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        /* Info text at bottom */
+        .dataTables_wrapper .dataTables_info {
+            color: #94a3b8 !important;
+            font-size: 13px;
+            font-weight: 500;
+            padding-top: 15px !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate {
+            padding-top: 15px !important;
+        }
+
+        /* Pagination buttons custom */
+        .pagination .page-item .page-link {
+            background-color: #0f172a !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #cbd5e1 !important;
+            padding: 8px 14px !important;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .pagination .page-item .page-link:hover {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+            border-color: rgba(255, 255, 255, 0.2) !important;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+            color: #ffffff !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3) !important;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            background-color: rgba(15, 23, 42, 0.3) !important;
+            color: #64748b !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
+        }
+    </style>
+}
+
+<div class="overview-dashboard">
+    <!-- Toast Notifications Container -->
+    <div class="toast-container-custom" id="toastContainer"></div>
+
+    <div class="setting-panel">
+        <div class="panel-header-custom">
+            <h3><i class="fas fa-users-cog"></i> HỆ THỐNG CÀI ĐẶT TÀI KHOẢN</h3>
+            <button onclick="openCreateModal()" class="btn-premium">
+                <i class="fas fa-plus"></i> Tạo tài khoản mới
+            </button>
         </div>
-        <!-- /.card -->
+
+        <div class="table-responsive" style="margin-top: 15px;">
+            <table id="accountTable" class="batch-table" style="width:100%">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">STT</th>
+                        <th>Tên đăng nhập (UserName)</th>
+                        <th>Vai trò (Role)</th>
+                        <th style="width: 280px; text-align: center;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="accountTableBody">
+                    <!-- Loaded dynamically via AJAX -->
+                </tbody>
+            </table>
+        </div>
     </div>
+</div>
 
-</body>
+<!-- Modal: Tạo tài khoản -->
+<div class="modal fade" id="createAccountModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content modal-content-custom">
+            <div class="modal-header-custom">
+                <h5 class="modal-title"><i class="fas fa-user-plus text-primary mr-2"></i> Tạo tài khoản mới</h5>
+                <button type="button" class="close-custom" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body-custom">
+                <div class="form-group-custom">
+                    <label>Tên đăng nhập (UserName)</label>
+                    <input type="text" id="createUserName" class="form-control-custom" placeholder="Nhập tên đăng nhập..." autocomplete="off">
+                </div>
+                <div class="form-group-custom">
+                    <label>Mật khẩu (Password)</label>
+                    <input type="password" id="createPassword" class="form-control-custom" placeholder="Nhập mật khẩu...">
+                </div>
+                <div class="form-group-custom">
+                    <label>Vai trò (Role)</label>
+                    <select id="createRole" class="form-control-custom">
+                        <option value="2">Operator</option>
+                        <option value="1">Admin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer-custom">
+                <button type="button" class="btn-cancel-custom" data-dismiss="modal">Hủy bỏ</button>
+                <button type="button" onclick="submitCreateAccount()" class="btn-premium"><i class="fas fa-save"></i> Lưu tài khoản</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-<script src="~/AdminLTE-master/plugins/jquery/jquery.min.js"></script>
-<!-- Bootstrap 4 -->
-<script src="~/AdminLTE-master/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-<!-- AdminLTE App -->
-<script src="~/AdminLTE-master/dist/js/adminlte.min.js"></script>
-<script src="~/JavaScript/Common/changePassword.js"></script>
+<!-- Modal: Reset Mật khẩu -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content modal-content-custom">
+            <div class="modal-header-custom">
+                <h5 class="modal-title"><i class="fas fa-key text-warning mr-2"></i> Reset Mật khẩu</h5>
+                <button type="button" class="close-custom" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body-custom">
+                <div class="form-group-custom">
+                    <label>Tên đăng nhập</label>
+                    <input type="text" id="resetUserName" class="form-control-custom" disabled>
+                </div>
+                <div class="form-group-custom">
+                    <label>Mật khẩu mới</label>
+                    <input type="password" id="resetNewPassword" class="form-control-custom" placeholder="Nhập mật khẩu mới...">
+                </div>
+                <div class="form-group-custom">
+                    <label>Xác nhận mật khẩu mới</label>
+                    <input type="password" id="resetConfirmPassword" class="form-control-custom" placeholder="Xác nhận mật khẩu mới...">
+                </div>
+            </div>
+            <div class="modal-footer-custom">
+                <button type="button" class="btn-cancel-custom" data-dismiss="modal">Hủy bỏ</button>
+                <button type="button" onclick="submitResetPassword()" class="btn-premium" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);"><i class="fas fa-save"></i> Lưu mật khẩu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/AdminLTE-master/plugins/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/AdminLTE-master/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+    <script>
+        var accountDt;
+
+        $(document).ready(function() {
+            loadAccounts();
+        });
+
+        // Toast message display utility
+        function showToast(message, isError = false) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-custom ${isError ? 'toast-error' : ''}`;
+            
+            const icon = document.createElement('i');
+            icon.className = isError ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
+            icon.style.color = isError ? '#ef4444' : '#10b981';
+            icon.style.fontSize = '18px';
+
+            const text = document.createElement('span');
+            text.innerText = message;
+
+            toast.appendChild(icon);
+            toast.appendChild(text);
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // Fetch accounts from Backend API
+        function loadAccounts() {
+            $.ajax({
+                url: '/Home/GetAccounts',
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    if (res.Status) {
+                        renderAccountsTable(res.Data);
+                    } else {
+                        showToast("Lỗi tải danh sách tài khoản: " + res.Message, true);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showToast("Lỗi hệ thống khi kết nối máy chủ!", true);
+                }
+            });
+        }
+
+        // Render account rows and initialize Datatables
+        function renderAccountsTable(data) {
+            if (accountDt) {
+                accountDt.destroy();
+            }
+
+            const tbody = document.getElementById('accountTableBody');
+            tbody.innerHTML = '';
+
+            data.forEach((user, index) => {
+                const tr = document.createElement('tr');
+
+                // STT
+                const tdIndex = document.createElement('td');
+                tdIndex.innerText = index + 1;
+                tdIndex.style.fontWeight = '600';
+                tr.appendChild(tdIndex);
+
+                // UserName
+                const tdUser = document.createElement('td');
+                tdUser.innerText = user.UserName;
+                tdUser.style.fontWeight = '700';
+                tdUser.style.color = '#ffffff';
+                tr.appendChild(tdUser);
+
+                // Role badge
+                const tdRole = document.createElement('td');
+                const badge = document.createElement('span');
+                badge.className = `badge-premium ${user.Role === 1 ? 'badge-admin' : 'badge-operator'}`;
+                badge.innerText = user.Role === 1 ? 'Admin' : 'Operator';
+                tdRole.appendChild(badge);
+                tr.appendChild(tdRole);
+
+                // Action controls
+                const tdAction = document.createElement('td');
+                tdAction.style.textAlign = 'center';
+                tdAction.style.display = 'flex';
+                tdAction.style.justifyContent = 'center';
+                tdAction.style.alignItems = 'center';
+                tdAction.style.gap = '12px';
+
+                // Change Role Dropdown (Only dynamic change on select)
+                const selectRole = document.createElement('select');
+                selectRole.className = 'role-select-custom';
+                selectRole.innerHTML = `
+                    <option value="2" ${user.Role === 2 ? 'selected' : ''}>Operator</option>
+                    <option value="1" ${user.Role === 1 ? 'selected' : ''}>Admin</option>
+                `;
+                selectRole.onchange = function() {
+                    submitChangeRole(user.UserName, parseInt(this.value), user.Role, this);
+                };
+                tdAction.appendChild(selectRole);
+
+                // Reset Password Button
+                const btnReset = document.createElement('button');
+                btnReset.className = 'btn-action-custom btn-reset-custom';
+                btnReset.innerHTML = '<i class="fas fa-key"></i> Đổi mật khẩu';
+                btnReset.onclick = function() {
+                    openResetModal(user.UserName);
+                };
+                tdAction.appendChild(btnReset);
+
+                tr.appendChild(tdAction);
+                tbody.appendChild(tr);
+            });
+
+            // Initialize Datatable
+            accountDt = $('#accountTable').DataTable({
+                "pageLength": 10,
+                "lengthMenu": [5, 10, 25, 50],
+                "ordering": false,
+                "language": {
+                    "search": "Tìm kiếm:",
+                    "lengthMenu": "Hiển thị _MENU_ tài khoản",
+                    "info": "Đang xem _START_ đến _END_ trong _TOTAL_ tài khoản",
+                    "infoEmpty": "Không tìm thấy tài khoản",
+                    "infoFiltered": "(lọc từ _MAX_ tài khoản)",
+                    "paginate": {
+                        "first": "Đầu",
+                        "last": "Cuối",
+                        "next": "Sau",
+                        "previous": "Trước"
+                    }
+                }
+            });
+        }
+
+        // Open Modal Create Account
+        function openCreateModal() {
+            document.getElementById('createUserName').value = '';
+            document.getElementById('createPassword').value = '';
+            document.getElementById('createRole').value = '2';
+            $('#createAccountModal').modal('show');
+        }
+
+        // Action: Submit Create Account
+        function submitCreateAccount() {
+            const username = document.getElementById('createUserName').value.trim();
+            const password = document.getElementById('createPassword').value;
+            const role = parseInt(document.getElementById('createRole').value);
+
+            if (!username) {
+                showToast("Tên đăng nhập không được để trống!", true);
+                return;
+            }
+            if (!password) {
+                showToast("Mật khẩu không được để trống!", true);
+                return;
+            }
+
+            $.ajax({
+                url: '/Home/CreateAccount',
+                type: 'POST',
+                data: JSON.stringify({ UserName: username, Password: password, Role: role }),
+                contentType: "application/json; charset=utf-8",
+                success: function(res) {
+                    if (res.Status) {
+                        showToast(res.Message);
+                        $('#createAccountModal').modal('hide');
+                        loadAccounts();
+                    } else {
+                        showToast(res.Message, true);
+                    }
+                },
+                error: function() {
+                    showToast("Lỗi hệ thống khi tạo tài khoản!", true);
+                }
+            });
+        }
+
+        // Open Modal Reset Password
+        function openResetModal(username) {
+            document.getElementById('resetUserName').value = username;
+            document.getElementById('resetNewPassword').value = '';
+            document.getElementById('resetConfirmPassword').value = '';
+            $('#resetPasswordModal').modal('show');
+        }
+
+        // Action: Submit Reset Password
+        function submitResetPassword() {
+            const username = document.getElementById('resetUserName').value;
+            const newPassword = document.getElementById('resetNewPassword').value;
+            const confirmPassword = document.getElementById('resetConfirmPassword').value;
+
+            if (!newPassword) {
+                showToast("Mật khẩu mới không được để trống!", true);
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                showToast("Xác nhận mật khẩu mới không trùng khớp!", true);
+                return;
+            }
+
+            $.ajax({
+                url: '/Home/ResetUserPassword',
+                type: 'POST',
+                data: JSON.stringify({ UserName: username, NewPassword: newPassword, ConfirmPassword: confirmPassword }),
+                contentType: "application/json; charset=utf-8",
+                success: function(res) {
+                    if (res.Status) {
+                        showToast(res.Message);
+                        $('#resetPasswordModal').modal('hide');
+                    } else {
+                        showToast(res.Message, true);
+                    }
+                },
+                error: function() {
+                    showToast("Lỗi hệ thống khi đổi mật khẩu!", true);
+                }
+            });
+        }
+
+        // Action: Submit Change Role directly
+        function submitChangeRole(username, newRole, oldRole, selectElement) {
+            const roleName = newRole === 1 ? "Admin" : "Operator";
+            const confirmMsg = `Bạn có chắc chắn muốn thay đổi quyền của tài khoản "${username}" thành "${roleName}"?`;
+            
+            if (!confirm(confirmMsg)) {
+                // Revert to old value
+                selectElement.value = oldRole;
+                return;
+            }
+
+            $.ajax({
+                url: '/Home/UpdateUserRole',
+                type: 'POST',
+                data: JSON.stringify({ UserName: username, NewRole: newRole }),
+                contentType: "application/json; charset=utf-8",
+                success: function(res) {
+                    if (res.Status) {
+                        showToast(res.Message);
+                        loadAccounts();
+                    } else {
+                        showToast(res.Message, true);
+                        // Revert selection
+                        selectElement.value = oldRole;
+                    }
+                },
+                error: function() {
+                    showToast("Lỗi hệ thống khi cập nhật quyền!", true);
+                    selectElement.value = oldRole;
+                }
+            });
+        }
+    </script>
+}

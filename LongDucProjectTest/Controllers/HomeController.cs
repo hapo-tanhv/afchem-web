@@ -1,4 +1,4 @@
-﻿using Hino.Getdata.Common;
+using Hino.Getdata.Common;
 using LongDucProjectTest.Controllers;
 using System;
 using System.Collections.Generic;
@@ -56,32 +56,13 @@ namespace LongDucProject.Controllers
             }
 
             Session["Role"] = (int)role;
+            Session["UserName"] = param.UserName;
             switch (role)
             {
                 case Role.Admin:
                     return RedirectToAction("Overview", "Home");
-                case Role.SolEnergy:
+                case Role.Operator:
                     return RedirectToAction("Overview", "Home");
-                case Role.JGC:
-                    return RedirectToAction("Overview", "Home");
-                case Role.Hino:
-                    return RedirectToAction("Overview", "Home");
-                case Role.LDIP:
-                    return RedirectToAction("Home", "LDIP");
-                case Role.Project1:
-                    return RedirectToAction("Info", "Project1");
-                case Role.Project2:
-                    return RedirectToAction("Info", "Project2");
-                case Role.Project3:
-                    return RedirectToAction("Info", "Project3");
-                case Role.Project4:
-                    return RedirectToAction("Info", "Project4");
-                case Role.Project5:
-                    return RedirectToAction("Info", "Project5");
-                case Role.Project6:
-                    return RedirectToAction("Info", "Project6");
-                case Role.Project7:
-                    return RedirectToAction("Info", "Project7");
                 default:
                     return View();
             }
@@ -122,11 +103,7 @@ namespace LongDucProject.Controllers
         {
             if (Session["Role"] is null) return RedirectToAction("Login", "Home");
 
-            if ((int)Session["Role"] == (int)Role.Admin || (int)Session["Role"] == (int)Role.SolEnergy || (int)Session["Role"] == (int)Role.JGC || (int)Session["Role"] == (int)Role.Hino)
-            {
-                ViewBag.DisplayAdmin = "block";
-            }
-            else if ((int)Session["Role"] == (int)Role.LDIP)
+            if ((int)Session["Role"] == (int)Role.Admin)
             {
                 ViewBag.DisplayAdmin = "block";
             }
@@ -393,6 +370,11 @@ namespace LongDucProject.Controllers
         [HttpGet]
         public FileResult ExportReportExcel(string starttime, string endtime, string batchId, string searchValue)
         {
+            if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
+            {
+                throw new HttpException(403, "Bạn không có quyền thực hiện hành động này.");
+            }
+
             var connector = new MySQLConnect()
             {
                 ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
@@ -492,6 +474,11 @@ namespace LongDucProject.Controllers
         [HttpGet]
         public FileResult ExportReportCsv(string starttime, string endtime, string batchId, string searchValue)
         {
+            if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
+            {
+                throw new HttpException(403, "Bạn không có quyền thực hiện hành động này.");
+            }
+
             var connector = new MySQLConnect()
             {
                 ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
@@ -593,11 +580,7 @@ namespace LongDucProject.Controllers
             ViewBag.ButtonHome = "active";
             if (Session["Role"] is null) return RedirectToAction("Login", "Home");
 
-            if ((int)Session["Role"] == (int)Role.Admin || (int)Session["Role"] == (int)Role.SolEnergy || (int)Session["Role"] == (int)Role.JGC || (int)Session["Role"] == (int)Role.Hino)
-            {
-                ViewBag.DisplayAdmin = "block";
-            }
-            else if ((int)Session["Role"] == (int)Role.LDIP)
+            if ((int)Session["Role"] == (int)Role.Admin)
             {
                 ViewBag.DisplayAdmin = "block";
             }
@@ -612,11 +595,7 @@ namespace LongDucProject.Controllers
         {
             ViewBag.ButtonHome = "active";
             if (Session["Role"] is null) return RedirectToAction("Login", "Home");
-            if ((int)Session["Role"] == (int)Role.Admin || (int)Session["Role"] == (int)Role.SolEnergy || (int)Session["Role"] == (int)Role.JGC || (int)Session["Role"] == (int)Role.Hino)
-            {
-                ViewBag.DisplayAdmin = "block";
-            }
-            else if ((int)Session["Role"] == (int)Role.LDIP)
+            if ((int)Session["Role"] == (int)Role.Admin)
             {
                 ViewBag.DisplayAdmin = "block";
             }
@@ -632,11 +611,7 @@ namespace LongDucProject.Controllers
             ViewBag.ButtonAlarm = "active";
             if (Session["Role"] is null) return RedirectToAction("Login", "Home");
 
-            if ((int)Session["Role"] == (int)Role.Admin || (int)Session["Role"] == (int)Role.SolEnergy || (int)Session["Role"] == (int)Role.JGC || (int)Session["Role"] == (int)Role.Hino)
-            {
-                ViewBag.DisplayAdmin = "block";
-            }
-            else if ((int)Session["Role"] == (int)Role.LDIP)
+            if ((int)Session["Role"] == (int)Role.Admin)
             {
                 ViewBag.DisplayAdmin = "block";
             }
@@ -651,11 +626,7 @@ namespace LongDucProject.Controllers
             ViewBag.ButtonEvent = "active";
             if (Session["Role"] is null) return RedirectToAction("Login", "Home");
 
-            if ((int)Session["Role"] == (int)Role.Admin || (int)Session["Role"] == (int)Role.SolEnergy || (int)Session["Role"] == (int)Role.JGC || (int)Session["Role"] == (int)Role.Hino)
-            {
-                ViewBag.DisplayAdmin = "block";
-            }
-            else if ((int)Session["Role"] == (int)Role.LDIP)
+            if ((int)Session["Role"] == (int)Role.Admin)
             {
                 ViewBag.DisplayAdmin = "block";
             }
@@ -671,19 +642,12 @@ namespace LongDucProject.Controllers
             ViewBag.ButtonUser = "active";
             if (Session["Role"] is null) return RedirectToAction("Login", "Home");
 
-            if ((int)Session["Role"] == (int)Role.Admin || (int)Session["Role"] == (int)Role.SolEnergy || (int)Session["Role"] == (int)Role.JGC || (int)Session["Role"] == (int)Role.Hino)
+            if ((int)Session["Role"] != (int)Role.Admin)
             {
-                ViewBag.DisplayAdmin = "block";
-            }
-            else if ((int)Session["Role"] == (int)Role.LDIP)
-            {
-                ViewBag.DisplayAdmin = "block";
-            }
-            else
-            {
-                ViewBag.DisplayAdmin = "block";
+                return RedirectToAction("Overview", "Home");
             }
 
+            ViewBag.DisplayAdmin = "block";
             return View();
         }
 
@@ -694,6 +658,182 @@ namespace LongDucProject.Controllers
             if (double.TryParse(value.ToString(), out res)) return res;
             return 0;
         }
+        [HttpGet]
+        public JsonResult GetAccounts()
+        {
+            if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
+            {
+                return Json(new { Status = false, Message = "Unauthorized" }, JsonRequestBehavior.AllowGet);
+            }
+
+            var list = new List<object>();
+            try
+            {
+                var connector = new MySQLConnect()
+                {
+                    ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
+                };
+                var dt = connector.ExecuteQuery("SELECT ID, UserName, Role FROM account");
+                if (dt != null)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        list.Add(new
+                        {
+                            ID = Convert.ToInt32(row["ID"]),
+                            UserName = row["UserName"].ToString(),
+                            Role = Convert.ToInt32(row["Role"])
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Status = false, Message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+            return Json(new { Status = true, Data = list }, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpPost]
+        public JsonResult CreateAccount(CreateAccountParam param)
+        {
+            if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
+            {
+                return Json(new { Status = false, Message = "Unauthorized" });
+            }
+
+            if (string.IsNullOrEmpty(param.UserName) || string.IsNullOrEmpty(param.Password))
+            {
+                return Json(new { Status = false, Message = "UserName and Password cannot be empty!" });
+            }
+
+            try
+            {
+                var connector = new MySQLConnect()
+                {
+                    ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
+                };
+                
+                // Check duplicate
+                var duplicateCheck = connector.ExecuteScalarQuery($"SELECT COUNT(*) FROM account WHERE UserName = '{param.UserName}'");
+                if (Convert.ToInt32(duplicateCheck) > 0)
+                {
+                    return Json(new { Status = false, Message = "Tên đăng nhập đã tồn tại!" });
+                }
+
+                // Insert
+                string query = $"INSERT INTO account (UserName, Password, Role) VALUES ('{param.UserName}', '{param.Password}', {param.Role})";
+                int result = connector.ExecuteNonQuery(query);
+                if (result > 0)
+                {
+                    return Json(new { Status = true, Message = "Tạo tài khoản thành công!" });
+                }
+                return Json(new { Status = false, Message = "Không thể tạo tài khoản. Vui lòng thử lại." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Status = false, Message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public JsonResult ResetUserPassword(ResetUserPasswordParam param)
+        {
+            if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
+            {
+                return Json(new { Status = false, Message = "Unauthorized" });
+            }
+
+            if (param.NewPassword != param.ConfirmPassword)
+            {
+                return Json(new { Status = false, Message = "Mật khẩu xác nhận không khớp!" });
+            }
+
+            try
+            {
+                var connector = new MySQLConnect()
+                {
+                    ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
+                };
+                
+                string query = $"UPDATE account SET Password = '{param.NewPassword}' WHERE UserName = '{param.UserName}'";
+                int result = connector.ExecuteNonQuery(query);
+                if (result > 0)
+                {
+                    return Json(new { Status = true, Message = "Thay đổi mật khẩu thành công!" });
+                }
+                return Json(new { Status = false, Message = "Không thể cập nhật mật khẩu. Vui lòng thử lại." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Status = false, Message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public JsonResult UpdateUserRole(UpdateRoleParam param)
+        {
+            if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
+            {
+                return Json(new { Status = false, Message = "Unauthorized" });
+            }
+
+            try
+            {
+                var connector = new MySQLConnect()
+                {
+                    ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
+                };
+
+                // Edge case validation: Minimum 1 Admin rule
+                if (param.NewRole == (int)Role.Operator)
+                {
+                    var currentRoleCheck = connector.ExecuteScalarQuery($"SELECT Role FROM account WHERE UserName = '{param.UserName}'");
+                    if (currentRoleCheck != null && Convert.ToInt32(currentRoleCheck) == (int)Role.Admin)
+                    {
+                        var adminCount = connector.ExecuteScalarQuery($"SELECT COUNT(*) FROM account WHERE Role = {(int)Role.Admin}");
+                        if (Convert.ToInt32(adminCount) <= 1)
+                        {
+                            return Json(new { Status = false, Message = "Hệ thống phải có ít nhất một tài khoản Admin!" });
+                        }
+                    }
+                }
+
+                string query = $"UPDATE account SET Role = {param.NewRole} WHERE UserName = '{param.UserName}'";
+                int result = connector.ExecuteNonQuery(query);
+                if (result > 0)
+                {
+                    return Json(new { Status = true, Message = "Cập nhật quyền thành công!" });
+                }
+                return Json(new { Status = false, Message = "Không thể cập nhật quyền. Vui lòng thử lại." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { Status = false, Message = ex.Message });
+            }
+        }
+
+    }
+
+
+    public class CreateAccountParam
+    {
+        public string UserName { get; set; }
+        public string Password { get; set; }
+        public int Role { get; set; }
+    }
+
+    public class ResetUserPasswordParam
+    {
+        public string UserName { get; set; }
+        public string NewPassword { get; set; }
+        public string ConfirmPassword { get; set; }
+    }
+
+    public class UpdateRoleParam
+    {
+        public string UserName { get; set; }
+        public int NewRole { get; set; }
     }
 
     public class ReportExportDto

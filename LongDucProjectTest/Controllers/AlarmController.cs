@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using Hino.Getdata.Common;
 using Microsoft.Win32;
 using OfficeOpenXml;
@@ -276,6 +276,11 @@ namespace LongDucProject.Controllers
         [HttpGet]
         public FileResult ExportAlarmsExcel(string starttime, string endtime, string batchId, string searchValue)
         {
+            if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
+            {
+                throw new HttpException(403, "Bạn không có quyền thực hiện hành động này.");
+            }
+
             var connector = new MySQLConnect()
             {
                 ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
@@ -350,6 +355,11 @@ namespace LongDucProject.Controllers
         [HttpGet]
         public FileResult ExportAlarmsCsv(string starttime, string endtime, string batchId, string searchValue)
         {
+            if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
+            {
+                throw new HttpException(403, "Bạn không có quyền thực hiện hành động này.");
+            }
+
             var connector = new MySQLConnect()
             {
                 ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
@@ -424,6 +434,11 @@ namespace LongDucProject.Controllers
         [HttpGet]
         public FileResult ExportAlarmReportExcel(string starttime, string endtime, string batchId, string searchValue)
         {
+            if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
+            {
+                throw new HttpException(403, "Bạn không có quyền thực hiện hành động này.");
+            }
+
             var Alarm = new AlarmCommon();
             var list = Alarm.GetAlarmLog(starttime, endtime) ?? new List<Hino.Parameter.Common.AlarmParameter>();
 
@@ -442,6 +457,11 @@ namespace LongDucProject.Controllers
         [HttpGet]
         public FileResult ExportAlarmReportCsv(string starttime, string endtime, string batchId, string searchValue)
         {
+            if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
+            {
+                throw new HttpException(403, "Bạn không có quyền thực hiện hành động này.");
+            }
+
             var Alarm = new AlarmCommon();
             var list = Alarm.GetAlarmLog(starttime, endtime) ?? new List<Hino.Parameter.Common.AlarmParameter>();
 
@@ -460,6 +480,11 @@ namespace LongDucProject.Controllers
         //Xuất dữ liệu ra file Excel
         public ActionResult GetdataExportAlarm(string starttime, string endtime, string filepath)
         {
+            if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
+            {
+                throw new HttpException(403, "Bạn không có quyền thực hiện hành động này.");
+            }
+
             var Alarm = new AlarmCommon();
             var list = Alarm.GetAlarmLog(starttime, endtime);
             var x = filepath;
@@ -502,6 +527,11 @@ namespace LongDucProject.Controllers
         //Xuất dữ liệu ra file CSV
         public void GetdataCSVExportAlarm(string starttime, string endtime, string filepath)
         {
+            if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
+            {
+                throw new HttpException(403, "Bạn không có quyền thực hiện hành động này.");
+            }
+
             var Alarm = new AlarmCommon();
             var listExcel = Alarm.GetAlarmLog(starttime, endtime).ToList();
             try

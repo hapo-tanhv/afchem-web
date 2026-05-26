@@ -128,10 +128,13 @@
             </div>
             <button onclick="reloadTable()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>
             
-            <div style="margin-left: auto; display: flex; gap: 10px;">
-                <button onclick="ExportExcel()" class="btn-custom btn-export"><i class="fas fa-file-excel"></i> Export Excel</button>
-                <button onclick="ExportCSV()" class="btn-custom btn-export"><i class="fas fa-file-csv"></i> Export CSV</button>
-            </div>
+            @if (Session["Role"] != null && (int)Session["Role"] == (int)Hino.Getdata.Common.Role.Admin)
+            {
+                <div style="margin-left: auto; display: flex; gap: 10px;">
+                    <button onclick="ExportExcel()" class="btn-custom btn-export"><i class="fas fa-file-excel"></i> Export Excel</button>
+                    <button onclick="ExportCSV()" class="btn-custom btn-export"><i class="fas fa-file-csv"></i> Export CSV</button>
+                </div>
+            }
         </div>
         
         <div class="table-responsive" style="margin-top: 15px;">

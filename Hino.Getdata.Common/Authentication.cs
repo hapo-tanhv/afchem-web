@@ -1,4 +1,4 @@
-﻿using Hino.DatabaseConnector;
+using Hino.DatabaseConnector;
 using Hino.Parameter.Common;
 using System;
 using System.Collections.Generic;
@@ -11,19 +11,9 @@ namespace Hino.Getdata.Common
 {
     public enum Role
     {
-        None,
-        Admin,
-        Project1,
-        Project2,
-        Project3,
-        Project4,
-        Project5,
-        Project6,
-        Project7,
-        SolEnergy,
-        JGC,
-        Hino,
-        LDIP
+        None = 0,
+        Admin = 1,
+        Operator = 2
     }
     public class Authentication
     {
