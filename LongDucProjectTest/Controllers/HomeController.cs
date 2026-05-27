@@ -1,4 +1,4 @@
-using Hino.Getdata.Common;
+﻿using Hino.Getdata.Common;
 using LongDucProjectTest.Controllers;
 using System;
 using System.Collections.Generic;
@@ -99,20 +99,7 @@ namespace LongDucProject.Controllers
             return Json(new { Status = status, Message = message }, JsonRequestBehavior.AllowGet);
         }
 
-        public ActionResult Home()
-        {
-            if (Session["Role"] is null) return RedirectToAction("Login", "Home");
 
-            if ((int)Session["Role"] == (int)Role.Admin)
-            {
-                ViewBag.DisplayAdmin = "block";
-            }
-            else
-            {
-                ViewBag.DisplayAdmin = "none";
-            }
-            return View();
-        }
 
         public ActionResult Report()
         {
@@ -591,20 +578,7 @@ namespace LongDucProject.Controllers
             return View();
         }
 
-        public ActionResult OverviewSignage()
-        {
-            ViewBag.ButtonHome = "active";
-            if (Session["Role"] is null) return RedirectToAction("Login", "Home");
-            if ((int)Session["Role"] == (int)Role.Admin)
-            {
-                ViewBag.DisplayAdmin = "block";
-            }
-            else
-            {
-                ViewBag.DisplayAdmin = "none";
-            }
-            return View("OverviewSignage", "~/Views/Shared/_LayoutSignageAdmin.cshtml");
-        }
+
 
         public ActionResult Alarm()
         {
