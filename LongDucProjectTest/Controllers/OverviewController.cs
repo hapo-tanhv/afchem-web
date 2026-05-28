@@ -709,31 +709,49 @@ namespace LongDucProject.Controllers
                 }
 
                 // Calculate running time:
-                // - If batch is completed: end_time - start_time of batch
-                // - If batch is active: activeStepStartTime - start_time of batch (or 0 if no active step yet)
+                // - Sum the durations of all steps (completed steps actual duration and currently running step's elapsed time)
                 double runningSeconds = 0;
-                if (batchStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+                if (batchId != -1)
                 {
-                    if (dtBatch.Rows[0]["end_time"] != DBNull.Value && dtBatch.Rows[0]["start_time"] != DBNull.Value)
+                    foreach (var def in stepDefs)
                     {
-                        runningSeconds = (Convert.ToDateTime(dtBatch.Rows[0]["end_time"]) - Convert.ToDateTime(dtBatch.Rows[0]["start_time"])).TotalSeconds;
+                        var stepLogRow = logRows.FirstOrDefault(r => {
+                            string rowTagNo = r.Table.Columns.Contains("TagNo") && r["TagNo"] != DBNull.Value ? r["TagNo"].ToString().Trim() : "";
+                            if (!string.IsNullOrEmpty(rowTagNo))
+                            {
+                                return rowTagNo.Equals(def.TagNo, StringComparison.OrdinalIgnoreCase);
+                            }
+                            string desc = r["Description"] != DBNull.Value ? r["Description"].ToString() : "";
+                            if (def.Code == 1 && (desc.IndexOf("Cấp Liệu", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Cap Lieu", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 2 && (desc.IndexOf("Trộn 1", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Tron 1", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 3 && (desc.IndexOf("Xả Đáy", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Xa Day", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 4 && (desc.IndexOf("Rung Xả Đ", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Rung Xa D", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 5 && (desc.IndexOf("Hút Xả Đáy", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Hut Xa Day", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 6 && (desc.IndexOf("Trộn 2", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Tron 2", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 7 && (desc.IndexOf("Xả Hàng", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Xa Hang", StringComparison.OrdinalIgnoreCase) >= 0) && desc.IndexOf("Rung", StringComparison.OrdinalIgnoreCase) < 0) return true;
+                            if (def.Code == 8 && (desc.IndexOf("Rung Xả H", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Rung Xa H", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            return false;
+                        });
+
+                        if (stepLogRow != null)
+                        {
+                            DateTime startTime = Convert.ToDateTime(stepLogRow["OccurrenceTime"]);
+                            string statusVal = stepLogRow["Status"].ToString().Trim();
+                            bool isCompleted = statusVal.Equals("Resolved", StringComparison.OrdinalIgnoreCase);
+
+                            if (isCompleted && stepLogRow["RestoreTime"] != DBNull.Value)
+                            {
+                                DateTime endTime = Convert.ToDateTime(stepLogRow["RestoreTime"]);
+                                runningSeconds += (endTime - startTime).TotalSeconds;
+                            }
+                            else if (!isCompleted)
+                            {
+                                runningSeconds += (DateTime.Now - startTime).TotalSeconds;
+                            }
+                        }
                     }
                 }
-                else if (batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (dtBatch.Rows[0]["start_time"] != DBNull.Value)
-                    {
-                        DateTime bStart = Convert.ToDateTime(dtBatch.Rows[0]["start_time"]);
-                        if (activeStepStartTime.HasValue)
-                        {
-                            runningSeconds = (activeStepStartTime.Value - bStart).TotalSeconds;
-                        }
-                        else
-                        {
-                            runningSeconds = 0;
-                        }
-                    }
-                }
+                if (runningSeconds < 0) runningSeconds = 0;
 
                 // Calculate alarm count excluding INFO severity
                 int alarmCount = 0;
@@ -746,23 +764,11 @@ namespace LongDucProject.Controllers
                     }
                 }
 
-                // Helper to format TimeSpan as Xh Ym Zs
+                // Helper to format runningSeconds as raw seconds
                 string headerRunningTimeStr = "0s";
                 if (runningSeconds >= 0)
                 {
-                    TimeSpan t = TimeSpan.FromSeconds(runningSeconds);
-                    if (t.TotalHours >= 1)
-                    {
-                        headerRunningTimeStr = $"{(int)t.TotalHours}h {t.Minutes}m {t.Seconds}s";
-                    }
-                    else if (t.TotalMinutes >= 1)
-                    {
-                        headerRunningTimeStr = $"{t.Minutes}m {t.Seconds}s";
-                    }
-                    else
-                    {
-                        headerRunningTimeStr = $"{t.Seconds}s";
-                    }
+                    headerRunningTimeStr = $"{(int)runningSeconds}s";
                 }
 
                 var batchInfo = new

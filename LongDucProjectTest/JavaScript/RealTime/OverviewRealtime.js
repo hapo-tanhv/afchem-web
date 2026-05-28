@@ -1,4 +1,4 @@
-﻿var activepower;
+var activepower;
 
 
 var temperature;
@@ -17,6 +17,58 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     var activeStepTimer = null;
+    var currentBatchInfo = null;
+    var currentSteps = null;
+
+    var stepElementIds = {
+        1: 'feedingTime',
+        2: 'mix1Time',
+        3: 'bottomDischargeTime',
+        4: 'bottomDischargeVibrationTime',
+        5: 'bottomSuctionDischargeTime',
+        6: 'mix2Time',
+        7: 'clearanceSaleTime',
+        8: 'vibrationDischargeTime'
+    };
+
+    function getCalculatedTotalTime() {
+        var total = 0;
+        if (currentSteps && currentSteps.length > 0) {
+            currentSteps.forEach(function(step, index) {
+                var stepCode = index + 1;
+                if (step.status === 'completed') {
+                    total += parseInt(step.duration) || 0;
+                } else if (step.status === 'in-progress') {
+                    var elementId = stepElementIds[stepCode];
+                    var el = document.getElementById(elementId);
+                    total += el ? (parseInt(el.innerHTML) || 0) : 0;
+                }
+            });
+        } else {
+            for (var code in stepElementIds) {
+                var el = document.getElementById(stepElementIds[code]);
+                total += el ? (parseInt(el.innerHTML) || 0) : 0;
+            }
+        }
+        return total;
+    }
+
+    function formatRunningTime(totalSeconds) {
+        return totalSeconds + "s";
+    }
+
+    function updateCalculatedTime() {
+        if (!currentBatchInfo || currentBatchInfo.machineStatus !== "COMPLETED") {
+            var elapsed = getCalculatedTotalTime();
+            var elapsedEl = document.getElementById("statElapsedTime");
+            if (elapsedEl) elapsedEl.innerHTML = elapsed;
+            
+            var runningTimeEl = document.getElementById("headerRunningTime");
+            if (runningTimeEl) {
+                runningTimeEl.innerHTML = formatRunningTime(elapsed);
+            }
+        }
+    }
 
 
     // FAKE DATA - Generate random values for testing
@@ -430,7 +482,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
                 if (data && data.steps) {
-
+                    currentSteps = data.steps;
 
                     if (typeof renderBatchTable === 'function') {
 
@@ -463,6 +515,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
                     var batchInfo = data.batchInfo;
+                    currentBatchInfo = batchInfo;
 
 
                     
@@ -559,9 +612,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
                     var runningTimeEl = document.getElementById("headerRunningTime");
-
-
-                    if (runningTimeEl) runningTimeEl.innerHTML = batchInfo.headerRunningTime || "0s";
+                    if (runningTimeEl) {
+                        if (batchInfo.machineStatus === "COMPLETED") {
+                            runningTimeEl.innerHTML = batchInfo.headerRunningTime || "0s";
+                        } else {
+                            runningTimeEl.innerHTML = formatRunningTime(getCalculatedTotalTime());
+                        }
+                    }
 
 
                     
@@ -631,182 +688,65 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
                     function updateStepStatsUI() {
-
-
                         var elapsed = 0;
-
-
                         var totalStdTime = 6300; // sum of standard times of all steps: 720+780+600+600+720+1200+1500+180
-
-
                         
-
-
                         if (batchInfo.machineStatus === "COMPLETED") {
-
-
                             var currentStepEl = document.getElementById("statCurrentStep");
-
-
                             if (currentStepEl) currentStepEl.innerHTML = "8 / 8";
-
-
                             
-
-
                             var stdTimeEl = document.getElementById("statStandardTime");
-
-
                             if (stdTimeEl) stdTimeEl.innerHTML = totalStdTime;
-
-
                             
-
-
                             var elapsedVal = Math.floor(batchInfo.batchTotalSeconds || totalStdTime);
-
-
                             var elapsedEl = document.getElementById("statElapsedTime");
-
-
                             if (elapsedEl) elapsedEl.innerHTML = elapsedVal;
-
-
                             
-
-
                             var remaining = Math.max(0, totalStdTime - elapsedVal);
-
-
                             var remainingEl = document.getElementById("statRemainingTime");
-
-
                             if (remainingEl) remainingEl.innerHTML = remaining;
-
-
                             
-
-
                             var progressPercent = 100;
-
-
                             var progressPercentEl = document.getElementById("statProgressPercent");
-
-
                             if (progressPercentEl) progressPercentEl.innerHTML = progressPercent + "%";
-
-
                             
-
-
                             var progressFillEl = document.getElementById("statProgressFill");
-
-
                             if (progressFillEl) {
-
-
                                 progressFillEl.style.width = progressPercent + "%";
-
-
                             }
-
-
                         } else {
-
-
                             var currentStepEl = document.getElementById("statCurrentStep");
-
-
                             if (currentStepEl) {
-
-
                                 currentStepEl.innerHTML = batchInfo.activeStepCode ? (batchInfo.activeStepCode + " / 8") : "";
-
-
                             }
-
-
                             
-
-
                             var stdTimeEl = document.getElementById("statStandardTime");
-
-
                             if (stdTimeEl) stdTimeEl.innerHTML = totalStdTime;
-
-
                             
-
-
-                            if (batchStartTime) {
-
-
-                                var currentAdjustedTime = Date.now() - clientServerTimeOffset;
-
-
-                                elapsed = Math.floor((currentAdjustedTime - batchStartTime) / 1000);
-
-
-                                if (elapsed < 0) elapsed = 0;
-
-
-                            }
-
-
+                            elapsed = getCalculatedTotalTime();
                             
-
-
                             var elapsedEl = document.getElementById("statElapsedTime");
-
-
                             if (elapsedEl) elapsedEl.innerHTML = elapsed;
-
-
                             
-
-
-                            var remaining = Math.max(0, totalStdTime - elapsed);
-
-
-                            var remainingEl = document.getElementById("statRemainingTime");
-
-
-                            if (remainingEl) remainingEl.innerHTML = remaining;
-
-
-                            
-
-
-                            var activeStepCode = batchInfo.activeStepCode || 0;
-
-
-                            var progressPercent = Math.round((activeStepCode / 8) * 100);
-
-
-                            var progressPercentEl = document.getElementById("statProgressPercent");
-
-
-                            if (progressPercentEl) progressPercentEl.innerHTML = progressPercent + "%";
-
-
-                            
-
-
-                            var progressFillEl = document.getElementById("statProgressFill");
-
-
-                            if (progressFillEl) {
-
-
-                                progressFillEl.style.width = progressPercent + "%";
-
-
+                            var runningTimeEl = document.getElementById("headerRunningTime");
+                            if (runningTimeEl) {
+                                runningTimeEl.innerHTML = formatRunningTime(elapsed);
                             }
-
-
+                            
+                            var remaining = Math.max(0, totalStdTime - elapsed);
+                            var remainingEl = document.getElementById("statRemainingTime");
+                            if (remainingEl) remainingEl.innerHTML = remaining;
+                            
+                            var activeStepCode = batchInfo.activeStepCode || 0;
+                            var progressPercent = Math.round((activeStepCode / 8) * 100);
+                            var progressPercentEl = document.getElementById("statProgressPercent");
+                            if (progressPercentEl) progressPercentEl.innerHTML = progressPercent + "%";
+                            
+                            var progressFillEl = document.getElementById("statProgressFill");
+                            if (progressFillEl) {
+                                progressFillEl.style.width = progressPercent + "%";
+                            }
                         }
-
-
                     }
 
 
@@ -1047,28 +987,28 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
 
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCapLieu`), document.querySelector('#feedingTime'));
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCapLieu`), document.querySelector('#feedingTime'), updateCalculatedTime);
 
 
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianTron1`), document.querySelector('#mix1Time'));
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianTron1`), document.querySelector('#mix1Time'), updateCalculatedTime);
 
 
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianXaDay`), document.querySelector('#bottomDischargeTime'));
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianXaDay`), document.querySelector('#bottomDischargeTime'), updateCalculatedTime);
 
 
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaDay`), document.querySelector('#bottomDischargeVibrationTime'));
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaDay`), document.querySelector('#bottomDischargeVibrationTime'), updateCalculatedTime);
 
 
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianHutXaDay`), document.querySelector('#bottomSuctionDischargeTime'));
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianHutXaDay`), document.querySelector('#bottomSuctionDischargeTime'), updateCalculatedTime);
 
 
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianTron2`), document.querySelector('#mix2Time'));
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianTron2`), document.querySelector('#mix2Time'), updateCalculatedTime);
 
 
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianXaHang`), document.querySelector('#clearanceSaleTime'));
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianXaHang`), document.querySelector('#clearanceSaleTime'), updateCalculatedTime);
 
 
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaHang`), document.querySelector('#vibrationDischargeTime'));
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaHang`), document.querySelector('#vibrationDischargeTime'), updateCalculatedTime);
 
 
 
@@ -1641,7 +1581,7 @@ function TemperatureChart() {
         series: [{
 
 
-            name: 'Nhiệt độ máy',
+            name: 'Nhiệt độ bồn trộn giữa',
 
 
             data: [0],
@@ -1662,7 +1602,7 @@ function TemperatureChart() {
                     '<div style="width:15px; height:2px; background:#7373f3; display:inline-block; margin-bottom:4px"></div> ' +
 
 
-                    '<span style="font-size:12px;color:#94a3b8;font-weight:normal">Nhiệt độ máy</span>' +
+                    '<span style="font-size:12px;color:#94a3b8;font-weight:normal">Nhiệt độ bồn trộn giữa</span>' +
 
 
                     '</div>',
@@ -1947,7 +1887,7 @@ function LineChart() {
         }, {
 
 
-            name: 'Nhiệt độ máy',
+            name: 'Nhiệt độ bồn trộn giữa',
 
 
             data: machineTempData,

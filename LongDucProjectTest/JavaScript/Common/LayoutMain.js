@@ -124,6 +124,11 @@ setInterval(updateClock, 1000);
 
 updateClock();
 
+// Header running time ticking state
+let headerRunningSeconds = 0;
+let lastHeaderUpdateLocalTime = 0;
+let headerMachineStatus = "COMPLETED";
+
 // Update header stats with data from GetCurrentBatchStats API
 
 function updateHeaderStats(data) {
@@ -133,6 +138,11 @@ function updateHeaderStats(data) {
     if (data.batchInfo) {
 
         const batchInfo = data.batchInfo;
+
+        // Cache the running seconds and timestamp for real-time ticking
+        headerRunningSeconds = Math.floor(Number(batchInfo.batchTotalSeconds)) || 0;
+        lastHeaderUpdateLocalTime = Date.now();
+        headerMachineStatus = batchInfo.machineStatus || "COMPLETED";
 
         const batchNumEl = document.getElementById("headerBatchNumber");
 
@@ -162,7 +172,12 @@ function updateHeaderStats(data) {
 
         const runningTimeEl = document.getElementById("headerRunningTime");
 
-        if (runningTimeEl) runningTimeEl.innerHTML = batchInfo.headerRunningTime || "0s";
+        if (runningTimeEl) {
+            const isOverviewPage = document.getElementById('dailyBatchesBody') !== null;
+            if (!isOverviewPage || headerMachineStatus === "COMPLETED") {
+                runningTimeEl.innerHTML = batchInfo.headerRunningTime || "0s";
+            }
+        }
 
         const alarmCountEl = document.getElementById("alarmCount");
 
@@ -263,3 +278,16 @@ $(document).ready(function() {
     }
 
 });
+
+// Shared ticker to tick the header running time on pages other than Overview
+setInterval(function() {
+    const isOverviewPage = document.getElementById('dailyBatchesBody') !== null;
+    if (!isOverviewPage && headerMachineStatus === "RUNNING") {
+        const runningTimeEl = document.getElementById("headerRunningTime");
+        if (runningTimeEl && lastHeaderUpdateLocalTime > 0) {
+            const elapsedSinceUpdate = Math.floor((Date.now() - lastHeaderUpdateLocalTime) / 1000);
+            const currentRunningSeconds = Math.floor(headerRunningSeconds + elapsedSinceUpdate);
+            runningTimeEl.innerHTML = currentRunningSeconds + "s";
+        }
+    }
+}, 1000);
