@@ -12,29 +12,111 @@
     <link rel="stylesheet" href="~/AdminLTE-master/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
     <link rel="stylesheet" href="~/Css/Overview.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Css/Event.css" asp-append-version="true" />
+    <style>
+        /* Autocomplete Premium Dark Theme */
+        .ui-autocomplete {
+            background: rgba(15, 23, 42, 0.95) !important;
+            border: 1px solid rgba(59, 130, 246, 0.4) !important;
+            border-radius: 6px !important;
+            color: #e2e8f0 !important;
+            max-height: 250px !important;
+            overflow-y: auto !important;
+            z-index: 2000 !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+            backdrop-filter: blur(12px) !important;
+            padding: 5px 0 !important;
+        }
+        .ui-menu-item {
+            padding: 0 !important;
+            list-style: none !important;
+        }
+        .ui-menu-item .ui-menu-item-wrapper {
+            padding: 8px 15px !important;
+            color: #cbd5e1 !important;
+            transition: all 0.2s ease !important;
+            border: none !important;
+            background: transparent !important;
+            font-size: 13px !important;
+            display: block !important;
+        }
+        .ui-menu-item .ui-menu-item-wrapper:hover,
+        .ui-menu-item .ui-menu-item-wrapper.ui-state-active {
+            background: rgba(59, 130, 246, 0.25) !important;
+            color: #00e5ff !important;
+            border: none !important;
+            cursor: pointer !important;
+        }
+        /* Two-Row Filter Bar Override */
+        .filter-bar {
+            background: #1e293b !important;
+            border-radius: 8px !important;
+            padding: 15px 20px !important;
+            margin-bottom: 20px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 15px !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        }
+        .filter-inputs {
+            display: flex !important;
+            align-items: center !important;
+            gap: 15px !important;
+            flex-wrap: wrap !important;
+            width: 100% !important;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            align-items: unset !important;
+            gap: 10px;
+        }
+        .filter-actions {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            gap: 10px !important;
+            width: 100% !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+            padding-top: 12px !important;
+        }
+    </style>
 }
 
 <div class="overview-dashboard">
     <!-- FILTER BAR -->
     <div class="filter-bar">
-        <div class="filter-group">
-            <span class="filter-label">Chọn ngày</span>
-            <input type="text" id="starttime" name="starttime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
+        <div class="filter-inputs">
+            <div class="filter-group">
+                <span class="filter-label">Chọn ngày</span>
+                <input type="text" id="starttime" name="starttime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
+            </div>
+            <div class="filter-group" style="margin-left: 10px;">
+                <span class="filter-label">Chọn mẻ (Batch)</span>
+                <select id="batchId" class="filter-input" style="min-width: 180px;">
+                    <option value="">Đang tải...</option>
+                </select>
+            </div>
+            <div class="filter-group" style="margin-left: 10px;">
+                <span class="filter-label">Chọn mẻ con (Run)</span>
+                <select id="runId" class="filter-input" style="min-width: 140px;" disabled>
+                    <option value="0">Không có mẻ con</option>
+                </select>
+            </div>
+            <div class="filter-group" style="margin-left: 10px; position: relative;">
+                <span class="filter-label">Tìm nhanh mẻ</span>
+                <input type="text" id="runSearch" class="filter-input" placeholder="Nhập tên mẻ..." style="min-width: 150px; font-size: 13px;">
+            </div>
         </div>
-        <div class="filter-group" style="margin-left: 10px;">
-            <span class="filter-label">Chọn mẻ (Batch)</span>
-            <select id="batchId" class="filter-input" style="min-width: 180px;">
-                <option value="">Đang tải...</option>
-            </select>
-        </div>
-        <button onclick="Submit()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>
-        @if (Session["Role"] != null && (int)Session["Role"] == (int)Hino.Getdata.Common.Role.Admin)
-        {
-            <div style="margin-left: auto; display: flex; gap: 10px;">
+        
+        <div class="filter-actions">
+            <button onclick="Submit()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>
+            @if (Session["Role"] != null && (int)Session["Role"] == (int)Hino.Getdata.Common.Role.Admin)
+            {
                 <button onclick="ExportExcel()" class="btn-custom btn-export"><i class="fas fa-file-excel"></i> Export Excel</button>
                 <button onclick="ExportCSV()" class="btn-custom btn-export"><i class="fas fa-file-csv"></i> Export CSV</button>
-            </div>
-        }
+            }
+        </div>
     </div>
 
     <!-- TOP ROW: CYCLE SUMMARY + ANOMALY SUMMARY -->
@@ -136,16 +218,18 @@
 
         function ExportExcel() {
             var batchId = $('#batchId').val() || "";
+            var runId = $('#runId').val() || "";
             var dateVal = $('#starttime').val() || "";
             var formattedDate = dateVal.replace(/\//g, '-');
-            window.location.href = "/Event/ExportEventExcel?batchId=" + batchId + "&starttime=" + formattedDate;
+            window.location.href = "/Event/ExportEventExcel?batchId=" + batchId + "&runId=" + runId + "&starttime=" + formattedDate;
         }
 
         function ExportCSV() {
             var batchId = $('#batchId').val() || "";
+            var runId = $('#runId').val() || "";
             var dateVal = $('#starttime').val() || "";
             var formattedDate = dateVal.replace(/\//g, '-');
-            window.location.href = "/Event/ExportEventCsv?batchId=" + batchId + "&starttime=" + formattedDate;
+            window.location.href = "/Event/ExportEventCsv?batchId=" + batchId + "&runId=" + runId + "&starttime=" + formattedDate;
         }
     </script>
 }

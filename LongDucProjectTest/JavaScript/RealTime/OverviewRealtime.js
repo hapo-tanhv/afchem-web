@@ -6,6 +6,10 @@ var pressure;
 
 var USE_FAKE_DATA = false; // Set to true to use fake data, false to use real SCADA data
 
+var selectedRunId = null;
+var activeRunId = null;
+window.isHistoricView = false;
+
 document.addEventListener("DOMContentLoaded", function () {
 
     var activeStepTimer = null;
@@ -204,11 +208,17 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Polling current batch stats from real database every 30 seconds
-
+ 
     function fetchCurrentBatchStats() {
+        var queryData = {};
+        if (selectedRunId !== null) {
+            queryData.runId = selectedRunId;
+        }
+
         $.ajax({
             url: '/Overview/GetCurrentBatchStats',
             type: 'GET',
+            data: queryData,
             dataType: 'json',
             success: function (data) {
                 // Update common header stats first
@@ -231,9 +241,23 @@ document.addEventListener("DOMContentLoaded", function () {
                     var batchInfo = data.batchInfo;
                     currentBatchInfo = batchInfo;
 
+                    // Parse runs for selector
+                    if (batchInfo.runs && batchInfo.runs.length > 0) {
+                        var activeRun = batchInfo.runs.find(r => r.status === 'Active');
+                        activeRunId = activeRun ? activeRun.id : null;
+                        
+                        if (selectedRunId === null) {
+                            selectedRunId = activeRunId ? activeRunId : batchInfo.runs[batchInfo.runs.length - 1].id;
+                            window.isHistoricView = (selectedRunId !== activeRunId);
+                            updateHistoricViewUI();
+                        }
+                        
+                        renderRunTabs(batchInfo.runs, selectedRunId);
+                    }
+
                     // Update header elements
                     var batchNumEl = document.getElementById("headerBatchNumber");
-                    if (batchNumEl) batchNumEl.innerHTML = batchInfo.batchName || "-";
+                    if (batchNumEl) batchNumEl.innerHTML = batchInfo.runName || batchInfo.batchName || "-";
                     var batchNumberInfoEl = document.getElementById("batchNumberInfo");
                     if (batchNumberInfoEl) batchNumberInfoEl.innerHTML = batchInfo.batchName || "-";
                     var batchStartTimeInfoEl = document.getElementById("batchStartTimeInfo");
@@ -250,8 +274,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (stepEl) stepEl.innerHTML = batchInfo.headerStepName || "";
                     var statusEl = document.getElementById("headerMachineStatus");
                     if (statusEl) {
-                        statusEl.innerHTML = batchInfo.machineStatus;
-                        if (batchInfo.machineStatus === "RUNNING") {
+                        statusEl.innerHTML = batchInfo.runStatus || batchInfo.batchStatus;
+                        if (batchInfo.runStatus === "Active") {
                             statusEl.style.color = "#22c55e";
                         } else {
                             statusEl.style.color = "#3b82f6";
@@ -260,7 +284,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     var runningTimeEl = document.getElementById("headerRunningTime");
                     if (runningTimeEl) {
-                        if (batchInfo.machineStatus === "COMPLETED") {
+                        if (batchInfo.machineStatus === "COMPLETED" || window.isHistoricView) {
                             runningTimeEl.innerHTML = batchInfo.headerRunningTime || "0s";
                         } else {
                             runningTimeEl.innerHTML = formatRunningTime(getCalculatedTotalTime());
@@ -292,9 +316,12 @@ document.addEventListener("DOMContentLoaded", function () {
                         var elapsed = 0;
                         var totalStdTime = 6300; // sum of standard times of all steps: 720+780+600+600+720+1200+1500+180
 
-                        if (batchInfo.machineStatus === "COMPLETED") {
+                        if (batchInfo.machineStatus === "COMPLETED" || window.isHistoricView) {
                             var currentStepEl = document.getElementById("statCurrentStep");
-                            if (currentStepEl) currentStepEl.innerHTML = "8 / 8";
+                            if (currentStepEl) {
+                                // For completed/historic runs, show total steps (8/8 or active step completed)
+                                currentStepEl.innerHTML = window.isHistoricView ? (batchInfo.activeStepCode || 8) + " / 8" : "8 / 8";
+                            }
 
                             var stdTimeEl = document.getElementById("statStandardTime");
                             if (stdTimeEl) stdTimeEl.innerHTML = totalStdTime;
@@ -307,7 +334,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             var remainingEl = document.getElementById("statRemainingTime");
                             if (remainingEl) remainingEl.innerHTML = remaining;
 
-                            var progressPercent = 100;
+                            var progressPercent = window.isHistoricView ? Math.round(((batchInfo.activeStepCode || 8) / 8) * 100) : 100;
                             var progressPercentEl = document.getElementById("statProgressPercent");
                             if (progressPercentEl) progressPercentEl.innerHTML = progressPercent + "%";
 
@@ -350,15 +377,64 @@ document.addEventListener("DOMContentLoaded", function () {
                         }
                     }
 
-                    // Run stats UI update immediately and set 1s interval
+                    // Run stats UI update immediately and set 1s interval (only if active/running)
                     updateStepStatsUI();
-                    activeStepTimer = setInterval(updateStepStatsUI, 1000);
+                    if (batchInfo.machineStatus === "RUNNING" && !window.isHistoricView) {
+                        activeStepTimer = setInterval(updateStepStatsUI, 1000);
+                    }
                 }
             },
             error: function (xhr, status, error) {
                 console.error('Error fetching current batch stats:', error);
             }
         });
+    }
+
+    function renderRunTabs(runs, currentSelectedId) {
+        var container = document.getElementById("runTabsContainer");
+        if (!container) return;
+        
+        var html = '';
+        runs.forEach(function (run) {
+            var isSelected = (run.id === currentSelectedId);
+            var selectClass = isSelected ? 'selected ' + run.status : '';
+            var statusLabel = run.status === 'Active' ? 'Đang chạy' : (run.status === 'Completed' ? 'Đã xong' : 'Chờ chạy');
+            
+            html += '<div class="run-tab ' + selectClass + '" onclick="window.switchRun(' + run.id + ', ' + (run.status === 'Active') + ')">' +
+                        '<span>Mẻ ' + run.run_number + '</span>' +
+                        '<span class="run-tab-badge">' + statusLabel + '</span>' +
+                    '</div>';
+        });
+        container.innerHTML = html;
+    }
+
+    window.switchRun = function (runId, isActive) {
+        if (selectedRunId === runId) return;
+        selectedRunId = runId;
+        window.isHistoricView = !isActive;
+        
+        updateHistoricViewUI();
+        fetchCurrentBatchStats();
+    }
+
+    function updateHistoricViewUI() {
+        var mixerDiagram = document.querySelector('.tank-diagram-container');
+        if (!mixerDiagram) return;
+        
+        if (window.isHistoricView) {
+            mixerDiagram.classList.add('historic-mode');
+            if (!document.getElementById("historicBadge")) {
+                var badge = document.createElement("div");
+                badge.id = "historicBadge";
+                badge.className = "historic-overlay-badge";
+                badge.innerHTML = "<i class='fas fa-history'></i> XEM LẠI DỮ LIỆU LỊCH SỬ";
+                mixerDiagram.appendChild(badge);
+            }
+        } else {
+            mixerDiagram.classList.remove('historic-mode');
+            var badge = document.getElementById("historicBadge");
+            if (badge) badge.remove();
+        }
     }
 
     // Polling recent alarms from real database every 2 seconds for high-speed realtime display

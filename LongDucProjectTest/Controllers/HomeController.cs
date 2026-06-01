@@ -165,7 +165,7 @@ namespace LongDucProject.Controllers
         }
 
         [HttpPost]
-        public JsonResult GetReportData(string starttime, string endtime, string batchId, int draw, int start, int length, bool? isInitialLoad)
+        public JsonResult GetReportData(string starttime, string endtime, string batchId, string runId, int draw, int start, int length, bool? isInitialLoad)
         {
             try
             {
@@ -177,10 +177,14 @@ namespace LongDucProject.Controllers
                 int parsedBatchId = 0;
                 bool hasBatchFilter = int.TryParse(batchId, out parsedBatchId) && parsedBatchId > 0;
 
+                int parsedRunId = 0;
+                bool hasRunFilter = int.TryParse(runId, out parsedRunId) && parsedRunId > 0;
+
                 DateTime startDate = DateTime.Today;
                 DateTime endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
 
                 int resolvedBatchId = 0;
+                int resolvedRunId = 0;
                 string batchDateStart = "";
                 string batchDateEnd = "";
 
@@ -231,6 +235,25 @@ namespace LongDucProject.Controllers
                         }
                         hasBatchFilter = true;
                         parsedBatchId = resolvedBatchId;
+
+                        // Try to find if there's an active run for this batch
+                        var dtActiveRun = connector.ExecuteQuery($"SELECT id FROM runs WHERE batch_id = {resolvedBatchId} AND status = 'Active' LIMIT 1");
+                        if (dtActiveRun != null && dtActiveRun.Rows.Count > 0)
+                        {
+                            resolvedRunId = Convert.ToInt32(dtActiveRun.Rows[0]["id"]);
+                            hasRunFilter = true;
+                            parsedRunId = resolvedRunId;
+                        }
+                        else
+                        {
+                            var dtLatestRun = connector.ExecuteQuery($"SELECT id FROM runs WHERE batch_id = {resolvedBatchId} ORDER BY id DESC LIMIT 1");
+                            if (dtLatestRun != null && dtLatestRun.Rows.Count > 0)
+                            {
+                                resolvedRunId = Convert.ToInt32(dtLatestRun.Rows[0]["id"]);
+                                hasRunFilter = true;
+                                parsedRunId = resolvedRunId;
+                            }
+                        }
                     }
                 }
                 else
@@ -261,12 +284,23 @@ namespace LongDucProject.Controllers
 
                 if (isInitialLoad == true && resolvedBatchId > 0)
                 {
-                    filterQuery = $" AND a.batchId = {resolvedBatchId}";
+                    if (hasRunFilter && resolvedRunId > 0)
+                    {
+                        filterQuery = $" AND a.runId = {resolvedRunId}";
+                    }
+                    else
+                    {
+                        filterQuery = $" AND a.batchId = {resolvedBatchId}";
+                    }
                 }
                 else
                 {
                     filterQuery = $" AND a.DateTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.DateTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
-                    if (hasBatchFilter)
+                    if (hasRunFilter)
+                    {
+                        filterQuery += $" AND a.runId = {parsedRunId}";
+                    }
+                    else if (hasBatchFilter)
                     {
                         filterQuery += $" AND a.batchId = {parsedBatchId}";
                     }
@@ -275,7 +309,7 @@ namespace LongDucProject.Controllers
                 string searchValue = Request.Form["search[value]"];
                 if (!string.IsNullOrEmpty(searchValue))
                 {
-                    filterQuery += $" AND (b.name LIKE '%{searchValue}%' OR a.ApSuat LIKE '%{searchValue}%' OR a.NhietDoMoiTruong LIKE '%{searchValue}%' OR a.NhietDoBonTronTren LIKE '%{searchValue}%')";
+                    filterQuery += $" AND (b.name LIKE '%{searchValue.Replace("'", "''")}%' OR a.ApSuat LIKE '%{searchValue.Replace("'", "''")}%' OR a.NhietDoMoiTruong LIKE '%{searchValue.Replace("'", "''")}%' OR a.NhietDoBonTronTren LIKE '%{searchValue.Replace("'", "''")}%')";
                 }
 
                 string countQuery = $"SELECT COUNT(*) {baseQuery} {filterQuery}";
@@ -337,6 +371,7 @@ namespace LongDucProject.Controllers
                     recordsFiltered = recordsFiltered,
                     data = data,
                     resolvedBatchId = resolvedBatchId,
+                    resolvedRunId = resolvedRunId,
                     batchDateStart = batchDateStart,
                     batchDateEnd = batchDateEnd
                 });
@@ -355,7 +390,7 @@ namespace LongDucProject.Controllers
         }
 
         [HttpGet]
-        public FileResult ExportReportExcel(string starttime, string endtime, string batchId, string searchValue)
+        public FileResult ExportReportExcel(string starttime, string endtime, string batchId, string runId, string searchValue)
         {
             if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
             {
@@ -369,6 +404,9 @@ namespace LongDucProject.Controllers
 
             int parsedBatchId = 0;
             bool hasBatchFilter = int.TryParse(batchId, out parsedBatchId) && parsedBatchId > 0;
+
+            int parsedRunId = 0;
+            bool hasRunFilter = int.TryParse(runId, out parsedRunId) && parsedRunId > 0;
 
             DateTime startDate = DateTime.Today;
             DateTime endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
@@ -396,14 +434,18 @@ namespace LongDucProject.Controllers
             string baseQuery = "FROM alarmreport a INNER JOIN batches b ON a.batchId = b.id WHERE 1=1";
             string filterQuery = $" AND a.DateTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.DateTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
 
-            if (hasBatchFilter)
+            if (hasRunFilter)
+            {
+                filterQuery += $" AND a.runId = {parsedRunId}";
+            }
+            else if (hasBatchFilter)
             {
                 filterQuery += $" AND a.batchId = {parsedBatchId}";
             }
 
             if (!string.IsNullOrEmpty(searchValue))
             {
-                filterQuery += $" AND (b.name LIKE '%{searchValue}%' OR a.ApSuat LIKE '%{searchValue}%' OR a.NhietDoMoiTruong LIKE '%{searchValue}%' OR a.NhietDoBonTronTren LIKE '%{searchValue}%')";
+                filterQuery += $" AND (b.name LIKE '%{searchValue.Replace("'", "''")}%' OR a.ApSuat LIKE '%{searchValue.Replace("'", "''")}%' OR a.NhietDoMoiTruong LIKE '%{searchValue.Replace("'", "''")}%' OR a.NhietDoBonTronTren LIKE '%{searchValue.Replace("'", "''")}%')";
             }
 
             string query = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime DESC, a.ID DESC";
@@ -459,7 +501,7 @@ namespace LongDucProject.Controllers
         }
 
         [HttpGet]
-        public FileResult ExportReportCsv(string starttime, string endtime, string batchId, string searchValue)
+        public FileResult ExportReportCsv(string starttime, string endtime, string batchId, string runId, string searchValue)
         {
             if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
             {
@@ -473,6 +515,9 @@ namespace LongDucProject.Controllers
 
             int parsedBatchId = 0;
             bool hasBatchFilter = int.TryParse(batchId, out parsedBatchId) && parsedBatchId > 0;
+
+            int parsedRunId = 0;
+            bool hasRunFilter = int.TryParse(runId, out parsedRunId) && parsedRunId > 0;
 
             DateTime startDate = DateTime.Today;
             DateTime endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
@@ -500,14 +545,18 @@ namespace LongDucProject.Controllers
             string baseQuery = "FROM alarmreport a INNER JOIN batches b ON a.batchId = b.id WHERE 1=1";
             string filterQuery = $" AND a.DateTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.DateTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
 
-            if (hasBatchFilter)
+            if (hasRunFilter)
+            {
+                filterQuery += $" AND a.runId = {parsedRunId}";
+            }
+            else if (hasBatchFilter)
             {
                 filterQuery += $" AND a.batchId = {parsedBatchId}";
             }
 
             if (!string.IsNullOrEmpty(searchValue))
             {
-                filterQuery += $" AND (b.name LIKE '%{searchValue}%' OR a.ApSuat LIKE '%{searchValue}%' OR a.NhietDoMoiTruong LIKE '%{searchValue}%' OR a.NhietDoBonTronTren LIKE '%{searchValue}%')";
+                filterQuery += $" AND (b.name LIKE '%{searchValue.Replace("'", "''")}%' OR a.ApSuat LIKE '%{searchValue.Replace("'", "''")}%' OR a.NhietDoMoiTruong LIKE '%{searchValue.Replace("'", "''")}%' OR a.NhietDoBonTronTren LIKE '%{searchValue.Replace("'", "''")}%')";
             }
 
             string query = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime DESC, a.ID DESC";

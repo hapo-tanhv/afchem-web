@@ -69,6 +69,97 @@
 }
 @section Styles {
     <link rel="stylesheet" href="~/Css/Overview.css" asp-append-version="true" />
+    <style>
+        /* Glassmorphism Run Selector Tabs */
+        .run-selector-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .run-tab {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .run-tab:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+        .run-tab.selected {
+            color: #fff;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+        }
+        .run-tab.selected.Active {
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            border-color: #00c6ff;
+        }
+        .run-tab.selected.Completed {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-color: #10b981;
+        }
+        .run-tab.selected.Pending {
+            background: linear-gradient(135deg, #4b5563, #374151);
+            border-color: #4b5563;
+        }
+        .run-tab-badge {
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .run-tab.Active .run-tab-badge { background: rgba(0, 229, 255, 0.2); color: #00e5ff; }
+        .run-tab.Completed .run-tab-badge { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .run-tab.Pending .run-tab-badge { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
+        
+        /* Tank diagram overlay styling for historic mode */
+        .tank-diagram-container.historic-mode {
+            position: relative;
+        }
+        .tank-diagram-container.historic-mode::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.35);
+            pointer-events: none;
+            z-index: 5;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+        .historic-overlay-badge {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            letter-spacing: 0.5px;
+        }
+    </style>
 }
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/modules/series-label.js"></script>
@@ -404,8 +495,12 @@
         </div>
         <!-- LỊCH SỬ CÁC BƯỚC -->
         <div class="history-panel">
-            <div class="panel-header">
-                <h3>Thống kê mẻ hiện tại</h3>
+            <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <h3 style="margin-bottom: 0;">Thống kê mẻ hiện tại</h3>
+                <!-- Horizontal Run Tab Selector -->
+                <div class="run-selector-tabs" id="runTabsContainer">
+                    <!-- Rendered dynamically -->
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="batch-table">

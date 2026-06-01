@@ -9,11 +9,37 @@
     <link href="~/Css/Overview.css" rel="stylesheet" />
     <style>
         .filter-bar {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 15px 20px;
             margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .filter-inputs {
             display: flex;
             align-items: center;
             gap: 15px;
             flex-wrap: wrap;
+            width: 100%;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            align-items: unset !important;
+            gap: 10px;
+        }
+        .filter-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            width: 100%;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 12px;
         }
         .filter-bar label {
             color: #a9b7cb;
@@ -117,6 +143,39 @@
         .text-left {
             text-align: left !important;
         }
+        /* Autocomplete Premium Dark Theme */
+        .ui-autocomplete {
+            background: rgba(15, 23, 42, 0.95) !important;
+            border: 1px solid rgba(59, 130, 246, 0.4) !important;
+            border-radius: 6px !important;
+            color: #e2e8f0 !important;
+            max-height: 250px !important;
+            overflow-y: auto !important;
+            z-index: 2000 !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+            backdrop-filter: blur(12px) !important;
+            padding: 5px 0 !important;
+        }
+        .ui-menu-item {
+            padding: 0 !important;
+            list-style: none !important;
+        }
+        .ui-menu-item .ui-menu-item-wrapper {
+            padding: 8px 15px !important;
+            color: #cbd5e1 !important;
+            transition: all 0.2s ease !important;
+            border: none !important;
+            background: transparent !important;
+            font-size: 13px !important;
+            display: block !important;
+        }
+        .ui-menu-item .ui-menu-item-wrapper:hover,
+        .ui-menu-item .ui-menu-item-wrapper.ui-state-active {
+            background: rgba(59, 130, 246, 0.25) !important;
+            color: #00e5ff !important;
+            border: none !important;
+            cursor: pointer !important;
+        }
     </style>
 }
 
@@ -127,29 +186,41 @@
         </div>
         
         <div class="filter-bar">
-            <div class="filter-group">
-                <span class="filter-label">Từ ngày</span>
-                <input type="text" id="starttime" name="starttime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
+            <div class="filter-inputs">
+                <div class="filter-group">
+                    <span class="filter-label">Từ ngày</span>
+                    <input type="text" id="starttime" name="starttime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
+                </div>
+                <div class="filter-group">
+                    <span class="filter-label">Đến ngày</span>
+                    <input type="text" id="endtime" name="endtime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
+                </div>
+                <div class="filter-group" style="margin-left: 10px;">
+                    <span class="filter-label">Chọn batch</span>
+                    <select id="batchId" class="filter-input" style="min-width: 120px;">
+                        <option value="0">-- Đang tải --</option>
+                    </select>
+                </div>
+                <div class="filter-group" style="margin-left: 10px;">
+                    <span class="filter-label">Chọn mẻ (Run)</span>
+                    <select id="runId" class="filter-input" style="min-width: 140px;" disabled>
+                        <option value="0">Không có mẻ con</option>
+                    </select>
+                </div>
+                <div class="filter-group" style="margin-left: 10px; position: relative;">
+                    <span class="filter-label">Tìm nhanh mẻ</span>
+                    <input type="text" id="runSearch" class="filter-input" placeholder="Nhập tên mẻ..." style="min-width: 150px; font-size: 13px;">
+                </div>
             </div>
-            <div class="filter-group">
-                <span class="filter-label">Đến ngày</span>
-                <input type="text" id="endtime" name="endtime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
-            </div>
-            <div class="filter-group" style="margin-left: 10px;">
-                <span class="filter-label">Chọn batch</span>
-                <select id="batchId" class="filter-input" style="min-width: 120px;">
-                    <option value="0">-- Đang tải --</option>
-                </select>
-            </div>
-            <button onclick="reloadTables()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>
             
-            @if (Session["Role"] != null && (int)Session["Role"] == (int)Hino.Getdata.Common.Role.Admin)
-            {
-                <div style="margin-left: auto; display: flex; gap: 10px;">
+            <div class="filter-actions">
+                <button onclick="reloadTables()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>
+                @if (Session["Role"] != null && (int)Session["Role"] == (int)Hino.Getdata.Common.Role.Admin)
+                {
                     <button onclick="ExportExcel()" class="btn-custom btn-export"><i class="fas fa-file-excel"></i> Export Excel</button>
                     <button onclick="ExportCSV()" class="btn-custom btn-export"><i class="fas fa-file-csv"></i> Export CSV</button>
-                </div>
-            }
+                }
+            </div>
         </div>
 
         <div class="table-responsive">
@@ -283,6 +354,64 @@
                 }
             });
 
+            // Bind cascading batchId changes
+            $('#batchId').on('change', function () {
+                loadRuns($(this).val());
+            });
+
+            // Init Autocomplete Search
+            $("#runSearch").autocomplete({
+                source: function (request, response) {
+                    $.ajax({
+                        url: "/Overview/SearchRuns",
+                        type: "GET",
+                        data: { query: request.term },
+                        success: function (data) {
+                            response($.map(data, function (item) {
+                                return {
+                                    label: item.label + " (" + item.batch_name + ")",
+                                    value: item.label,
+                                    id: item.value,
+                                    batch_id: item.batch_id,
+                                    batch_name: item.batch_name,
+                                    batch_start: item.batch_start,
+                                    batch_end: item.batch_end
+                                };
+                            }));
+                        }
+                    });
+                },
+                minLength: 1,
+                select: function (event, ui) {
+                    var item = ui.item;
+                    if (item) {
+                        if (item.batch_start && item.batch_end) {
+                            $('#starttime').val(item.batch_start);
+                            $('#endtime').val(item.batch_end);
+
+                            var startDrp = $('#starttime').data('daterangepicker');
+                            if (startDrp) {
+                                startDrp.setStartDate(item.batch_start);
+                                startDrp.setEndDate(item.batch_start);
+                            }
+                            var endDrp = $('#endtime').data('daterangepicker');
+                            if (endDrp) {
+                                endDrp.setStartDate(item.batch_end);
+                                endDrp.setEndDate(item.batch_end);
+                            }
+                        }
+
+                        loadBatchesRange(function () {
+                            $('#batchId').val(item.batch_id);
+                            loadRuns(item.batch_id, function () {
+                                $('#runId').val(item.id);
+                                reloadTables();
+                            });
+                        });
+                    }
+                }
+            });
+
             // Init DataTable with live data
             realtimeDt = initDataTable('#realtimeTable', '/Alarm/GetAlarmsData');
         });
@@ -309,12 +438,60 @@
                             });
                         }
                     }
+                    loadRuns(select.val(), function () {
+                        if (typeof callback === 'function') {
+                            callback();
+                        }
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.error('Failed to load batches:', error);
+                    loadRuns("0", function () {
+                        if (typeof callback === 'function') {
+                            callback();
+                        }
+                    });
+                }
+            });
+        }
+
+        function loadRuns(batchId, callback) {
+            var select = $('#runId');
+            if (batchId === "0" || batchId === "") {
+                select.empty();
+                select.append('<option value="0">-- Tất cả mẻ --</option>');
+                select.prop('disabled', true);
+                if (typeof callback === 'function') callback();
+                return;
+            }
+
+            $.ajax({
+                url: '/Overview/GetRuns',
+                type: 'GET',
+                data: { batch_id: batchId },
+                dataType: 'json',
+                success: function (data) {
+                    select.empty();
+                    if (data && data.length > 0) {
+                        select.append('<option value="0">-- Tất cả mẻ --</option>');
+                        data.forEach(function (item) {
+                            var statusLabel = item.status === 'Active' ? ' (Active)' : '';
+                            select.append('<option value="' + item.id + '">' + item.name + statusLabel + '</option>');
+                        });
+                        select.prop('disabled', false);
+                    } else {
+                        select.append('<option value="0">Không có mẻ con</option>');
+                        select.prop('disabled', true);
+                    }
                     if (typeof callback === 'function') {
                         callback();
                     }
                 },
                 error: function (xhr, status, error) {
-                    console.error('Failed to load batches:', error);
+                    console.error('Failed to load runs:', error);
+                    select.empty();
+                    select.append('<option value="0">Lỗi tải dữ liệu</option>');
+                    select.prop('disabled', true);
                     if (typeof callback === 'function') {
                         callback();
                     }
@@ -333,6 +510,7 @@
                         d.starttime = $('#starttime').val() + " 00:00:00";
                         d.endtime = $('#endtime').val() + " 23:59:59";
                         d.batchId = $('#batchId').val();
+                        d.runId = $('#runId').val() || "0";
                         d.isInitialLoad = isInitialLoad;
                     }
                 },
@@ -389,6 +567,11 @@
 
                     loadBatchesRange(function () {
                         $('#batchId').val(json.resolvedBatchId);
+                        loadRuns(json.resolvedBatchId, function () {
+                            if (json.resolvedRunId > 0) {
+                                $('#runId').val(json.resolvedRunId);
+                            }
+                        });
                     });
                     isInitialLoad = false;
                 }
@@ -405,6 +588,7 @@
             var starttime = $('#starttime').val() + " 00:00:00";
             var endtime = $('#endtime').val() + " 23:59:59";
             var batchId = $('#batchId').val();
+            var runId = $('#runId').val() || "0";
             var searchValue = realtimeDt ? realtimeDt.search() : "";
 
             var url = "/Alarm/ExportAlarmsExcel?";
@@ -412,6 +596,7 @@
                 starttime: starttime,
                 endtime: endtime,
                 batchId: batchId,
+                runId: runId,
                 searchValue: searchValue
             });
             window.location = url + params;
@@ -421,6 +606,7 @@
             var starttime = $('#starttime').val() + " 00:00:00";
             var endtime = $('#endtime').val() + " 23:59:59";
             var batchId = $('#batchId').val();
+            var runId = $('#runId').val() || "0";
             var searchValue = realtimeDt ? realtimeDt.search() : "";
 
             var url = "/Alarm/ExportAlarmsCsv?";
@@ -428,6 +614,7 @@
                 starttime: starttime,
                 endtime: endtime,
                 batchId: batchId,
+                runId: runId,
                 searchValue: searchValue
             });
             window.location = url + params;

@@ -223,12 +223,60 @@
                         select.append('<option value="">Không có mẻ nào</option>');
                     }
                 }
+                loadRuns(select.val(), function () {
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                });
+            },
+            error: function (xhr, status, error) {
+                console.error("Lỗi khi tải danh sách batches:", error);
+                loadRuns("0", function () {
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                });
+            }
+        });
+    }
+
+    function loadRuns(batchId, callback) {
+        var select = $('#runId');
+        if (!batchId || batchId === "0") {
+            select.empty();
+            select.append('<option value="0">-- Tất cả mẻ --</option>');
+            select.prop('disabled', true);
+            if (typeof callback === 'function') callback();
+            return;
+        }
+
+        $.ajax({
+            url: '/Overview/GetRuns',
+            type: 'GET',
+            data: { batch_id: batchId },
+            dataType: 'json',
+            success: function (data) {
+                select.empty();
+                if (data && data.length > 0) {
+                    select.append('<option value="0">-- Tất cả mẻ --</option>');
+                    data.forEach(function (item) {
+                        var statusLabel = item.status === 'Active' ? ' (Active)' : '';
+                        select.append('<option value="' + item.id + '">' + item.name + statusLabel + '</option>');
+                    });
+                    select.prop('disabled', false);
+                } else {
+                    select.append('<option value="0">Không có mẻ con</option>');
+                    select.prop('disabled', true);
+                }
                 if (typeof callback === 'function') {
                     callback();
                 }
             },
             error: function (xhr, status, error) {
-                console.error("Lỗi khi tải danh sách batches:", error);
+                console.error('Failed to load runs:', error);
+                select.empty();
+                select.append('<option value="0">Lỗi tải dữ liệu</option>');
+                select.prop('disabled', true);
                 if (typeof callback === 'function') {
                     callback();
                 }
@@ -238,6 +286,7 @@
 
     function loadEventData(isInitialLoad) {
         var batchId = isInitialLoad ? "" : ($('#batchId').val() || "");
+        var runId = isInitialLoad ? "" : ($('#runId').val() || "");
         var formattedDate = "";
         
         if (!isInitialLoad) {
@@ -252,7 +301,7 @@
         $.ajax({
             url: '/Event/GetEventLogRealtime',
             type: 'GET',
-            data: { batchId: batchId, date: formattedDate },
+            data: { batchId: batchId, date: formattedDate, runId: runId },
             dataType: 'json',
             success: function (res) {
                 if (res.error) {
@@ -283,12 +332,20 @@
                         loadBatches(res.batchDate, function() {
                             if (res.batchId && res.batchId > 0) {
                                 $('#batchId').val(res.batchId);
+                                loadRuns(res.batchId, function () {
+                                    if (res.resolvedRunId && res.resolvedRunId > 0) {
+                                        $('#runId').val(res.resolvedRunId);
+                                    }
+                                });
                             }
                         });
                     }
                 } else {
                     if (res.batchId && res.batchId > 0) {
                         $('#batchId').val(res.batchId);
+                    }
+                    if (res.resolvedRunId && res.resolvedRunId > 0) {
+                        $('#runId').val(res.resolvedRunId);
                     }
                 }
             },
@@ -302,6 +359,60 @@
 
     // ========== INIT ==========
     function init() {
+        // Bind cascading batchId changes
+        $('#batchId').on('change', function () {
+            loadRuns($(this).val());
+        });
+
+        // Init Autocomplete Search
+        $("#runSearch").autocomplete({
+            source: function (request, response) {
+                $.ajax({
+                    url: "/Overview/SearchRuns",
+                    type: "GET",
+                    data: { query: request.term },
+                    success: function (data) {
+                        response($.map(data, function (item) {
+                            return {
+                                label: item.label + " (" + item.batch_name + ")",
+                                value: item.label,
+                                id: item.value,
+                                batch_id: item.batch_id,
+                                batch_name: item.batch_name,
+                                batch_start: item.batch_start,
+                                batch_end: item.batch_end
+                            };
+                        }));
+                    }
+                });
+            },
+            minLength: 1,
+            select: function (event, ui) {
+                var item = ui.item;
+                if (item) {
+                    if (item.batch_start) {
+                        var dateVal = item.batch_start.replace(/-/g, '/');
+                        $('#starttime').val(dateVal);
+
+                        var drp = $('#starttime').data('daterangepicker');
+                        if (drp) {
+                            drp.setStartDate(dateVal);
+                            drp.setEndDate(dateVal);
+                        }
+                    }
+
+                    // Reload batches and select
+                    loadBatches(item.batch_start ? item.batch_start.replace(/\//g, '-') : "", function () {
+                        $('#batchId').val(item.batch_id);
+                        loadRuns(item.batch_id, function () {
+                            $('#runId').val(item.id);
+                            loadEventData();
+                        });
+                    });
+                }
+            }
+        });
+
         // Initial load: fetch the latest active/completed batch from the server
         loadEventData(true);
     }
@@ -311,6 +422,7 @@
         togglePhaseAlarm: togglePhaseAlarm,
         filterEvents: filterEvents,
         loadBatches: loadBatches,
+        loadRuns: loadRuns,
         loadEventData: loadEventData
     };
 

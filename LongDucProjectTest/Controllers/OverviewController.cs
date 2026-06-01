@@ -266,7 +266,7 @@ namespace LongDucProject.Controllers
         }
 
         [HttpGet]
-        public JsonResult GetCurrentBatchStats()
+        public JsonResult GetCurrentBatchStats(int? runId = null)
         {
             try
             {
@@ -275,66 +275,141 @@ namespace LongDucProject.Controllers
                     ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
                 };
 
-                // 1. Get selected batch info
-                DataTable dtBatch = null;
-                var dtActive = connector.ExecuteQuery("SELECT id, name, status, start_time, end_time FROM batches WHERE status = 'Active' LIMIT 1");
-                int batchId = -1;
+                int resolvedRunId = -1;
+                int resolvedBatchId = -1;
+                string runName = "";
+                string runStatus = "";
+                string runStart = "";
+                string runEnd = "";
                 string batchName = "";
                 string batchStatus = "";
                 string batchStart = "";
                 string batchEnd = "";
 
-                if (dtActive != null && dtActive.Rows.Count > 0)
+                if (runId.HasValue && runId.Value > 0)
                 {
-                    dtBatch = dtActive;
-                }
-                else
-                {
-                    // Fallback to the most recently completed batch
-                    var dtCompleted = connector.ExecuteQuery("SELECT id, name, status, start_time, end_time FROM batches WHERE status = 'Completed' ORDER BY id DESC LIMIT 1");
-                    if (dtCompleted != null && dtCompleted.Rows.Count > 0)
+                    // 1. Operator clicked a specific run tab
+                    var dtRun = connector.ExecuteQuery($"SELECT id, batch_id, name, status, start_time, end_time FROM runs WHERE id = {runId.Value} LIMIT 1");
+                    if (dtRun != null && dtRun.Rows.Count > 0)
                     {
-                        dtBatch = dtCompleted;
+                        resolvedRunId = Convert.ToInt32(dtRun.Rows[0]["id"]);
+                        resolvedBatchId = Convert.ToInt32(dtRun.Rows[0]["batch_id"]);
+                        runName = dtRun.Rows[0]["name"] != DBNull.Value ? dtRun.Rows[0]["name"].ToString() : "";
+                        runStatus = dtRun.Rows[0]["status"] != DBNull.Value ? dtRun.Rows[0]["status"].ToString() : "";
+                        runStart = dtRun.Rows[0]["start_time"] != DBNull.Value ? Convert.ToDateTime(dtRun.Rows[0]["start_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
+                        runEnd = dtRun.Rows[0]["end_time"] != DBNull.Value ? Convert.ToDateTime(dtRun.Rows[0]["end_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
+                    }
+                }
+
+                if (resolvedRunId == -1)
+                {
+                    // 2. Default: Resolve active run
+                    var dtActiveRun = connector.ExecuteQuery("SELECT id, batch_id, name, status, start_time, end_time FROM runs WHERE status = 'Active' ORDER BY id DESC LIMIT 1");
+                    if (dtActiveRun != null && dtActiveRun.Rows.Count > 0)
+                    {
+                        resolvedRunId = Convert.ToInt32(dtActiveRun.Rows[0]["id"]);
+                        resolvedBatchId = Convert.ToInt32(dtActiveRun.Rows[0]["batch_id"]);
+                        runName = dtActiveRun.Rows[0]["name"] != DBNull.Value ? dtActiveRun.Rows[0]["name"].ToString() : "";
+                        runStatus = dtActiveRun.Rows[0]["status"] != DBNull.Value ? dtActiveRun.Rows[0]["status"].ToString() : "";
+                        runStart = dtActiveRun.Rows[0]["start_time"] != DBNull.Value ? Convert.ToDateTime(dtActiveRun.Rows[0]["start_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
+                        runEnd = dtActiveRun.Rows[0]["end_time"] != DBNull.Value ? Convert.ToDateTime(dtActiveRun.Rows[0]["end_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
                     }
                     else
                     {
-                        // Final fallback to the latest batch of any status
-                        var dtLatest = connector.ExecuteQuery("SELECT id, name, status, start_time, end_time FROM batches ORDER BY id DESC LIMIT 1");
-                        if (dtLatest != null && dtLatest.Rows.Count > 0)
+                        // Fallback to the latest run of any status
+                        var dtLatestRun = connector.ExecuteQuery("SELECT id, batch_id, name, status, start_time, end_time FROM runs ORDER BY id DESC LIMIT 1");
+                        if (dtLatestRun != null && dtLatestRun.Rows.Count > 0)
                         {
-                            dtBatch = dtLatest;
+                            resolvedRunId = Convert.ToInt32(dtLatestRun.Rows[0]["id"]);
+                            resolvedBatchId = Convert.ToInt32(dtLatestRun.Rows[0]["batch_id"]);
+                            runName = dtLatestRun.Rows[0]["name"] != DBNull.Value ? dtLatestRun.Rows[0]["name"].ToString() : "";
+                            runStatus = dtLatestRun.Rows[0]["status"] != DBNull.Value ? dtLatestRun.Rows[0]["status"].ToString() : "";
+                            runStart = dtLatestRun.Rows[0]["start_time"] != DBNull.Value ? Convert.ToDateTime(dtLatestRun.Rows[0]["start_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
+                            runEnd = dtLatestRun.Rows[0]["end_time"] != DBNull.Value ? Convert.ToDateTime(dtLatestRun.Rows[0]["end_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
                         }
                     }
                 }
 
-                if (dtBatch != null && dtBatch.Rows.Count > 0)
+                // Get the batch info using resolvedBatchId
+                if (resolvedBatchId != -1)
                 {
-                    batchId = Convert.ToInt32(dtBatch.Rows[0]["id"]);
-                    batchName = dtBatch.Rows[0]["name"] != DBNull.Value ? dtBatch.Rows[0]["name"].ToString() : "";
-                    batchStatus = dtBatch.Rows[0]["status"] != DBNull.Value ? dtBatch.Rows[0]["status"].ToString() : "";
-                    batchStart = dtBatch.Rows[0]["start_time"] != DBNull.Value ? Convert.ToDateTime(dtBatch.Rows[0]["start_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
-                    batchEnd = dtBatch.Rows[0]["end_time"] != DBNull.Value ? Convert.ToDateTime(dtBatch.Rows[0]["end_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
+                    var dtBatch = connector.ExecuteQuery($"SELECT name, status, start_time, end_time FROM batches WHERE id = {resolvedBatchId} LIMIT 1");
+                    if (dtBatch != null && dtBatch.Rows.Count > 0)
+                    {
+                        batchName = dtBatch.Rows[0]["name"] != DBNull.Value ? dtBatch.Rows[0]["name"].ToString() : "";
+                        batchStatus = dtBatch.Rows[0]["status"] != DBNull.Value ? dtBatch.Rows[0]["status"].ToString() : "";
+                        batchStart = dtBatch.Rows[0]["start_time"] != DBNull.Value ? Convert.ToDateTime(dtBatch.Rows[0]["start_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
+                        batchEnd = dtBatch.Rows[0]["end_time"] != DBNull.Value ? Convert.ToDateTime(dtBatch.Rows[0]["end_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
+                    }
                 }
 
-                // 2. Fetch alarmlog for active batch
+                // Fallback to old batch resolution if both are still not resolved (e.g. database completely empty of runs but has batches)
+                if (resolvedBatchId == -1)
+                {
+                    var dtActive = connector.ExecuteQuery("SELECT id, name, status, start_time, end_time FROM batches WHERE status = 'Active' LIMIT 1");
+                    DataTable dtBatchFallback = null;
+                    if (dtActive != null && dtActive.Rows.Count > 0)
+                    {
+                        dtBatchFallback = dtActive;
+                    }
+                    else
+                    {
+                        var dtCompleted = connector.ExecuteQuery("SELECT id, name, status, start_time, end_time FROM batches WHERE status = 'Completed' ORDER BY id DESC LIMIT 1");
+                        if (dtCompleted != null && dtCompleted.Rows.Count > 0)
+                        {
+                            dtBatchFallback = dtCompleted;
+                        }
+                        else
+                        {
+                            var dtLatest = connector.ExecuteQuery("SELECT id, name, status, start_time, end_time FROM batches ORDER BY id DESC LIMIT 1");
+                            if (dtLatest != null && dtLatest.Rows.Count > 0)
+                            {
+                                dtBatchFallback = dtLatest;
+                            }
+                        }
+                    }
+
+                    if (dtBatchFallback != null && dtBatchFallback.Rows.Count > 0)
+                    {
+                        resolvedBatchId = Convert.ToInt32(dtBatchFallback.Rows[0]["id"]);
+                        batchName = dtBatchFallback.Rows[0]["name"] != DBNull.Value ? dtBatchFallback.Rows[0]["name"].ToString() : "";
+                        batchStatus = dtBatchFallback.Rows[0]["status"] != DBNull.Value ? dtBatchFallback.Rows[0]["status"].ToString() : "";
+                        batchStart = dtBatchFallback.Rows[0]["start_time"] != DBNull.Value ? Convert.ToDateTime(dtBatchFallback.Rows[0]["start_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
+                        batchEnd = dtBatchFallback.Rows[0]["end_time"] != DBNull.Value ? Convert.ToDateTime(dtBatchFallback.Rows[0]["end_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
+                    }
+                }
+
+                // 2. Fetch alarmlog for active run (fallback to batchId if no runId resolved)
                 DataTable dtAlarmLog = null;
-                if (batchId != -1)
+                if (resolvedRunId != -1)
                 {
-                    dtAlarmLog = connector.ExecuteQuery($"SELECT OccurrenceTime, RestoreTime, Description, Status, TagNo FROM alarmlog WHERE batchId = {batchId}");
+                    dtAlarmLog = connector.ExecuteQuery($"SELECT OccurrenceTime, RestoreTime, Description, Status, TagNo FROM alarmlog WHERE runId = {resolvedRunId}");
+                }
+                else if (resolvedBatchId != -1)
+                {
+                    dtAlarmLog = connector.ExecuteQuery($"SELECT OccurrenceTime, RestoreTime, Description, Status, TagNo FROM alarmlog WHERE batchId = {resolvedBatchId}");
                 }
 
-                // 3. Fetch alarmreport (telemetry) for active batch
+                // 3. Fetch alarmreport (telemetry) for active run
                 DataTable dtTelemetry = null;
-                if (batchId != -1)
+                if (resolvedRunId != -1)
                 {
-                    dtTelemetry = connector.ExecuteQuery($"SELECT DateTime, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi FROM alarmreport WHERE batchId = {batchId} ORDER BY DateTime ASC");
+                    dtTelemetry = connector.ExecuteQuery($"SELECT DateTime, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi FROM alarmreport WHERE runId = {resolvedRunId} ORDER BY DateTime ASC");
+                }
+                else if (resolvedBatchId != -1)
+                {
+                    dtTelemetry = connector.ExecuteQuery($"SELECT DateTime, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi FROM alarmreport WHERE batchId = {resolvedBatchId} ORDER BY DateTime ASC");
                 }
 
-                // 4. Fetch realtime_alarms for active batch
+                // 4. Fetch realtime_alarms for active run
                 DataTable dtAlarms = null;
-                if (batchId != -1)
+                if (resolvedRunId != -1)
                 {
-                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE batchId = {batchId} AND Severity IN ('ALARM', 'WARNING') ORDER BY DateTime ASC, id ASC");
+                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {resolvedRunId} AND Severity IN ('ALARM', 'WARNING') ORDER BY DateTime ASC, id ASC");
+                }
+                else if (resolvedBatchId != -1)
+                {
+                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE batchId = {resolvedBatchId} AND Severity IN ('ALARM', 'WARNING') ORDER BY DateTime ASC, id ASC");
                 }
 
                 // 5. Set up standard steps with their alarmlog TagNo mapping & keywords
@@ -700,18 +775,21 @@ namespace LongDucProject.Controllers
                 else if (batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) && !activeStepStartTime.HasValue)
                 {
                     // If batch is Active but no active step has been found in alarmlog yet,
-                    // set activeStepStartTime to the batch start time (so running/elapsed time calculation ticks from it),
-                    // but keep activeStepCode = 0 and activeStepName = "" (display blank).
-                    if (dtBatch.Rows[0]["start_time"] != DBNull.Value)
+                    // set activeStepStartTime to the run start time (so running/elapsed time calculation ticks from it)
+                    if (!string.IsNullOrEmpty(runStart))
                     {
-                        activeStepStartTime = Convert.ToDateTime(dtBatch.Rows[0]["start_time"]);
+                        activeStepStartTime = Convert.ToDateTime(runStart);
+                    }
+                    else if (!string.IsNullOrEmpty(batchStart))
+                    {
+                        activeStepStartTime = Convert.ToDateTime(batchStart);
                     }
                 }
 
                 // Calculate running time:
                 // - Sum the durations of all steps (completed steps actual duration and currently running step's elapsed time)
                 double runningSeconds = 0;
-                if (batchId != -1)
+                if (resolvedRunId != -1 || resolvedBatchId != -1)
                 {
                     foreach (var def in stepDefs)
                     {
@@ -755,9 +833,17 @@ namespace LongDucProject.Controllers
 
                 // Calculate alarm count excluding INFO severity
                 int alarmCount = 0;
-                if (batchId != -1)
+                if (resolvedRunId != -1)
                 {
-                    var dtAlarmCount = connector.ExecuteQuery($"SELECT COUNT(*) FROM realtime_alarms WHERE batchId = {batchId} AND Severity != 'INFO'");
+                    var dtAlarmCount = connector.ExecuteQuery($"SELECT COUNT(*) FROM realtime_alarms WHERE runId = {resolvedRunId} AND Severity != 'INFO'");
+                    if (dtAlarmCount != null && dtAlarmCount.Rows.Count > 0)
+                    {
+                        alarmCount = Convert.ToInt32(dtAlarmCount.Rows[0][0]);
+                    }
+                }
+                else if (resolvedBatchId != -1)
+                {
+                    var dtAlarmCount = connector.ExecuteQuery($"SELECT COUNT(*) FROM realtime_alarms WHERE batchId = {resolvedBatchId} AND Severity != 'INFO'");
                     if (dtAlarmCount != null && dtAlarmCount.Rows.Count > 0)
                     {
                         alarmCount = Convert.ToInt32(dtAlarmCount.Rows[0][0]);
@@ -771,21 +857,49 @@ namespace LongDucProject.Controllers
                     headerRunningTimeStr = $"{(int)runningSeconds}s";
                 }
 
+                // Gather runs metadata for tab selector
+                var runsList = new List<object>();
+                if (resolvedBatchId != -1)
+                {
+                    var dtRuns = connector.ExecuteQuery($"SELECT id, run_number, name, status, start_time, end_time FROM runs WHERE batch_id = {resolvedBatchId} ORDER BY run_number ASC");
+                    if (dtRuns != null)
+                    {
+                        foreach (DataRow row in dtRuns.Rows)
+                        {
+                            runsList.Add(new
+                            {
+                                id = Convert.ToInt32(row["id"]),
+                                run_number = Convert.ToInt32(row["run_number"]),
+                                name = row["name"].ToString(),
+                                status = row["status"].ToString(),
+                                start_time = row["start_time"] != DBNull.Value ? Convert.ToDateTime(row["start_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "",
+                                end_time = row["end_time"] != DBNull.Value ? Convert.ToDateTime(row["end_time"]).ToString("yyyy-MM-dd HH:mm:ss") : ""
+                            });
+                        }
+                    }
+                }
+
                 var batchInfo = new
                 {
-                    batchId = batchId,
+                    batchId = resolvedBatchId,
                     batchName = batchName,
                     batchStatus = batchStatus,
-                    machineStatus = batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) ? "RUNNING" : "COMPLETED",
+                    machineStatus = runStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) ? "RUNNING" : "COMPLETED",
                     activeStepCode = activeStepCode,
                     activeStepName = activeStepName,
                     headerStepName = headerStepName,
                     activeStepStartTime = activeStepStartTime?.ToString("yyyy-MM-dd HH:mm:ss"),
-                    batchStartTime = batchStart, // start_time of the batch
-                    batchTotalSeconds = runningSeconds, // total elapsed seconds if completed
+                    batchStartTime = !string.IsNullOrEmpty(runStart) ? runStart : batchStart, // fallback to batch start
+                    batchTotalSeconds = runningSeconds, // total elapsed seconds of the resolved run
                     headerRunningTime = headerRunningTimeStr,
                     alarmCount = alarmCount,
-                    serverTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                    serverTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                    
+                    // Run specific metadata
+                    runId = resolvedRunId,
+                    runName = runName,
+                    runStatus = runStatus,
+                    runs = runsList
                 };
 
                 // Prevent duplicate global alarms and sort descending by database id, then take top 5
@@ -872,41 +986,41 @@ namespace LongDucProject.Controllers
                     ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
                 };
 
-                // 1. Get active batch
-                var dtActive = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Active' LIMIT 1");
-                int batchId = -1;
+                // 1. Get active run
+                var dtActive = connector.ExecuteQuery("SELECT id FROM runs WHERE status = 'Active' LIMIT 1");
+                int runId = -1;
                 if (dtActive != null && dtActive.Rows.Count > 0)
                 {
-                    batchId = Convert.ToInt32(dtActive.Rows[0]["id"]);
+                    runId = Convert.ToInt32(dtActive.Rows[0]["id"]);
                 }
                 else
                 {
-                    // Fallback to the most recently completed batch
-                    var dtCompleted = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Completed' ORDER BY id DESC LIMIT 1");
+                    // Fallback to the most recently completed run
+                    var dtCompleted = connector.ExecuteQuery("SELECT id FROM runs WHERE status = 'Completed' ORDER BY id DESC LIMIT 1");
                     if (dtCompleted != null && dtCompleted.Rows.Count > 0)
                     {
-                        batchId = Convert.ToInt32(dtCompleted.Rows[0]["id"]);
+                        runId = Convert.ToInt32(dtCompleted.Rows[0]["id"]);
                     }
                     else
                     {
-                        // Final fallback to the latest batch of any status
-                        var dtLatest = connector.ExecuteQuery("SELECT id FROM batches ORDER BY id DESC LIMIT 1");
+                        // Final fallback to the latest run of any status
+                        var dtLatest = connector.ExecuteQuery("SELECT id FROM runs ORDER BY id DESC LIMIT 1");
                         if (dtLatest != null && dtLatest.Rows.Count > 0)
                         {
-                            batchId = Convert.ToInt32(dtLatest.Rows[0]["id"]);
+                            runId = Convert.ToInt32(dtLatest.Rows[0]["id"]);
                         }
                     }
                 }
 
-                if (batchId == -1)
+                if (runId == -1)
                 {
                     return Json(new List<object>(), JsonRequestBehavior.AllowGet);
                 }
 
-                // 2. Fetch realtime_alarms for active batch (limit to top 30 to de-duplicate, then take top 5)
+                // 2. Fetch realtime_alarms for active run (limit to top 30 to de-duplicate, then take top 5)
                 DataTable dtAlarms = connector.ExecuteQuery(
                     $"SELECT id, DateTime, Severity, TagName, Value, Threshold, Message FROM realtime_alarms " +
-                    $"WHERE batchId = {batchId} AND Severity IN ('ALARM', 'WARNING') " +
+                    $"WHERE runId = {runId} AND Severity IN ('ALARM', 'WARNING') " +
                     $"ORDER BY DateTime DESC, id DESC LIMIT 30"
                 );
 
@@ -947,6 +1061,76 @@ namespace LongDucProject.Controllers
                     .ToList();
 
                 return Json(sortedGlobalAlarms, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpGet]
+        public JsonResult GetRuns(int batch_id)
+        {
+            try
+            {
+                var connector = new MySQLConnect()
+                {
+                    ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
+                };
+                var dt = connector.ExecuteQuery($"SELECT id, name, status, run_number FROM runs WHERE batch_id = {batch_id} ORDER BY run_number ASC");
+                var list = new List<object>();
+                if (dt != null)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        list.Add(new
+                        {
+                            id = Convert.ToInt32(row["id"]),
+                            name = row["name"].ToString(),
+                            status = row["status"].ToString(),
+                            run_number = Convert.ToInt32(row["run_number"])
+                        });
+                    }
+                }
+                return Json(list, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpGet]
+        public JsonResult SearchRuns(string query)
+        {
+            try
+            {
+                var connector = new MySQLConnect()
+                {
+                    ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
+                };
+                string safeQuery = (query ?? "").Replace("'", "''");
+                var dt = connector.ExecuteQuery($"SELECT r.id, r.name, r.batch_id, r.status, b.name as batch_name, b.start_time, b.end_time FROM runs r INNER JOIN batches b ON r.batch_id = b.id WHERE r.name LIKE '%{safeQuery}%' ORDER BY r.id DESC LIMIT 10");
+                var list = new List<object>();
+                if (dt != null)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        string batchStart = row["start_time"] != DBNull.Value ? Convert.ToDateTime(row["start_time"]).ToString("yyyy/MM/dd") : "";
+                        string batchEnd = row["end_time"] != DBNull.Value ? Convert.ToDateTime(row["end_time"]).ToString("yyyy/MM/dd") : "";
+                        list.Add(new
+                        {
+                            value = Convert.ToInt32(row["id"]),
+                            label = row["name"].ToString(),
+                            batch_id = Convert.ToInt32(row["batch_id"]),
+                            batch_name = row["batch_name"].ToString(),
+                            status = row["status"].ToString(),
+                            batch_start = batchStart,
+                            batch_end = batchEnd
+                        });
+                    }
+                }
+                return Json(list, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {

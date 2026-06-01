@@ -83,7 +83,7 @@ namespace LongDucProject.Controllers
         }
 
         [HttpPost]
-        public JsonResult GetAlarmsData(string starttime, string endtime, string batchId, int draw, int start, int length, bool? isInitialLoad)
+        public JsonResult GetAlarmsData(string starttime, string endtime, string batchId, string runId, int draw, int start, int length, bool? isInitialLoad)
         {
             try
             {
@@ -95,10 +95,14 @@ namespace LongDucProject.Controllers
                 int parsedBatchId = 0;
                 bool hasBatchFilter = int.TryParse(batchId, out parsedBatchId) && parsedBatchId > 0;
 
+                int parsedRunId = 0;
+                bool hasRunFilter = int.TryParse(runId, out parsedRunId) && parsedRunId > 0;
+
                 DateTime startDate = DateTime.Today;
                 DateTime endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
 
                 int resolvedBatchId = 0;
+                int resolvedRunId = 0;
                 string batchDateStart = "";
                 string batchDateEnd = "";
 
@@ -149,6 +153,25 @@ namespace LongDucProject.Controllers
                         }
                         hasBatchFilter = true;
                         parsedBatchId = resolvedBatchId;
+
+                        // Try to find if there's an active run for this batch
+                        var dtActiveRun = connector.ExecuteQuery($"SELECT id FROM runs WHERE batch_id = {resolvedBatchId} AND status = 'Active' LIMIT 1");
+                        if (dtActiveRun != null && dtActiveRun.Rows.Count > 0)
+                        {
+                            resolvedRunId = Convert.ToInt32(dtActiveRun.Rows[0]["id"]);
+                            hasRunFilter = true;
+                            parsedRunId = resolvedRunId;
+                        }
+                        else
+                        {
+                            var dtLatestRun = connector.ExecuteQuery($"SELECT id FROM runs WHERE batch_id = {resolvedBatchId} ORDER BY id DESC LIMIT 1");
+                            if (dtLatestRun != null && dtLatestRun.Rows.Count > 0)
+                            {
+                                resolvedRunId = Convert.ToInt32(dtLatestRun.Rows[0]["id"]);
+                                hasRunFilter = true;
+                                parsedRunId = resolvedRunId;
+                            }
+                        }
                     }
                 }
                 else
@@ -179,12 +202,23 @@ namespace LongDucProject.Controllers
 
                 if (isInitialLoad == true && resolvedBatchId > 0)
                 {
-                    filterQuery = $" AND a.batchId = {resolvedBatchId}";
+                    if (hasRunFilter && resolvedRunId > 0)
+                    {
+                        filterQuery = $" AND a.runId = {resolvedRunId}";
+                    }
+                    else
+                    {
+                        filterQuery = $" AND a.batchId = {resolvedBatchId}";
+                    }
                 }
                 else
                 {
                     filterQuery = $" AND a.DateTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.DateTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
-                    if (hasBatchFilter)
+                    if (hasRunFilter)
+                    {
+                        filterQuery += $" AND a.runId = {parsedRunId}";
+                    }
+                    else if (hasBatchFilter)
                     {
                         filterQuery += $" AND a.batchId = {parsedBatchId}";
                     }
@@ -227,6 +261,7 @@ namespace LongDucProject.Controllers
                     recordsFiltered = recordsFiltered,
                     data = data,
                     resolvedBatchId = resolvedBatchId,
+                    resolvedRunId = resolvedRunId,
                     batchDateStart = batchDateStart,
                     batchDateEnd = batchDateEnd
                 });
@@ -245,36 +280,111 @@ namespace LongDucProject.Controllers
         }
 
         [HttpPost]
-        public JsonResult GetAlarmReportData(string starttime, string endtime, string batchId, int draw, int start, int length)
+        public JsonResult GetAlarmReportData(string starttime, string endtime, string batchId, string runId, int draw, int start, int length)
         {
-            // TODO: Replace with actual query to `alarmreport` table if different from `realtime_alarms`.
-            // Currently using GetAlarmLog as a fallback placeholder.
-            var Alarm = new AlarmCommon();
-            var resultList = Alarm.GetAlarmLog(starttime, endtime);
-            var list = resultList != null ? resultList.ToList() : new List<Hino.Parameter.Common.AlarmParameter>();
-
-            var searchValue = Request.Form["search[value]"];
-            if (!string.IsNullOrEmpty(searchValue))
+            try
             {
-                list = list.Where(x => 
-                    (x.Description != null && x.Description.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) || 
-                    (x.TagNo != null && x.TagNo.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
-                ).ToList();
+                var connector = new MySQLConnect()
+                {
+                    ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
+                };
+
+                int parsedBatchId = 0;
+                bool hasBatchFilter = int.TryParse(batchId, out parsedBatchId) && parsedBatchId > 0;
+
+                int parsedRunId = 0;
+                bool hasRunFilter = int.TryParse(runId, out parsedRunId) && parsedRunId > 0;
+
+                DateTime startDate = DateTime.Today;
+                DateTime endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
+
+                if (!string.IsNullOrEmpty(starttime))
+                {
+                    DateTime.TryParseExact(starttime, new[] { "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out startDate);
+                }
+
+                if (!string.IsNullOrEmpty(endtime))
+                {
+                    DateTime.TryParseExact(endtime, new[] { "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out endDate);
+                    if (endDate.TimeOfDay == TimeSpan.Zero)
+                    {
+                        endDate = endDate.Date.AddDays(1).AddSeconds(-1);
+                    }
+                }
+
+                string baseQuery = "FROM alarmlog a INNER JOIN batches b ON a.batchId = b.id WHERE 1=1";
+                string filterQuery = $" AND a.OccurrenceTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.OccurrenceTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
+
+                if (hasRunFilter)
+                {
+                    filterQuery += $" AND a.runId = {parsedRunId}";
+                }
+                else if (hasBatchFilter)
+                {
+                    filterQuery += $" AND a.batchId = {parsedBatchId}";
+                }
+
+                var searchValue = Request.Form["search[value]"];
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    filterQuery += $" AND (a.Description LIKE '%{searchValue.Replace("'", "''")}%' OR a.TagNo LIKE '%{searchValue.Replace("'", "''")}%')";
+                }
+
+                string countQuery = $"SELECT COUNT(*) {baseQuery} {filterQuery}";
+                int recordsFiltered = Convert.ToInt32(connector.ExecuteScalarQuery(countQuery));
+                int recordsTotal = recordsFiltered;
+
+                string dataQuery = $"SELECT a.OccurrenceTime, a.RestoreTime, a.Description, a.Status, a.TagNo, b.name AS BatchName {baseQuery} {filterQuery} ORDER BY a.OccurrenceTime DESC, a.id DESC LIMIT {length} OFFSET {start}";
+
+                var data = new List<object>();
+                var dt = connector.ExecuteQuery(dataQuery);
+                if (dt != null)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        var occurrenceTimeVal = row["OccurrenceTime"] != DBNull.Value ? Convert.ToDateTime(row["OccurrenceTime"]) : DateTime.MinValue;
+                        var restoreTimeVal = row["RestoreTime"] != DBNull.Value ? Convert.ToDateTime(row["RestoreTime"]) : (DateTime?)null;
+
+                        string occurrenceTimeStr = occurrenceTimeVal != DateTime.MinValue ? occurrenceTimeVal.ToString("yyyy/MM/dd HH:mm:ss") : "-";
+                        string restoreTimeStr = restoreTimeVal.HasValue ? restoreTimeVal.Value.ToString("yyyy/MM/dd HH:mm:ss") : "-";
+
+                        data.Add(new
+                        {
+                            count = start + data.Count + 1,
+                            OccurrenceTime = occurrenceTimeStr,
+                            RestoreTime = restoreTimeStr,
+                            TagNo = row["TagNo"].ToString(),
+                            Location = "",
+                            FaultCode = 0,
+                            Description = row["Description"].ToString(),
+                            Status = row["Status"].ToString()
+                        });
+                    }
+                }
+
+                return Json(new
+                {
+                    draw = draw,
+                    recordsTotal = recordsTotal,
+                    recordsFiltered = recordsFiltered,
+                    data = data
+                });
             }
-
-            int recordsTotal = list.Count;
-            var data = list.Skip(start).Take(length).ToList();
-
-            return Json(new {
-                draw = draw,
-                recordsTotal = recordsTotal,
-                recordsFiltered = recordsTotal,
-                data = data
-            });
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    draw = draw,
+                    recordsTotal = 0,
+                    recordsFiltered = 0,
+                    data = new List<object>(),
+                    error = ex.Message
+                });
+            }
         }
 
         [HttpGet]
-        public FileResult ExportAlarmsExcel(string starttime, string endtime, string batchId, string searchValue)
+        public FileResult ExportAlarmsExcel(string starttime, string endtime, string batchId, string runId, string searchValue)
         {
             if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
             {
@@ -288,6 +398,9 @@ namespace LongDucProject.Controllers
 
             int parsedBatchId = 0;
             bool hasBatchFilter = int.TryParse(batchId, out parsedBatchId) && parsedBatchId > 0;
+
+            int parsedRunId = 0;
+            bool hasRunFilter = int.TryParse(runId, out parsedRunId) && parsedRunId > 0;
 
             DateTime startDate = DateTime.Today;
             DateTime endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
@@ -315,7 +428,11 @@ namespace LongDucProject.Controllers
             string baseQuery = "FROM realtime_alarms a INNER JOIN batches b ON a.batchId = b.id WHERE a.Severity IN ('ALARM', 'WARNING')";
             string filterQuery = $" AND a.DateTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.DateTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
 
-            if (hasBatchFilter)
+            if (hasRunFilter)
+            {
+                filterQuery += $" AND a.runId = {parsedRunId}";
+            }
+            else if (hasBatchFilter)
             {
                 filterQuery += $" AND a.batchId = {parsedBatchId}";
             }
@@ -353,7 +470,7 @@ namespace LongDucProject.Controllers
         }
 
         [HttpGet]
-        public FileResult ExportAlarmsCsv(string starttime, string endtime, string batchId, string searchValue)
+        public FileResult ExportAlarmsCsv(string starttime, string endtime, string batchId, string runId, string searchValue)
         {
             if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
             {
@@ -367,6 +484,9 @@ namespace LongDucProject.Controllers
 
             int parsedBatchId = 0;
             bool hasBatchFilter = int.TryParse(batchId, out parsedBatchId) && parsedBatchId > 0;
+
+            int parsedRunId = 0;
+            bool hasRunFilter = int.TryParse(runId, out parsedRunId) && parsedRunId > 0;
 
             DateTime startDate = DateTime.Today;
             DateTime endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
@@ -394,7 +514,11 @@ namespace LongDucProject.Controllers
             string baseQuery = "FROM realtime_alarms a INNER JOIN batches b ON a.batchId = b.id WHERE a.Severity IN ('ALARM', 'WARNING')";
             string filterQuery = $" AND a.DateTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.DateTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
 
-            if (hasBatchFilter)
+            if (hasRunFilter)
+            {
+                filterQuery += $" AND a.runId = {parsedRunId}";
+            }
+            else if (hasBatchFilter)
             {
                 filterQuery += $" AND a.batchId = {parsedBatchId}";
             }
@@ -432,22 +556,85 @@ namespace LongDucProject.Controllers
         }
 
         [HttpGet]
-        public FileResult ExportAlarmReportExcel(string starttime, string endtime, string batchId, string searchValue)
+        public FileResult ExportAlarmReportExcel(string starttime, string endtime, string batchId, string runId, string searchValue)
         {
             if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
             {
                 throw new HttpException(403, "Bạn không có quyền thực hiện hành động này.");
             }
 
-            var Alarm = new AlarmCommon();
-            var list = Alarm.GetAlarmLog(starttime, endtime) ?? new List<Hino.Parameter.Common.AlarmParameter>();
+            var connector = new MySQLConnect()
+            {
+                ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
+            };
+
+            int parsedBatchId = 0;
+            bool hasBatchFilter = int.TryParse(batchId, out parsedBatchId) && parsedBatchId > 0;
+
+            int parsedRunId = 0;
+            bool hasRunFilter = int.TryParse(runId, out parsedRunId) && parsedRunId > 0;
+
+            DateTime startDate = DateTime.Today;
+            DateTime endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
+
+            if (!string.IsNullOrEmpty(starttime))
+            {
+                DateTime.TryParseExact(starttime, new[] { "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out startDate);
+            }
+
+            if (!string.IsNullOrEmpty(endtime))
+            {
+                DateTime.TryParseExact(endtime, new[] { "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out endDate);
+                if (endDate.TimeOfDay == TimeSpan.Zero)
+                {
+                    endDate = endDate.Date.AddDays(1).AddSeconds(-1);
+                }
+            }
+
+            string baseQuery = "FROM alarmlog a INNER JOIN batches b ON a.batchId = b.id WHERE 1=1";
+            string filterQuery = $" AND a.OccurrenceTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.OccurrenceTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
+
+            if (hasRunFilter)
+            {
+                filterQuery += $" AND a.runId = {parsedRunId}";
+            }
+            else if (hasBatchFilter)
+            {
+                filterQuery += $" AND a.batchId = {parsedBatchId}";
+            }
 
             if (!string.IsNullOrEmpty(searchValue))
             {
-                list = list.Where(x => 
-                    (x.Description != null && x.Description.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) || 
-                    (x.TagNo != null && x.TagNo.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
-                ).ToList();
+                filterQuery += $" AND (a.Description LIKE '%{searchValue.Replace("'", "''")}%' OR a.TagNo LIKE '%{searchValue.Replace("'", "''")}%')";
+            }
+
+            string query = $"SELECT a.OccurrenceTime, a.RestoreTime, a.Description, a.Status, a.TagNo, b.name AS BatchName {baseQuery} {filterQuery} ORDER BY a.OccurrenceTime DESC, a.id DESC";
+
+            var list = new List<Hino.Parameter.Common.AlarmParameter>();
+            var dt = connector.ExecuteQuery(query);
+            if (dt != null)
+            {
+                int index = 1;
+                foreach (DataRow row in dt.Rows)
+                {
+                    var occurrenceTimeVal = row["OccurrenceTime"] != DBNull.Value ? Convert.ToDateTime(row["OccurrenceTime"]) : DateTime.MinValue;
+                    var restoreTimeVal = row["RestoreTime"] != DBNull.Value ? Convert.ToDateTime(row["RestoreTime"]) : (DateTime?)null;
+
+                    string occurrenceTimeStr = occurrenceTimeVal != DateTime.MinValue ? occurrenceTimeVal.ToString("yyyy/MM/dd HH:mm:ss") : "-";
+                    string restoreTimeStr = restoreTimeVal.HasValue ? restoreTimeVal.Value.ToString("yyyy/MM/dd HH:mm:ss") : "-";
+
+                    list.Add(new Hino.Parameter.Common.AlarmParameter
+                    {
+                        count = index++,
+                        OccurrenceTime = occurrenceTimeStr,
+                        RestoreTime = restoreTimeStr,
+                        TagNo = row["TagNo"].ToString(),
+                        Location = "",
+                        FaultCode = 0,
+                        Description = row["Description"].ToString(),
+                        Status = row["Status"].ToString()
+                    });
+                }
             }
 
             byte[] fileBytes = LongDucProjectTest.Service.ExportUtility.ExportToExcel(list, "AlarmReport");
@@ -455,22 +642,85 @@ namespace LongDucProject.Controllers
         }
 
         [HttpGet]
-        public FileResult ExportAlarmReportCsv(string starttime, string endtime, string batchId, string searchValue)
+        public FileResult ExportAlarmReportCsv(string starttime, string endtime, string batchId, string runId, string searchValue)
         {
             if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
             {
                 throw new HttpException(403, "Bạn không có quyền thực hiện hành động này.");
             }
 
-            var Alarm = new AlarmCommon();
-            var list = Alarm.GetAlarmLog(starttime, endtime) ?? new List<Hino.Parameter.Common.AlarmParameter>();
+            var connector = new MySQLConnect()
+            {
+                ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
+            };
+
+            int parsedBatchId = 0;
+            bool hasBatchFilter = int.TryParse(batchId, out parsedBatchId) && parsedBatchId > 0;
+
+            int parsedRunId = 0;
+            bool hasRunFilter = int.TryParse(runId, out parsedRunId) && parsedRunId > 0;
+
+            DateTime startDate = DateTime.Today;
+            DateTime endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
+
+            if (!string.IsNullOrEmpty(starttime))
+            {
+                DateTime.TryParseExact(starttime, new[] { "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out startDate);
+            }
+
+            if (!string.IsNullOrEmpty(endtime))
+            {
+                DateTime.TryParseExact(endtime, new[] { "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out endDate);
+                if (endDate.TimeOfDay == TimeSpan.Zero)
+                {
+                    endDate = endDate.Date.AddDays(1).AddSeconds(-1);
+                }
+            }
+
+            string baseQuery = "FROM alarmlog a INNER JOIN batches b ON a.batchId = b.id WHERE 1=1";
+            string filterQuery = $" AND a.OccurrenceTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.OccurrenceTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
+
+            if (hasRunFilter)
+            {
+                filterQuery += $" AND a.runId = {parsedRunId}";
+            }
+            else if (hasBatchFilter)
+            {
+                filterQuery += $" AND a.batchId = {parsedBatchId}";
+            }
 
             if (!string.IsNullOrEmpty(searchValue))
             {
-                list = list.Where(x => 
-                    (x.Description != null && x.Description.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0) || 
-                    (x.TagNo != null && x.TagNo.IndexOf(searchValue, StringComparison.OrdinalIgnoreCase) >= 0)
-                ).ToList();
+                filterQuery += $" AND (a.Description LIKE '%{searchValue.Replace("'", "''")}%' OR a.TagNo LIKE '%{searchValue.Replace("'", "''")}%')";
+            }
+
+            string query = $"SELECT a.OccurrenceTime, a.RestoreTime, a.Description, a.Status, a.TagNo, b.name AS BatchName {baseQuery} {filterQuery} ORDER BY a.OccurrenceTime DESC, a.id DESC";
+
+            var list = new List<Hino.Parameter.Common.AlarmParameter>();
+            var dt = connector.ExecuteQuery(query);
+            if (dt != null)
+            {
+                int index = 1;
+                foreach (DataRow row in dt.Rows)
+                {
+                    var occurrenceTimeVal = row["OccurrenceTime"] != DBNull.Value ? Convert.ToDateTime(row["OccurrenceTime"]) : DateTime.MinValue;
+                    var restoreTimeVal = row["RestoreTime"] != DBNull.Value ? Convert.ToDateTime(row["RestoreTime"]) : (DateTime?)null;
+
+                    string occurrenceTimeStr = occurrenceTimeVal != DateTime.MinValue ? occurrenceTimeVal.ToString("yyyy/MM/dd HH:mm:ss") : "-";
+                    string restoreTimeStr = restoreTimeVal.HasValue ? restoreTimeVal.Value.ToString("yyyy/MM/dd HH:mm:ss") : "-";
+
+                    list.Add(new Hino.Parameter.Common.AlarmParameter
+                    {
+                        count = index++,
+                        OccurrenceTime = occurrenceTimeStr,
+                        RestoreTime = restoreTimeStr,
+                        TagNo = row["TagNo"].ToString(),
+                        Location = "",
+                        FaultCode = 0,
+                        Description = row["Description"].ToString(),
+                        Status = row["Status"].ToString()
+                    });
+                }
             }
 
             byte[] fileBytes = LongDucProjectTest.Service.ExportUtility.ExportToCsv(list);
