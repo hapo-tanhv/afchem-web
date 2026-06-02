@@ -1,4 +1,4 @@
-﻿var activepower;
+var activepower;
 
 var temperature;
 
@@ -491,6 +491,19 @@ document.addEventListener("DOMContentLoaded", function () {
         dataCollection.add(`AFChemTX01.ThoiGianTron2`);
         dataCollection.add(`AFChemTX01.ThoiGianXaHang`);
         dataCollection.add(`AFChemTX01.ThoiGianRungXaHang`);
+        dataCollection.add(`AFChemTX01.Run`);
+        dataCollection.add(`AFChemTX01.Stop`);
+        dataCollection.add(`AFChemTX01.CaiDatApSuat`);
+        dataCollection.add(`AFChemTX01.DatNguongNhietDoMoiTruong`);
+        dataCollection.add(`AFChemTX01.DatNguongDoAmMoiTruong`);
+        dataCollection.add(`AFChemTX01.ThoiGianCaiDatCapLieu`);
+        dataCollection.add(`AFChemTX01.ThoiGianCaiDatTron1`);
+        dataCollection.add(`AFChemTX01.ThoiGianCaiDatXaDay`);
+        dataCollection.add(`AFChemTX01.ThoiGianCaiDatRungXaDay`);
+        dataCollection.add(`AFChemTX01.ThoiGianCaiDatHutXaDayThem`);
+        dataCollection.add(`AFChemTX01.ThoiGianCaiDatTron2`);
+        dataCollection.add(`AFChemTX01.ThoiGianCaiDatXaHang`);
+        dataCollection.add(`AFChemTX01.ThoiGianCaiDatRungXaHang`);
 
         // Thêm tag nếu cần (các tag mới sẽ được cập nhật ở phase sau nếu kết nối PLC thật)
 
@@ -498,7 +511,9 @@ document.addEventListener("DOMContentLoaded", function () {
             updateTag(dataCollection.get(`AFChemTX01.NhietDoMoiTruong`), document.querySelector('#AmbientTemp'), function(val) {
                 latestNhietDoMoiTruong = val;
             });
+            updateTag(dataCollection.get(`AFChemTX01.DatNguongNhietDoMoiTruong`), document.querySelector('#AmbientTempStandard'), updateCalculatedTime);
             updateTag(dataCollection.get(`AFChemTX01.DoAmMoiTruong`), document.querySelector('#Humidity'));
+            updateTag(dataCollection.get(`AFChemTX01.DatNguongDoAmMoiTruong`), document.querySelector('#HumidityStandard'));
             updateTag(dataCollection.get(`AFChemTX01.NhietDoBonTronTren`), document.querySelector('#TankDiagramTempTop'));
             updateTag(dataCollection.get(`AFChemTX01.NhietDoBonTronGiua`), document.querySelector('#TankDiagramTemp'), function(val) {
                 latestNhietDoBonTronGiua = val;
@@ -507,14 +522,25 @@ document.addEventListener("DOMContentLoaded", function () {
             updateTag(dataCollection.get(`AFChemTX01.ApSuat`), document.querySelector('#TankDiagramPressure'), function(val) {
                 latestApSuat = val;
             });
+            updateTag(dataCollection.get(`AFChemTX01.CaiDatApSuat`), document.querySelector('#TankDiagramPressureStandard'), function (val) {
+                latestApSuat = val;
+            });
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianCapLieu`), document.querySelector('#feedingTime'), updateCalculatedTime);
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatCapLieu`), document.querySelector('#feedingTimeStandard'), updateCalculatedTime);
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianTron1`), document.querySelector('#mix1Time'), updateCalculatedTime);
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatTron1`), document.querySelector('#mix1TimeStandard'), updateCalculatedTime);
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianXaDay`), document.querySelector('#bottomDischargeTime'), updateCalculatedTime);
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatXaDay`), document.querySelector('#bottomDischargeTimeStandard'), updateCalculatedTime);
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaDay`), document.querySelector('#bottomDischargeVibrationTime'), updateCalculatedTime);
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatRungXaDay`), document.querySelector('#bottomDischargeVibrationTimeStandard'), updateCalculatedTime);
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianHutXaDay`), document.querySelector('#bottomSuctionDischargeTime'), updateCalculatedTime);
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatHutXaDayThem`), document.querySelector('#bottomSuctionDischargeTimeStandard'), updateCalculatedTime);
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianTron2`), document.querySelector('#mix2Time'), updateCalculatedTime);
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatTron2`), document.querySelector('#mix2TimeStandard'), updateCalculatedTime);
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianXaHang`), document.querySelector('#clearanceSaleTime'), updateCalculatedTime);
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatXaHang`), document.querySelector('#clearanceSaleTimeStandard'), updateCalculatedTime);
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaHang`), document.querySelector('#vibrationDischargeTime'), updateCalculatedTime);
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatRungXaHang`), document.querySelector('#vibrationDischargeTimeStandard'), updateCalculatedTime);
 
             // Periodically update charts every 5 seconds (with debounce / performance throttling)
 
@@ -829,26 +855,38 @@ function LineChart() {
 function updateLineChart(ambientTemp, machineTemp, pressure) {
     if (!window.lineChartInstance || !window.lineChartInstance.series) return;
     var chart = window.lineChartInstance;
-    var shift = chart.series[0].data.length >= 30; // Keep last 30 points
-    // Get current time for x-axis in HH:mm:ss format
 
     var now = new Date();
     var timeStr = (now.getHours() < 10 ? '0' : '') + now.getHours() + ':' +
                   (now.getMinutes() < 10 ? '0' : '') + now.getMinutes() + ':' +
                   (now.getSeconds() < 10 ? '0' : '') + now.getSeconds();
 
-    // Add new data points (numeric values only to correctly map with indexed categories)
-    chart.series[0].addPoint(Number(ambientTemp) || 0, true, shift);
-    chart.series[1].addPoint(Number(machineTemp) || 0, true, shift);
-    chart.series[2].addPoint(Number(pressure) || 0, true, shift);
-
     // Update categories (x-axis)
     var categories = chart.xAxis[0].categories || [];
     categories.push(timeStr);
-    if (categories.length > 30) {
+    if (categories.length > 10) {
         categories.shift();
     }
-    chart.xAxis[0].setCategories(categories, true);
+    chart.xAxis[0].setCategories(categories, false);
+
+    // Update series data using setData to keep indices aligned to 0-9 and prevent index drift
+    for (var i = 0; i < chart.series.length; i++) {
+        var series = chart.series[i];
+        var data = series.data.map(function(p) { return p.y; });
+        
+        var val = 0;
+        if (i === 0) val = Number(ambientTemp) || 0;
+        else if (i === 1) val = Number(machineTemp) || 0;
+        else if (i === 2) val = Number(pressure) || 0;
+        
+        data.push(val);
+        if (data.length > 10) {
+            data.shift();
+        }
+        series.setData(data, false);
+    }
+
+    chart.redraw();
 }
 
 function PressureChart() {
