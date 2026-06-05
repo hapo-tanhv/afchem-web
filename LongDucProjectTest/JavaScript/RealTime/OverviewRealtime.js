@@ -10,6 +10,19 @@ var selectedRunId = null;
 var activeRunId = null;
 window.isHistoricView = false;
 
+window.plcStandardTimes = {
+    1: 720,
+    2: 780,
+    3: 600,
+    4: 600,
+    5: 720,
+    6: 1200,
+    7: 1500,
+    8: 180
+};
+
+window.currentSteps = null;
+
 document.addEventListener("DOMContentLoaded", function () {
 
     var activeStepTimer = null;
@@ -228,8 +241,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 if (data && data.steps) {
                     currentSteps = data.steps;
+                    window.currentSteps = data.steps;
                     if (typeof renderBatchTable === 'function') {
                         renderBatchTable(data.steps);
+                    }
+                }
+
+                if (data && data.bom) {
+                    if (typeof renderBOMTable === 'function') {
+                        renderBOMTable(data.bom);
                     }
                 }
 
@@ -260,14 +280,18 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (batchNumEl) batchNumEl.innerHTML = batchInfo.runName || batchInfo.batchName || "-";
                     var batchNumberInfoEl = document.getElementById("batchNumberInfo");
                     if (batchNumberInfoEl) batchNumberInfoEl.innerHTML = batchInfo.batchName || "-";
+                    
+                    // Update batch overview details from batches table
+                    var batchProductNameEl = document.getElementById("batchProductName");
+                    if (batchProductNameEl) batchProductNameEl.innerHTML = batchInfo.productName || "-";
+                    var batchTargetWeightEl = document.getElementById("batchTargetWeight");
+                    if (batchTargetWeightEl) batchTargetWeightEl.innerHTML = batchInfo.targetWeightStr || "-";
+                    var batchActualWeightEl = document.getElementById("batchActualWeight");
+                    if (batchActualWeightEl) batchActualWeightEl.innerHTML = batchInfo.actualWeightStr || "-";
+
                     var batchStartTimeInfoEl = document.getElementById("batchStartTimeInfo");
                     if (batchStartTimeInfoEl) {
-                        if (batchInfo.batchStartTime) {
-                            var timePart = batchInfo.batchStartTime.split(' ')[1] || batchInfo.batchStartTime;
-                            batchStartTimeInfoEl.innerHTML = timePart;
-                        } else {
-                            batchStartTimeInfoEl.innerHTML = "-";
-                        }
+                        batchStartTimeInfoEl.innerHTML = batchInfo.batchActualStart || "-";
                     }
 
                     var stepEl = document.getElementById("step");
@@ -312,9 +336,27 @@ document.addEventListener("DOMContentLoaded", function () {
                         batchStartTime = new Date(batchInfo.batchStartTime.replace(/-/g, '/')).getTime();
                     }
 
+                    function getStandardTotalTime() {
+                        if (window.isHistoricView) {
+                            var total = 0;
+                            if (window.currentSteps && window.currentSteps.length > 0) {
+                                window.currentSteps.forEach(function(step) {
+                                    total += parseInt(step.standard) || 0;
+                                });
+                            }
+                            return total || 6300;
+                        } else {
+                            var total = 0;
+                            for (var code in window.plcStandardTimes) {
+                                total += window.plcStandardTimes[code];
+                            }
+                            return total;
+                        }
+                    }
+
                     function updateStepStatsUI() {
                         var elapsed = 0;
-                        var totalStdTime = 6300; // sum of standard times of all steps: 720+780+600+600+720+1200+1500+180
+                        var totalStdTime = getStandardTotalTime();
 
                         if (batchInfo.machineStatus === "COMPLETED" || window.isHistoricView) {
                             var currentStepEl = document.getElementById("statCurrentStep");
@@ -373,6 +415,53 @@ document.addEventListener("DOMContentLoaded", function () {
                             var progressFillEl = document.getElementById("statProgressFill");
                             if (progressFillEl) {
                                 progressFillEl.style.width = progressPercent + "%";
+                            }
+                        }
+
+                        // Calculate remaining and estimated end times for the batch
+                        var batchEstimatedEndTimeEl = document.getElementById("batchEstimatedEndTime");
+                        var batchRemainingTimeEl = document.getElementById("batchRemainingTime");
+                        
+                        if (batchInfo.batchStatus === "Completed" || batchInfo.machineStatus === "COMPLETED") {
+                            if (batchEstimatedEndTimeEl) {
+                                if (batchInfo.batchEndTime) {
+                                    var timePart = batchInfo.batchEndTime.split(' ')[1] || batchInfo.batchEndTime;
+                                    batchEstimatedEndTimeEl.innerHTML = timePart;
+                                } else {
+                                    batchEstimatedEndTimeEl.innerHTML = "-";
+                                }
+                            }
+                            if (batchRemainingTimeEl) batchRemainingTimeEl.innerHTML = "0s";
+                        } else {
+                            // Batch is running
+                            var totalRuns = batchInfo.totalRuns || 1;
+                            var completedRuns = batchInfo.completedRuns || 0;
+                            
+                            // Remaining runs (including current active one)
+                            var remainingRuns = Math.max(0, totalRuns - completedRuns);
+                            
+                            // Estimated remaining seconds for the batch
+                            var remainingSeconds = Math.max(0, (remainingRuns * totalStdTime) - elapsed);
+                            
+                            if (batchRemainingTimeEl) {
+                                if (remainingSeconds > 0) {
+                                    var h = Math.floor(remainingSeconds / 3600);
+                                    var m = Math.floor((remainingSeconds % 3600) / 60);
+                                    var s = remainingSeconds % 60;
+                                    var timeStr = (h > 0 ? h + "h " : "") + (m > 0 || h > 0 ? m + "m " : "") + s + "s";
+                                    batchRemainingTimeEl.innerHTML = timeStr;
+                                } else {
+                                    batchRemainingTimeEl.innerHTML = "0s";
+                                }
+                            }
+                            
+                            if (batchEstimatedEndTimeEl) {
+                                var now = new Date();
+                                var estEnd = new Date(now.getTime() + remainingSeconds * 1000);
+                                var estEndStr = (estEnd.getHours() < 10 ? '0' : '') + estEnd.getHours() + ':' +
+                                                (estEnd.getMinutes() < 10 ? '0' : '') + estEnd.getMinutes() + ':' +
+                                                (estEnd.getSeconds() < 10 ? '0' : '') + estEnd.getSeconds();
+                                batchEstimatedEndTimeEl.innerHTML = estEndStr;
                             }
                         }
                     }
@@ -525,22 +614,61 @@ document.addEventListener("DOMContentLoaded", function () {
             updateTag(dataCollection.get(`AFChemTX01.CaiDatApSuat`), document.querySelector('#TankDiagramPressureStandard'), function (val) {
                 latestApSuat = val;
             });
+            function updateCalculatedTimeAndStandards() {
+                updateCalculatedTime();
+                var stdTimeEl = document.getElementById("statStandardTime");
+                if (stdTimeEl) {
+                    var total = 0;
+                    for (var code in window.plcStandardTimes) {
+                        total += window.plcStandardTimes[code];
+                    }
+                    stdTimeEl.innerHTML = total;
+                }
+                if (typeof renderBatchTable === 'function' && window.currentSteps) {
+                    renderBatchTable(window.currentSteps);
+                }
+            }
+
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianCapLieu`), document.querySelector('#feedingTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatCapLieu`), document.querySelector('#feedingTimeStandard'), updateCalculatedTime);
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatCapLieu`), document.querySelector('#feedingTimeStandard'), function(val) {
+                window.plcStandardTimes[1] = parseInt(val) || 0;
+                updateCalculatedTimeAndStandards();
+            });
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianTron1`), document.querySelector('#mix1Time'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatTron1`), document.querySelector('#mix1TimeStandard'), updateCalculatedTime);
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatTron1`), document.querySelector('#mix1TimeStandard'), function(val) {
+                window.plcStandardTimes[2] = parseInt(val) || 0;
+                updateCalculatedTimeAndStandards();
+            });
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianXaDay`), document.querySelector('#bottomDischargeTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatXaDay`), document.querySelector('#bottomDischargeTimeStandard'), updateCalculatedTime);
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatXaDay`), document.querySelector('#bottomDischargeTimeStandard'), function(val) {
+                window.plcStandardTimes[3] = parseInt(val) || 0;
+                updateCalculatedTimeAndStandards();
+            });
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaDay`), document.querySelector('#bottomDischargeVibrationTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatRungXaDay`), document.querySelector('#bottomDischargeVibrationTimeStandard'), updateCalculatedTime);
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatRungXaDay`), document.querySelector('#bottomDischargeVibrationTimeStandard'), function(val) {
+                window.plcStandardTimes[4] = parseInt(val) || 0;
+                updateCalculatedTimeAndStandards();
+            });
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianHutXaDay`), document.querySelector('#bottomSuctionDischargeTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatHutXaDayThem`), document.querySelector('#bottomSuctionDischargeTimeStandard'), updateCalculatedTime);
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatHutXaDayThem`), document.querySelector('#bottomSuctionDischargeTimeStandard'), function(val) {
+                window.plcStandardTimes[5] = parseInt(val) || 0;
+                updateCalculatedTimeAndStandards();
+            });
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianTron2`), document.querySelector('#mix2Time'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatTron2`), document.querySelector('#mix2TimeStandard'), updateCalculatedTime);
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatTron2`), document.querySelector('#mix2TimeStandard'), function(val) {
+                window.plcStandardTimes[6] = parseInt(val) || 0;
+                updateCalculatedTimeAndStandards();
+            });
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianXaHang`), document.querySelector('#clearanceSaleTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatXaHang`), document.querySelector('#clearanceSaleTimeStandard'), updateCalculatedTime);
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatXaHang`), document.querySelector('#clearanceSaleTimeStandard'), function(val) {
+                window.plcStandardTimes[7] = parseInt(val) || 0;
+                updateCalculatedTimeAndStandards();
+            });
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaHang`), document.querySelector('#vibrationDischargeTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatRungXaHang`), document.querySelector('#vibrationDischargeTimeStandard'), updateCalculatedTime);
+            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatRungXaHang`), document.querySelector('#vibrationDischargeTimeStandard'), function(val) {
+                window.plcStandardTimes[8] = parseInt(val) || 0;
+                updateCalculatedTimeAndStandards();
+            });
 
             // Periodically update charts every 5 seconds (with debounce / performance throttling)
 

@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewBag.Title = "SOLAR SCADA SYSTEM - OVERVIEW";
     ViewBag.ButtonHome = "active";
     ViewBag.ButtonOverview = "";
@@ -432,15 +432,15 @@
                     </div>
                     <div class="info-row border-bottom-subtle">
                         <span class="info-label">Sản phẩm</span>
-                        <span class="info-value text-white font-weight-bold">Jelly Powder JP-01</span>
+                        <span class="info-value text-white font-weight-bold" id="batchProductName">-</span>
                     </div>
                     <div class="info-row border-bottom-subtle">
                         <span class="info-label">Sản lượng kế hoạch</span>
-                        <span class="info-value text-white font-weight-bold">2.000 KG</span>
+                        <span class="info-value text-white font-weight-bold" id="batchTargetWeight">-</span>
                     </div>
                     <div class="info-row border-bottom-subtle" style="margin-bottom: 10px;">
                         <span class="info-label">Sản lượng đã SX</span>
-                        <span class="info-value text-white font-weight-bold">1.000 KG (50%)</span>
+                        <span class="info-value text-white font-weight-bold" id="batchActualWeight">-</span>
                     </div>
                     <div class="info-row border-bottom-subtle">
                         <span class="info-label">Thời gian bắt đầu mẻ</span>
@@ -448,11 +448,11 @@
                     </div>
                     <div class="info-row border-bottom-subtle">
                         <span class="info-label">Thời gian dự kiến kết thúc</span>
-                        <span class="info-value text-white font-weight-bold">15:33:00</span>
+                        <span class="info-value text-white font-weight-bold" id="batchEstimatedEndTime">-</span>
                     </div>
                     <div class="info-row border-bottom-subtle">
                         <span class="info-label">Thời gian còn lại mẻ</span>
-                        <span class="info-value text-white font-weight-bold">1h 20m 35s</span>
+                        <span class="info-value text-white font-weight-bold" id="batchRemainingTime">-</span>
                     </div>
                 </div>
             </div>
@@ -563,42 +563,7 @@
                             <th class="th-lot">LOT NVL</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td class="td-code">AF-01</td>
-                            <td class="td-name">153</td>
-                            <td class="td-ratio">600</td>
-                            <td class="td-unit">kg</td>
-                            <td class="td-lot">20251222TRF</td>
-                        </tr>
-                        <tr>
-                            <td class="td-code">AF-24</td>
-                            <td class="td-name">140</td>
-                            <td class="td-ratio">560</td>
-                            <td class="td-unit">kg</td>
-                            <td class="td-lot">20260306TA</td>
-                        </tr>
-                        <tr>
-                            <td class="td-code">AF-30</td>
-                            <td class="td-name">65</td>
-                            <td class="td-ratio">260</td>
-                            <td class="td-unit">kg</td>
-                            <td class="td-lot">8820100105</td>
-                        </tr>
-                        <tr>
-                            <td class="td-code">AF-39</td>
-                            <td class="td-name">13</td>
-                            <td class="td-ratio">110</td>
-                            <td class="td-unit">kg</td>
-                            <td class="td-lot">1235101011</td>
-                        </tr>
-                        <tr>
-                            <td class="td-code">CITRIC ACID</td>
-                            <td class="td-name">10</td>
-                            <td class="td-ratio">40</td>
-                            <td class="td-unit">kg</td>
-                            <td class="td-lot">BP00012-2</td>
-                        </tr>
+                    <tbody id="bomTableBody">
                     </tbody>
                 </table>
             </div>
@@ -664,13 +629,20 @@
         const tbody = document.getElementById('batchTableBody');
         if (!tbody) return;
         let html = '';
-        data.forEach(step => {
+        data.forEach((step, index) => {
             const rowActive = step.status === 'in-progress' ? 'row-active' : '';
-            const durationColor = (step.duration && step.duration !== '-' && parseInt(step.duration) > parseInt(step.standard)) ? 'text-warning' : '';
+            
+            // Get standard time: use PLC realtime value if not historic view
+            let standardVal = step.standard;
+            if (!window.isHistoricView && window.plcStandardTimes && window.plcStandardTimes[index + 1] !== undefined) {
+                standardVal = window.plcStandardTimes[index + 1] + 's';
+            }
+            
+            const durationColor = (step.duration && step.duration !== '-' && parseInt(step.duration) > parseInt(standardVal)) ? 'text-warning' : '';
             const tempColor = step.status === 'pending' ? 'text-cyan' : '';
             html += `<tr class="${rowActive}">
     <td class="td-process">${step.process}</td>
-    <td class="td-standard">${step.standard}</td>
+    <td class="td-standard">${standardVal}</td>
     <td class="td-start">${step.start}</td>
     <td class="td-end">${step.end}</td>
     <td class="td-duration ${durationColor}">${step.duration}</td>
@@ -770,6 +742,25 @@
     </div>`;
         });
         container.innerHTML = html;
+    }
+    function renderBOMTable(bom) {
+        const tbody = document.getElementById('bomTableBody');
+        if (!tbody) return;
+        if (!bom || bom.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="color: #94a3b8; padding: 20px; text-align: center;">Không có dữ liệu BOM</td></tr>';
+            return;
+        }
+        let html = '';
+        bom.forEach(item => {
+            html += `<tr>
+                <td class="td-code">${item.material_code || item.code || '-'}</td>
+                <td class="td-name">${item.quantity !== null && item.quantity !== undefined ? item.quantity : '-'}</td>
+                <td class="td-ratio">${item.value || '-'}</td>
+                <td class="td-unit">${item.unit || '-'}</td>
+                <td class="td-lot">${item.batch_no || '-'}</td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
     }
 </script>
 <atscada-task at-interval="1000"></atscada-task>

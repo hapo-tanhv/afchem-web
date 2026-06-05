@@ -379,6 +379,36 @@ namespace LongDucProject.Controllers
                     }
                 }
 
+                string productName = "-";
+                double targetWeight = 0;
+                int totalRuns = 0;
+                int completedRuns = 0;
+                string batchActualStart = "-";
+
+                if (resolvedBatchId != -1)
+                {
+                    var dtBatchDetail = connector.ExecuteQuery($"SELECT product_name, target_weight, total_runs, start_time FROM batches WHERE id = {resolvedBatchId} LIMIT 1");
+                    if (dtBatchDetail != null && dtBatchDetail.Rows.Count > 0)
+                    {
+                        var row = dtBatchDetail.Rows[0];
+                        productName = row["product_name"] != DBNull.Value ? row["product_name"].ToString() : "-";
+                        targetWeight = row["target_weight"] != DBNull.Value ? Convert.ToDouble(row["target_weight"]) : 0;
+                        totalRuns = row["total_runs"] != DBNull.Value ? Convert.ToInt32(row["total_runs"]) : 0;
+                        batchActualStart = row["start_time"] != DBNull.Value ? Convert.ToDateTime(row["start_time"]).ToString("HH:mm:ss") : "-";
+                    }
+
+                    var dtCompRuns = connector.ExecuteQuery($"SELECT COUNT(*) FROM runs WHERE batch_id = {resolvedBatchId} AND status = 'Completed'");
+                    if (dtCompRuns != null && dtCompRuns.Rows.Count > 0)
+                    {
+                        completedRuns = Convert.ToInt32(dtCompRuns.Rows[0][0]);
+                    }
+                }
+
+                string targetWeightStr = targetWeight > 0 ? $"{targetWeight.ToString("N0", CultureInfo.InvariantCulture)} KG" : "-";
+                double producedWeight = completedRuns * (targetWeight / (totalRuns > 0 ? totalRuns : 1));
+                double percent = totalRuns > 0 ? ((double)completedRuns / totalRuns * 100) : 0;
+                string actualWeightStr = totalRuns > 0 ? $"{producedWeight.ToString("N0", CultureInfo.InvariantCulture)} KG ({Math.Round(percent)}%)" : "-";
+
                 // 2. Fetch alarmlog for active run (fallback to batchId if no runId resolved)
                 DataTable dtAlarmLog = null;
                 if (resolvedRunId != -1)
@@ -1039,6 +1069,15 @@ namespace LongDucProject.Controllers
                     alarmCount = alarmCount,
                     serverTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                     
+                    // Batch overview parameters
+                    productName = productName,
+                    targetWeightStr = targetWeightStr,
+                    actualWeightStr = actualWeightStr,
+                    batchActualStart = batchActualStart,
+                    totalRuns = totalRuns,
+                    completedRuns = completedRuns,
+                    batchEndTime = batchEnd,
+
                     // Run specific metadata
                     runId = resolvedRunId,
                     runName = runName,
@@ -1056,7 +1095,7 @@ namespace LongDucProject.Controllers
 
                 // 5. Fetch daily batches produced today
                 var dailyBatchesList = new List<object>();
-                var dtDaily = connector.ExecuteQuery($"SELECT id, name, status, start_time, end_time FROM batches WHERE DATE(created_at) = '{DateTime.Today.ToString("yyyy-MM-dd")}' OR DATE(start_time) = '{DateTime.Today.ToString("yyyy-MM-dd")}' ORDER BY id ASC");
+                var dtDaily = connector.ExecuteQuery($"SELECT id, name, status, start_time, end_time, target_weight FROM batches WHERE DATE(created_at) = '{DateTime.Today.ToString("yyyy-MM-dd")}' OR DATE(start_time) = '{DateTime.Today.ToString("yyyy-MM-dd")}' ORDER BY id ASC");
                 if (dtDaily != null)
                 {
                     foreach (DataRow row in dtDaily.Rows)
@@ -1101,18 +1140,43 @@ namespace LongDucProject.Controllers
                             }
                         }
                         
+                        double bWeight = row["target_weight"] != DBNull.Value ? Convert.ToDouble(row["target_weight"]) : 0;
+                        string bWeightStr = bWeight > 0 ? $"{bWeight.ToString("N0", CultureInfo.InvariantCulture)} KG" : "-";
+
                         dailyBatchesList.Add(new
                         {
                             id = bId,
                             name = bName,
-                            weight = "500kg",
+                            weight = bWeightStr,
                             duration = durationStr,
                             status = bStatus
                         });
                     }
                 }
 
-                return Json(new { steps = stepsList, globalAlarms = sortedGlobalAlarms, batchInfo = batchInfo, dailyBatches = dailyBatchesList }, JsonRequestBehavior.AllowGet);
+                // Fetch BOM (run_info) for active/resolved run
+                var bomList = new List<object>();
+                if (resolvedRunId != -1)
+                {
+                    var dtBOM = connector.ExecuteQuery($"SELECT code, material_code, quantity, value, unit, batch_no FROM run_info WHERE run_id = {resolvedRunId} ORDER BY id ASC");
+                    if (dtBOM != null)
+                    {
+                        foreach (DataRow row in dtBOM.Rows)
+                        {
+                            bomList.Add(new
+                            {
+                                code = row["code"] != DBNull.Value ? row["code"].ToString() : "",
+                                material_code = row["material_code"] != DBNull.Value ? row["material_code"].ToString() : "",
+                                quantity = row["quantity"] != DBNull.Value ? Convert.ToDouble(row["quantity"]) : (double?)null,
+                                value = row["value"] != DBNull.Value ? row["value"].ToString() : "",
+                                unit = row["unit"] != DBNull.Value ? row["unit"].ToString() : "",
+                                batch_no = row["batch_no"] != DBNull.Value ? row["batch_no"].ToString() : ""
+                            });
+                        }
+                    }
+                }
+
+                return Json(new { steps = stepsList, globalAlarms = sortedGlobalAlarms, batchInfo = batchInfo, dailyBatches = dailyBatchesList, bom = bomList }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {
