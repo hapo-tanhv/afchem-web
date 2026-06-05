@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+﻿﻿﻿using CsvHelper;
 
 using Hino.Getdata.Common;
 
@@ -219,7 +219,8 @@ namespace LongDucProject.Controllers
 
                 var cycleSummary = new {
                     status = batchStatus.ToUpper(),
-                    statusLabel = batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ đang chạy..." : "Chu kỳ hoàn tất thành công",
+                    statusLabel = batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ đang chạy..." : 
+                                  (batchStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ chưa bắt đầu" : "Chu kỳ hoàn tất thành công"),
                     batchId = batchName,
                     productName = deviceName,
                     endTime = endStr,
@@ -431,7 +432,9 @@ namespace LongDucProject.Controllers
 
                 string note = batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase)
                     ? "Chu kỳ đang chạy. Chất lượng sản phẩm: <strong class='text-warning'>ĐANG ĐÁNH GIÁ</strong>"
-                    : "Chu kỳ hoàn tất. Chất lượng sản phẩm: <strong class='text-success'>ĐẠT</strong>";
+                    : (batchStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase)
+                        ? "Chu kỳ đang chờ chạy, chưa có dữ liệu đánh giá chất lượng."
+                        : "Chu kỳ hoàn tất. Chất lượng sản phẩm: <strong class='text-success'>ĐẠT</strong>");
 
                 return Json(new {
                     batchId = selectedBatchId,

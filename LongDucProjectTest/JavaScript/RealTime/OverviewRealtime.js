@@ -1,4 +1,4 @@
-﻿﻿﻿var activepower;
+﻿﻿﻿﻿﻿﻿﻿var activepower;
 
 var temperature;
 

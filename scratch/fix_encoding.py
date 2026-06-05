@@ -5,7 +5,9 @@ files_to_fix = [
     r"c:\Users\tanhv\Project\WebApp_LongDuc_22012025Phase2\WebApp_LongDuc_22012025Phase2\LongDucProjectTest\Views\Home\Overview.cshtml",
     r"c:\Users\tanhv\Project\WebApp_LongDuc_22012025Phase2\WebApp_LongDuc_22012025Phase2\LongDucProjectTest\JavaScript\RealTime\OverviewRealtime.js",
     r"c:\Users\tanhv\Project\WebApp_LongDuc_22012025Phase2\WebApp_LongDuc_22012025Phase2\LongDucProjectTest\Controllers\EventController.cs",
-    r"c:\Users\tanhv\Project\WebApp_LongDuc_22012025Phase2\WebApp_LongDuc_22012025Phase2\LongDucProjectTest\Service\BatchResolver.cs"
+    r"c:\Users\tanhv\Project\WebApp_LongDuc_22012025Phase2\WebApp_LongDuc_22012025Phase2\LongDucProjectTest\Service\BatchResolver.cs",
+    r"c:\Users\tanhv\Project\WebApp_LongDuc_22012025Phase2\WebApp_LongDuc_22012025Phase2\LongDucProjectTest\Views\Shared\_LayoutMain.cshtml",
+    r"c:\Users\tanhv\Project\WebApp_LongDuc_22012025Phase2\WebApp_LongDuc_22012025Phase2\LongDucProjectTest\JavaScript\Common\LayoutMain.js"
 ]
 
 for file_path in files_to_fix:

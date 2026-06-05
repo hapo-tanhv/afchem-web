@@ -1,4 +1,4 @@
-﻿﻿﻿using CsvHelper;
+﻿﻿﻿﻿﻿using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -337,10 +337,10 @@ namespace LongDucProject.Controllers
                     }
                 }
 
-                string targetWeightStr = targetWeight > 0 ? $"{targetWeight.ToString("N0", CultureInfo.InvariantCulture)} KG" : "-";
+                string targetWeightStr = targetWeight > 0 ? $"{targetWeight.ToString("0.##", CultureInfo.InvariantCulture)} KG" : "-";
                 double producedWeight = completedRuns * (targetWeight / (totalRuns > 0 ? totalRuns : 1));
                 double percent = totalRuns > 0 ? ((double)completedRuns / totalRuns * 100) : 0;
-                string actualWeightStr = totalRuns > 0 ? $"{producedWeight.ToString("N0", CultureInfo.InvariantCulture)} KG ({Math.Round(percent)}%)" : "-";
+                string actualWeightStr = totalRuns > 0 ? $"{producedWeight.ToString("0.##", CultureInfo.InvariantCulture)} KG ({Math.Round(percent)}%)" : "-";
 
                 // 2. Fetch alarmlog for active run (fallback to batchId if no runId resolved)
                 DataTable dtAlarmLog = null;
@@ -991,7 +991,8 @@ namespace LongDucProject.Controllers
                     batchId = resolvedBatchId,
                     batchName = batchName,
                     batchStatus = batchStatus,
-                    machineStatus = runStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) ? "RUNNING" : "COMPLETED",
+                    machineStatus = runStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) ? "RUNNING" : 
+                                    (runStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) ? "PENDING" : "COMPLETED"),
                     activeStepCode = activeStepCode,
                     activeStepName = activeStepName,
                     headerStepName = headerStepName,
@@ -1074,7 +1075,7 @@ namespace LongDucProject.Controllers
                         }
                         
                         double bWeight = row["target_weight"] != DBNull.Value ? Convert.ToDouble(row["target_weight"]) : 0;
-                        string bWeightStr = bWeight > 0 ? $"{bWeight.ToString("N0", CultureInfo.InvariantCulture)} KG" : "-";
+                        string bWeightStr = bWeight > 0 ? $"{bWeight.ToString("0.##", CultureInfo.InvariantCulture)} KG" : "-";
 
                         dailyBatchesList.Add(new
                         {

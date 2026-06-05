@@ -1,4 +1,4 @@
-﻿// Machine Dropdown Functions
+﻿﻿// Machine Dropdown Functions
 
 function toggleMachineDropdown() {
 
@@ -162,6 +162,10 @@ function updateHeaderStats(data) {
 
                 statusEl.style.color = "#22c55e";
 
+            } else if (batchInfo.machineStatus === "PENDING") {
+
+                statusEl.style.color = "#6b7280";
+
             } else {
 
                 statusEl.style.color = "#3b82f6";
@@ -228,11 +232,8 @@ function updateHeaderStats(data) {
     const targetOutputEl = document.getElementById("headerTargetOutput");
 
     if (targetOutputEl) {
-
-        targetOutputEl.innerHTML = "2000";
-
+        targetOutputEl.innerHTML = (data.batchInfo && data.batchInfo.targetWeightStr) ? data.batchInfo.targetWeightStr : "2000";
     }
-
 }
 
 // Fetch stats from server
