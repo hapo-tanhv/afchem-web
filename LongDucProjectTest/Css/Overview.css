@@ -1,4 +1,4 @@
-﻿/* RESET & NỀN TỔNG THỂ */
+/* RESET & NỀN TỔNG THỂ */
 .content-wrapper {
     background-color: #0a0a0a !important;
     padding: 20px;
@@ -814,6 +814,7 @@
 .gauge-container {
     display: flex;
     justify-content: space-between;
+    width: 100%;
 }
 
 .gauge-item {
@@ -832,6 +833,11 @@
 
 .gauge-item .highcharts-pane-series-0 {
     fill: #1a1a1a;
+}
+
+.main-line-chart,
+#container_line {
+    width: 100%;
 }
 
 /* DANH SÁCH ALARM/EVENT (BÊN PHẢI) */

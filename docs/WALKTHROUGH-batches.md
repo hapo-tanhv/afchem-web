@@ -123,5 +123,38 @@ Khi mẻ xả hàng hoàn tất (Công đoạn 8 kết thúc, các tag rung và 
 1. Cập nhật mẻ con hiện tại thành `Completed` và gán thời gian `end_time`.
 2. Truy vấn đếm số mẻ chưa `Completed` trong Lô cha hiện hành.
 3. **Trường hợp tất cả mẻ con đã hoàn thành**: Cập nhật trạng thái Lô cha (`batches`) thành `Completed` và lưu `end_time` cho Lô.
-4. **Trường hợp vẫn còn mẻ con chưa chạy**: Giữ nguyên Lô là `Active` để chờ mẻ tiếp theo.
-5. Giải phóng các biến ID trong bộ nhớ và quay lại trạng thái `Idle` chờ mẻ tiếp theo.
+4.  - Trường hợp vẫn còn mẻ con chưa chạy: Giữ nguyên Lô là Active để chờ mẻ tiếp theo.
+  - Giải phóng các biến ID trong bộ nhớ và quay lại trạng thái Idle chờ mẻ tiếp theo.
+
+---
+
+## 5. Tái cấu trúc & Đồng bộ hóa logic phân giải mặc định (BatchResolver)
+
+Để giải quyết vấn đề bất đồng bộ logic phân giải giữa trang Overview và trang Batches (Event) và các API Export, hệ thống đã được tái cấu trúc bằng cách chuyển toàn bộ logic xác định BatchId và RunId về một helper dùng chung:
+
+### 5.1. Lớp Helper `BatchResolver.cs`
+Được đặt tại [BatchResolver.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Service/BatchResolver.cs), cung cấp phương thức tĩnh:
+`BatchResolver.Resolve(MySQLConnect connector, string batchIdStr, string runIdStr, string dateStr = null)`
+
+Phương thức này áp dụng logic phân giải chuẩn hóa với thứ tự ưu tiên:
+1. **Theo `runId` cụ thể:** Nếu client truyền lên `runId` > 0, hệ thống lấy chính xác mẻ đó và batch cha tương ứng.
+2. **Theo `batchId` cụ thể:** Nếu client chọn một batch từ dropdown, hệ thống sẽ tự động xác định mẻ con:
+   - Ưu tiên mẻ đang chạy (`status = 'Active'`).
+   - Nếu không có, ưu tiên mẻ đã hoàn thành gần nhất (`status = 'Completed' ORDER BY end_time DESC, id DESC`).
+   - Nếu batch chưa chạy (cả batch và các mẻ đều `Pending`), lấy **mẻ con đầu tiên / cũ nhất** (`ORDER BY id ASC LIMIT 1`).
+3. **Theo ngày (`date`):** Nếu client truyền ngày, lấy batch mới nhất của ngày đó, sau đó áp dụng cơ chế xác định mẻ con như bước 2.
+4. **Fallback mặc định (Tải trang lần đầu):** Áp dụng logic ưu tiên toàn hệ thống:
+   - Run đang chạy (`Active run`) / Batch đang chạy (`Active batch`).
+   - Mẻ con hoàn thành gần nhất (`Completed run`).
+   - Batch đang chờ trong ngày (`Pending batch` ngày hôm nay), chọn mẻ con đầu tiên.
+   - Batch đang chờ bất kỳ, chọn mẻ con đầu tiên.
+   - Fallback cuối cùng: Batch mới nhất hệ thống, chọn mẻ con đầu tiên.
+
+### 5.2. Các API được nâng cấp sử dụng `BatchResolver`
+Toàn bộ các điểm cuối sau đã được sửa đổi để sử dụng chung một logic phân giải thông qua `BatchResolver`, đảm bảo tính đồng nhất 100% giữa UI hiển thị và dữ liệu xuất báo cáo:
+- **`OverviewController.GetCurrentBatchStats`**: API hiển thị dữ liệu bảng điều khiển Overview.
+- **`EventController.GetEventLogRealtime`**: API tải dữ liệu danh sách sự kiện thời gian thực trên trang Batches.
+- **`EventController.ExportEventExcel`**: API xuất dữ liệu Excel trên trang Batches.
+- **`EventController.ExportEventCsv`**: API xuất dữ liệu CSV trên trang Batches.
+
+Nhờ sự đồng bộ này, khi vào trang Batches lúc chưa chạy mẻ (Lô sản xuất đang ở trạng thái `Pending`), hệ thống sẽ hiển thị và xuất báo cáo chính xác cho mẻ con đầu tiên (`runId = 1`, `Me01`) thay vì bị lệch sang mẻ cuối cùng.

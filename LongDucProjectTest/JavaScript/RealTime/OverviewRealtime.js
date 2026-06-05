@@ -1,4 +1,4 @@
-var activepower;
+﻿﻿﻿var activepower;
 
 var temperature;
 
@@ -170,6 +170,14 @@ document.addEventListener("DOMContentLoaded", function () {
         window.pressureChartInstance = PressureChart();
         window.lineChartInstance = LineChart(); // Initialize line chart
         console.log('Charts initialized successfully');
+
+        // Force reflow after a short delay to adapt to CSS Grid column width
+        setTimeout(function () {
+            if (window.speedChartInstance) window.speedChartInstance.reflow();
+            if (window.tempChartInstance) window.tempChartInstance.reflow();
+            if (window.pressureChartInstance) window.pressureChartInstance.reflow();
+            if (window.lineChartInstance) window.lineChartInstance.reflow();
+        }, 300);
     } catch (e) {
         console.error('Error initializing charts:', e);
     }
@@ -224,9 +232,6 @@ document.addEventListener("DOMContentLoaded", function () {
  
     function fetchCurrentBatchStats() {
         var queryData = {};
-        if (selectedRunId !== null) {
-            queryData.runId = selectedRunId;
-        }
 
         $.ajax({
             url: '/Overview/GetCurrentBatchStats',
@@ -257,22 +262,22 @@ document.addEventListener("DOMContentLoaded", function () {
                     renderDailyBatches(data.dailyBatches);
                 }
 
+                // Force reflow after dynamic data render to adjust chart sizes
+                setTimeout(function () {
+                    if (window.speedChartInstance) window.speedChartInstance.reflow();
+                    if (window.tempChartInstance) window.tempChartInstance.reflow();
+                    if (window.pressureChartInstance) window.pressureChartInstance.reflow();
+                    if (window.lineChartInstance) window.lineChartInstance.reflow();
+                }, 100);
+
                 if (data && data.batchInfo) {
                     var batchInfo = data.batchInfo;
                     currentBatchInfo = batchInfo;
 
-                    // Parse runs for selector
-                    if (batchInfo.runs && batchInfo.runs.length > 0) {
-                        var activeRun = batchInfo.runs.find(r => r.status === 'Active');
-                        activeRunId = activeRun ? activeRun.id : null;
-                        
-                        if (selectedRunId === null) {
-                            selectedRunId = activeRunId ? activeRunId : batchInfo.runs[batchInfo.runs.length - 1].id;
-                            window.isHistoricView = (selectedRunId !== activeRunId);
-                            updateHistoricViewUI();
-                        }
-                        
-                        renderRunTabs(batchInfo.runs, selectedRunId);
+                    // Track resolved run IDs
+                    if (batchInfo.runId) {
+                        selectedRunId = batchInfo.runId;
+                        activeRunId = batchInfo.runId;
                     }
 
                     // Update header elements
@@ -479,52 +484,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    function renderRunTabs(runs, currentSelectedId) {
-        var container = document.getElementById("runTabsContainer");
-        if (!container) return;
-        
-        var html = '';
-        runs.forEach(function (run) {
-            var isSelected = (run.id === currentSelectedId);
-            var selectClass = isSelected ? 'selected ' + run.status : '';
-            var statusLabel = run.status === 'Active' ? 'Đang chạy' : (run.status === 'Completed' ? 'Đã xong' : 'Chờ chạy');
-            
-            html += '<div class="run-tab ' + selectClass + '" onclick="window.switchRun(' + run.id + ', ' + (run.status === 'Active') + ')">' +
-                        '<span>Mẻ ' + run.run_number + '</span>' +
-                        '<span class="run-tab-badge">' + statusLabel + '</span>' +
-                    '</div>';
-        });
-        container.innerHTML = html;
-    }
 
-    window.switchRun = function (runId, isActive) {
-        if (selectedRunId === runId) return;
-        selectedRunId = runId;
-        window.isHistoricView = !isActive;
-        
-        updateHistoricViewUI();
-        fetchCurrentBatchStats();
-    }
-
-    function updateHistoricViewUI() {
-        var mixerDiagram = document.querySelector('.tank-diagram-container');
-        if (!mixerDiagram) return;
-        
-        if (window.isHistoricView) {
-            mixerDiagram.classList.add('historic-mode');
-            if (!document.getElementById("historicBadge")) {
-                var badge = document.createElement("div");
-                badge.id = "historicBadge";
-                badge.className = "historic-overlay-badge";
-                badge.innerHTML = "<i class='fas fa-history'></i> XEM LẠI DỮ LIỆU LỊCH SỬ";
-                mixerDiagram.appendChild(badge);
-            }
-        } else {
-            mixerDiagram.classList.remove('historic-mode');
-            var badge = document.getElementById("historicBadge");
-            if (badge) badge.remove();
-        }
-    }
 
     // Polling recent alarms from real database every 2 seconds for high-speed realtime display
 

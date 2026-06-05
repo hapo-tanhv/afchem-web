@@ -1,4 +1,4 @@
-@{
+﻿﻿@{
     ViewBag.Title = "SOLAR SCADA SYSTEM - OVERVIEW";
     ViewBag.ButtonHome = "active";
     ViewBag.ButtonOverview = "";
@@ -497,10 +497,7 @@
         <div class="history-panel">
             <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                 <h3 style="margin-bottom: 0;">Thống kê mẻ hiện tại</h3>
-                <!-- Horizontal Run Tab Selector -->
-                <div class="run-selector-tabs" id="runTabsContainer">
-                    <!-- Rendered dynamically -->
-                </div>
+
             </div>
             <div class="table-responsive">
                 <table class="batch-table">
@@ -556,11 +553,11 @@
                 <table class="bom-table">
                     <thead>
                         <tr>
-                            <th class="th-code">Tên NVL</th>
-                            <th class="th-name">Tỉ lệ</th>
+                            <th class="th-code">Mã hàng</th>
+                            <th class="th-name">Tên nguyên vật liệu</th>
                             <th class="th-ratio">Tổng xuất</th>
-                            <th class="th-unit">ĐVT</th>
-                            <th class="th-lot">LOT NVL</th>
+                            <th class="th-unit">Đơn vị tính</th>
+                            <th class="th-lot">Lot/No</th>
                         </tr>
                     </thead>
                     <tbody id="bomTableBody">
@@ -569,7 +566,6 @@
             </div>
         </div>
     </div>
-</div>
 </div>
 <script>
     const mockBatchData = [
@@ -753,9 +749,9 @@
         let html = '';
         bom.forEach(item => {
             html += `<tr>
-                <td class="td-code">${item.material_code || item.code || '-'}</td>
-                <td class="td-name">${item.quantity !== null && item.quantity !== undefined ? item.quantity : '-'}</td>
-                <td class="td-ratio">${item.value || '-'}</td>
+                <td class="td-code">${item.code || '-'}</td>
+                <td class="td-name">${item.material_code || '-'}</td>
+                <td class="td-ratio">${item.quantity !== null && item.quantity !== undefined ? item.quantity : '-'}</td>
                 <td class="td-unit">${item.unit || '-'}</td>
                 <td class="td-lot">${item.batch_no || '-'}</td>
             </tr>`;

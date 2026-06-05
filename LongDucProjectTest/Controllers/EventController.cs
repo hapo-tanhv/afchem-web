@@ -124,92 +124,9 @@ namespace LongDucProject.Controllers
                     ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
                 };
 
-                int selectedBatchId = -1;
-                if (!string.IsNullOrEmpty(batchId) && int.TryParse(batchId, out int bId))
-                {
-                    selectedBatchId = bId;
-                }
-
-                int selectedRunId = -1;
-                if (!string.IsNullOrEmpty(runId) && int.TryParse(runId, out int rId) && rId > 0)
-                {
-                    selectedRunId = rId;
-                    var dtRun = connector.ExecuteQuery($"SELECT batch_id FROM runs WHERE id = {selectedRunId} LIMIT 1");
-                    if (dtRun != null && dtRun.Rows.Count > 0)
-                    {
-                        selectedBatchId = Convert.ToInt32(dtRun.Rows[0]["batch_id"]);
-                    }
-                }
-
-                // If no batchId is selected, resolve the default batch
-                if (selectedBatchId <= 0)
-                {
-                    string dateFilter = "";
-                    if (!string.IsNullOrEmpty(date) && DateTime.TryParseExact(date, new[] { "yyyy-MM-dd", "yyyy/MM/dd" }, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime parsedDate))
-                    {
-                        dateFilter = $"WHERE DATE(start_time) = '{parsedDate.ToString("yyyy-MM-dd")}'";
-                    }
-
-                    if (!string.IsNullOrEmpty(dateFilter))
-                    {
-                        // Get latest batch of that date
-                        var dtLatestDate = connector.ExecuteQuery($"SELECT id FROM batches {dateFilter} ORDER BY id DESC LIMIT 1");
-                        if (dtLatestDate != null && dtLatestDate.Rows.Count > 0)
-                        {
-                            selectedBatchId = Convert.ToInt32(dtLatestDate.Rows[0]["id"]);
-                        }
-                        else
-                        {
-                            selectedBatchId = -2; // Mark as date filtered but no batch found, do not fall back
-                        }
-                    }
-
-                    if (selectedBatchId == -1) // No date filter was applied (initial load), so find default overall batch
-                    {
-                        // 1. Get active batch
-                        var dtActive = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Active' LIMIT 1");
-                        if (dtActive != null && dtActive.Rows.Count > 0)
-                        {
-                            selectedBatchId = Convert.ToInt32(dtActive.Rows[0]["id"]);
-                        }
-                        else
-                        {
-                            // 2. Get latest completed batch
-                            var dtCompleted = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Completed' ORDER BY id DESC LIMIT 1");
-                            if (dtCompleted != null && dtCompleted.Rows.Count > 0)
-                            {
-                                selectedBatchId = Convert.ToInt32(dtCompleted.Rows[0]["id"]);
-                            }
-                            else
-                            {
-                                // 3. Get latest overall
-                                var dtLatest = connector.ExecuteQuery("SELECT id FROM batches ORDER BY id DESC LIMIT 1");
-                                if (dtLatest != null && dtLatest.Rows.Count > 0)
-                                {
-                                    selectedBatchId = Convert.ToInt32(dtLatest.Rows[0]["id"]);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // If selectedBatchId is resolved but selectedRunId is not, auto-resolve to active or latest run of this batch
-                if (selectedBatchId > 0 && selectedRunId <= 0)
-                {
-                    var dtActiveRun = connector.ExecuteQuery($"SELECT id FROM runs WHERE batch_id = {selectedBatchId} AND status = 'Active' LIMIT 1");
-                    if (dtActiveRun != null && dtActiveRun.Rows.Count > 0)
-                    {
-                        selectedRunId = Convert.ToInt32(dtActiveRun.Rows[0]["id"]);
-                    }
-                    else
-                    {
-                        var dtLatestRun = connector.ExecuteQuery($"SELECT id FROM runs WHERE batch_id = {selectedBatchId} ORDER BY id DESC LIMIT 1");
-                        if (dtLatestRun != null && dtLatestRun.Rows.Count > 0)
-                        {
-                            selectedRunId = Convert.ToInt32(dtLatestRun.Rows[0]["id"]);
-                        }
-                    }
-                }
+                var resolution = LongDucProject.Helpers.BatchResolver.Resolve(connector, batchId, runId, date);
+                int selectedBatchId = resolution.BatchId;
+                int selectedRunId = resolution.RunId;
 
                 if (selectedBatchId <= 0)
                 {
@@ -548,65 +465,9 @@ namespace LongDucProject.Controllers
                 ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
             };
 
-            int selectedBatchId = -1;
-            if (!string.IsNullOrEmpty(batchId) && int.TryParse(batchId, out int bId))
-            {
-                selectedBatchId = bId;
-            }
-
-            int selectedRunId = -1;
-            if (!string.IsNullOrEmpty(runId) && int.TryParse(runId, out int rId) && rId > 0)
-            {
-                selectedRunId = rId;
-                var dtRun = connector.ExecuteQuery($"SELECT batch_id FROM runs WHERE id = {selectedRunId} LIMIT 1");
-                if (dtRun != null && dtRun.Rows.Count > 0)
-                {
-                    selectedBatchId = Convert.ToInt32(dtRun.Rows[0]["batch_id"]);
-                }
-            }
-
-            if (selectedBatchId <= 0)
-            {
-                string dateFilter = "";
-                if (!string.IsNullOrEmpty(starttime) && DateTime.TryParseExact(starttime, new[] { "yyyy-MM-dd", "yyyy/MM/dd" }, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime parsedDate))
-                {
-                    dateFilter = $"WHERE DATE(start_time) = '{parsedDate.ToString("yyyy-MM-dd")}'";
-                }
-
-                if (!string.IsNullOrEmpty(dateFilter))
-                {
-                    var dtLatestDate = connector.ExecuteQuery($"SELECT id FROM batches {dateFilter} ORDER BY id DESC LIMIT 1");
-                    if (dtLatestDate != null && dtLatestDate.Rows.Count > 0)
-                    {
-                        selectedBatchId = Convert.ToInt32(dtLatestDate.Rows[0]["id"]);
-                    }
-                }
-
-                if (selectedBatchId <= 0)
-                {
-                    var dtActive = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Active' LIMIT 1");
-                    if (dtActive != null && dtActive.Rows.Count > 0)
-                    {
-                        selectedBatchId = Convert.ToInt32(dtActive.Rows[0]["id"]);
-                    }
-                    else
-                    {
-                        var dtCompleted = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Completed' ORDER BY id DESC LIMIT 1");
-                        if (dtCompleted != null && dtCompleted.Rows.Count > 0)
-                        {
-                            selectedBatchId = Convert.ToInt32(dtCompleted.Rows[0]["id"]);
-                        }
-                        else
-                        {
-                            var dtLatest = connector.ExecuteQuery("SELECT id FROM batches ORDER BY id DESC LIMIT 1");
-                            if (dtLatest != null && dtLatest.Rows.Count > 0)
-                            {
-                                selectedBatchId = Convert.ToInt32(dtLatest.Rows[0]["id"]);
-                            }
-                        }
-                    }
-                }
-            }
+            var resolution = LongDucProject.Helpers.BatchResolver.Resolve(connector, batchId, runId, starttime);
+            int selectedBatchId = resolution.BatchId;
+            int selectedRunId = resolution.RunId;
 
             var list = new List<EventExportDto>();
             if (selectedRunId > 0)
@@ -689,65 +550,9 @@ namespace LongDucProject.Controllers
                 ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
             };
 
-            int selectedBatchId = -1;
-            if (!string.IsNullOrEmpty(batchId) && int.TryParse(batchId, out int bId))
-            {
-                selectedBatchId = bId;
-            }
-
-            int selectedRunId = -1;
-            if (!string.IsNullOrEmpty(runId) && int.TryParse(runId, out int rId) && rId > 0)
-            {
-                selectedRunId = rId;
-                var dtRun = connector.ExecuteQuery($"SELECT batch_id FROM runs WHERE id = {selectedRunId} LIMIT 1");
-                if (dtRun != null && dtRun.Rows.Count > 0)
-                {
-                    selectedBatchId = Convert.ToInt32(dtRun.Rows[0]["batch_id"]);
-                }
-            }
-
-            if (selectedBatchId <= 0)
-            {
-                string dateFilter = "";
-                if (!string.IsNullOrEmpty(starttime) && DateTime.TryParseExact(starttime, new[] { "yyyy-MM-dd", "yyyy/MM/dd" }, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime parsedDate))
-                {
-                    dateFilter = $"WHERE DATE(start_time) = '{parsedDate.ToString("yyyy-MM-dd")}'";
-                }
-
-                if (!string.IsNullOrEmpty(dateFilter))
-                {
-                    var dtLatestDate = connector.ExecuteQuery($"SELECT id FROM batches {dateFilter} ORDER BY id DESC LIMIT 1");
-                    if (dtLatestDate != null && dtLatestDate.Rows.Count > 0)
-                    {
-                        selectedBatchId = Convert.ToInt32(dtLatestDate.Rows[0]["id"]);
-                    }
-                }
-
-                if (selectedBatchId <= 0)
-                {
-                    var dtActive = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Active' LIMIT 1");
-                    if (dtActive != null && dtActive.Rows.Count > 0)
-                    {
-                        selectedBatchId = Convert.ToInt32(dtActive.Rows[0]["id"]);
-                    }
-                    else
-                    {
-                        var dtCompleted = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Completed' ORDER BY id DESC LIMIT 1");
-                        if (dtCompleted != null && dtCompleted.Rows.Count > 0)
-                        {
-                            selectedBatchId = Convert.ToInt32(dtCompleted.Rows[0]["id"]);
-                        }
-                        else
-                        {
-                            var dtLatest = connector.ExecuteQuery("SELECT id FROM batches ORDER BY id DESC LIMIT 1");
-                            if (dtLatest != null && dtLatest.Rows.Count > 0)
-                            {
-                                selectedBatchId = Convert.ToInt32(dtLatest.Rows[0]["id"]);
-                            }
-                        }
-                    }
-                }
-            }
+            var resolution = LongDucProject.Helpers.BatchResolver.Resolve(connector, batchId, runId, starttime);
+            int selectedBatchId = resolution.BatchId;
+            int selectedRunId = resolution.RunId;
 
             var list = new List<EventExportDto>();
 
