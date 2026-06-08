@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿var activepower;
+﻿﻿﻿﻿﻿﻿var activepower;
 
 var temperature;
 
@@ -559,21 +559,19 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!USE_FAKE_DATA) {
             updateTag(dataCollection.get(`AFChemTX01.NhietDoMoiTruong`), document.querySelector('#AmbientTemp'), function(val) {
                 latestNhietDoMoiTruong = val;
-            });
-            updateTag(dataCollection.get(`AFChemTX01.DatNguongNhietDoMoiTruong`), document.querySelector('#AmbientTempStandard'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.DoAmMoiTruong`), document.querySelector('#Humidity'));
-            updateTag(dataCollection.get(`AFChemTX01.DatNguongDoAmMoiTruong`), document.querySelector('#HumidityStandard'));
-            updateTag(dataCollection.get(`AFChemTX01.NhietDoBonTronTren`), document.querySelector('#TankDiagramTempTop'));
+            }, true);
+            updateTag(dataCollection.get(`AFChemTX01.DatNguongNhietDoMoiTruong`), document.querySelector('#AmbientTempStandard'), updateCalculatedTime, true);
+            updateTag(dataCollection.get(`AFChemTX01.DoAmMoiTruong`), document.querySelector('#Humidity'), null, true);
+            updateTag(dataCollection.get(`AFChemTX01.DatNguongDoAmMoiTruong`), document.querySelector('#HumidityStandard'), null, true);
+            updateTag(dataCollection.get(`AFChemTX01.NhietDoBonTronTren`), document.querySelector('#TankDiagramTempTop'), null, true);
             updateTag(dataCollection.get(`AFChemTX01.NhietDoBonTronGiua`), document.querySelector('#TankDiagramTemp'), function(val) {
                 latestNhietDoBonTronGiua = val;
-            });
-            updateTag(dataCollection.get(`AFChemTX01.NhietDoBonTronDuoi`), document.querySelector('#TankDiagramTempBot'));
+            }, true);
+            updateTag(dataCollection.get(`AFChemTX01.NhietDoBonTronDuoi`), document.querySelector('#TankDiagramTempBot'), null, true);
             updateTag(dataCollection.get(`AFChemTX01.ApSuat`), document.querySelector('#TankDiagramPressure'), function(val) {
                 latestApSuat = val;
-            });
-            updateTag(dataCollection.get(`AFChemTX01.CaiDatApSuat`), document.querySelector('#TankDiagramPressureStandard'), function (val) {
-                latestApSuat = val;
-            });
+            }, true);
+            updateTag(dataCollection.get(`AFChemTX01.CaiDatApSuat`), document.querySelector('#TankDiagramPressureStandard'), null, true);
             function updateCalculatedTimeAndStandards() {
                 updateCalculatedTime();
                 var stdTimeEl = document.getElementById("statStandardTime");
@@ -680,11 +678,19 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
-function updateTag(dataTag, element, onValueChangeCallback) {
+function updateTag(dataTag, element, onValueChangeCallback, divideBy10 = false) {
     if (dataTag && element) {
         dataTag.dispatcher.on('valueChanged', (data) => {
             if (data.e.newValue !== undefined) {
                 var val = data.e.newValue;
+                if (divideBy10 && !isNaN(val) && val !== null && val !== '') {
+                    var numVal = Number(val) / 10;
+                    if (element.id === 'TankDiagramPressure' || element.id === 'TankDiagramPressureStandard') {
+                        val = numVal.toFixed(2);
+                    } else {
+                        val = numVal.toFixed(1);
+                    }
+                }
                 element.innerHTML = val;
                 if (typeof onValueChangeCallback === 'function') {
                     onValueChangeCallback(val);
@@ -694,6 +700,14 @@ function updateTag(dataTag, element, onValueChangeCallback) {
 
         if (dataTag.Value !== undefined) {
             var val = dataTag.Value;
+            if (divideBy10 && !isNaN(val) && val !== null && val !== '') {
+                var numVal = Number(val) / 10;
+                if (element.id === 'TankDiagramPressure' || element.id === 'TankDiagramPressureStandard') {
+                    val = numVal.toFixed(2);
+                } else {
+                    val = numVal.toFixed(1);
+                }
+            }
             element.innerHTML = val;
             if (typeof onValueChangeCallback === 'function') {
                 onValueChangeCallback(val);
