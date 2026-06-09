@@ -1,4 +1,4 @@
-﻿﻿﻿using CsvHelper;
+﻿﻿using CsvHelper;
 
 using Hino.Getdata.Common;
 
@@ -220,7 +220,8 @@ namespace LongDucProject.Controllers
                 var cycleSummary = new {
                     status = batchStatus.ToUpper(),
                     statusLabel = batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ đang chạy..." : 
-                                  (batchStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ chưa bắt đầu" : "Chu kỳ hoàn tất thành công"),
+                                  (batchStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ chưa bắt đầu" : 
+                                  (batchStatus.Equals("Error", StringComparison.OrdinalIgnoreCase) || batchStatus.Equals("Failed", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ bị lỗi" : "Chu kỳ hoàn tất thành công")),
                     batchId = batchName,
                     productName = deviceName,
                     endTime = endStr,
@@ -434,7 +435,9 @@ namespace LongDucProject.Controllers
                     ? "Chu kỳ đang chạy. Chất lượng sản phẩm: <strong class='text-warning'>ĐANG ĐÁNH GIÁ</strong>"
                     : (batchStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase)
                         ? "Chu kỳ đang chờ chạy, chưa có dữ liệu đánh giá chất lượng."
-                        : "Chu kỳ hoàn tất. Chất lượng sản phẩm: <strong class='text-success'>ĐẠT</strong>");
+                        : (batchStatus.Equals("Error", StringComparison.OrdinalIgnoreCase) || batchStatus.Equals("Failed", StringComparison.OrdinalIgnoreCase)
+                            ? "Chu kỳ bị lỗi. Chất lượng sản phẩm: <strong class='text-danger'>KHÔNG ĐẠT (LỖI)</strong>"
+                            : "Chu kỳ hoàn tất. Chất lượng sản phẩm: <strong class='text-success'>ĐẠT</strong>"));
 
                 return Json(new {
                     batchId = selectedBatchId,

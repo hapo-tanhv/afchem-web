@@ -1,4 +1,4 @@
-# Tài liệu cập nhật hiển thị mẻ bù trừ (Run Compensation) trên trang Overview
+# Tài liệu cập nhật hiển thị mẻ bù trừ (Run Compensation) trên trang Overview và trang Event
 
 ## 1. Vấn đề hiện tại
 Khi một Batch có cơ chế bù trừ mẻ chạy lỗi:
@@ -7,6 +7,7 @@ Khi một Batch có cơ chế bù trừ mẻ chạy lỗi:
 - Khi mẻ 3 chạy xong (`status = 'Completed'`), mẻ 2 vẫn chưa chạy (không có mẻ nào đang `Active`).
 - **Lỗi hiển thị mẻ trên Overview:** Trang Overview hiển thị thông tin của mẻ 1 (bị lỗi `Error`) thay vì hiển thị mẻ vừa hoàn thành gần nhất (mẻ 3).
 - **Lỗi hiển thị BOM:** Dữ liệu bảng BOM sản xuất và tổng lượng nguyên liệu vẫn lấy cả thông tin định mức của mẻ bị lỗi (`Error`).
+- **Lỗi hiển thị Ghi chú trên Event:** Khi chọn xem mẻ lỗi (`Error`), trang Event hiển thị nhầm nhãn trạng thái và ghi chú chất lượng là "Chu kỳ hoàn tất thành công" và "Chất lượng sản phẩm: ĐẠT".
 
 ---
 
@@ -35,8 +36,16 @@ Trong phương thức `GetCurrentBatchStats` của [OverviewController.cs](file:
   ```
 - **Kết quả:** Các mẻ bị lỗi sẽ không xuất hiện trong bảng BOM sản xuất trên giao diện, và tổng lượng nguyên liệu tiêu hao sẽ chỉ tính toán dựa trên các mẻ hợp lệ (không lỗi).
 
+### C. Hiển thị thông tin ghi chú trạng thái lỗi trên trang Event (`EventController.cs`)
+Trong phương thức `GetEventLogRealtime` của [EventController.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Controllers/EventController.cs), chúng tôi đã cập nhật logic sinh các nhãn trạng thái và ghi chú đánh giá chất lượng cho các mẻ bị lỗi hoặc thất bại (`Error` hoặc `Failed`):
+1. **Trạng thái chu kỳ (`statusLabel`):**
+   * Nếu mẻ bị lỗi, nhãn sẽ hiển thị là `"Chu kỳ bị lỗi"` thay vì nhãn mặc định `"Chu kỳ hoàn tất thành công"`.
+2. **Ghi chú chất lượng (`note`):**
+   * Nếu mẻ bị lỗi, ghi chú sẽ hiển thị là `"Chu kỳ bị lỗi. Chất lượng sản phẩm: KHÔNG ĐẠT (LỖI)"` với màu chữ đỏ tương ứng của lớp `text-danger`, giúp người vận hành nhận biết nhanh các mẻ chạy không thành công.
+
 ---
 
 ## 3. Các tệp đã thay đổi (Modified Files)
 * [BatchResolver.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Service/BatchResolver.cs)
 * [OverviewController.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Controllers/OverviewController.cs)
+* [EventController.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Controllers/EventController.cs)
