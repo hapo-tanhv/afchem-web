@@ -34,21 +34,21 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="iDriver">
-      <HintPath>..\..\..\..\..\Program Files\ATPro\ATSCADA\iDriver.dll</HintPath>
+      <HintPath>C:\Program Files\ATPro\ATSCADA\iDriver.dll</HintPath>
     </Reference>
     <Reference Include="iWebService">
-      <HintPath>..\..\..\..\..\Program Files\ATPro\ATSCADA\iWebService.dll</HintPath>
+      <HintPath>C:\Program Files\ATPro\ATSCADA\iWebService.dll</HintPath>
     </Reference>
     <Reference Include="DriverPluginInterface">
-      <HintPath>..\..\..\..\..\Program Files\ATPro\ATSCADA\DriverPluginInterface.dll</HintPath>
+      <HintPath>C:\Program Files\ATPro\ATSCADA\DriverPluginInterface.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="iTools">
-      <HintPath>..\..\..\..\..\Program Files\ATPro\ATSCADA\iTools.dll</HintPath>
+      <HintPath>C:\Program Files\ATPro\ATSCADA\iTools.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Visualization">
-      <HintPath>..\..\..\..\..\Program Files\ATPro\ATSCADA\Visualization.dll</HintPath>
+      <HintPath>C:\Program Files\ATPro\ATSCADA\Visualization.dll</HintPath>
       <Private>True</Private>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
