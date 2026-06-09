@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿using CsvHelper;
+﻿﻿﻿﻿using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -1088,11 +1088,11 @@ namespace LongDucProject.Controllers
                     }
                 }
 
-                // Fetch BOM (run_info) for active/resolved run
+                // Fetch BOM (run_info) for all runs in the active/resolved batch
                 var bomList = new List<object>();
-                if (resolvedRunId != -1)
+                if (resolvedBatchId != -1)
                 {
-                    var dtBOM = connector.ExecuteQuery($"SELECT code, material_code, quantity, value, unit, batch_no FROM run_info WHERE run_id = {resolvedRunId} ORDER BY id ASC");
+                    var dtBOM = connector.ExecuteQuery($"SELECT ri.code, ri.material_code, ri.quantity, ri.value, ri.unit, ri.batch_no, r.run_number, ri.run_id FROM run_info ri JOIN runs r ON ri.run_id = r.id WHERE r.batch_id = {resolvedBatchId} ORDER BY r.run_number ASC, ri.id ASC");
                     if (dtBOM != null)
                     {
                         foreach (DataRow row in dtBOM.Rows)
@@ -1104,7 +1104,9 @@ namespace LongDucProject.Controllers
                                 quantity = row["quantity"] != DBNull.Value ? Convert.ToDouble(row["quantity"]) : (double?)null,
                                 value = row["value"] != DBNull.Value ? row["value"].ToString() : "",
                                 unit = row["unit"] != DBNull.Value ? row["unit"].ToString() : "",
-                                batch_no = row["batch_no"] != DBNull.Value ? row["batch_no"].ToString() : ""
+                                batch_no = row["batch_no"] != DBNull.Value ? row["batch_no"].ToString() : "",
+                                run_number = row["run_number"] != DBNull.Value ? Convert.ToInt32(row["run_number"]) : 1,
+                                run_id = row["run_id"] != DBNull.Value ? Convert.ToInt32(row["run_id"]) : 0
                             });
                         }
                     }

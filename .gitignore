@@ -84,3 +84,6 @@ appsettings.Local.json
 specs/_shared/
 plans/
 !plans/templates/
+
+# Temporary scratch scripts
+scratch/

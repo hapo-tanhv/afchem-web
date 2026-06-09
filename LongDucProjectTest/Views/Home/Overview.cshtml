@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿@{
+﻿﻿﻿﻿@{
     ViewBag.Title = "SOLAR SCADA SYSTEM - OVERVIEW";
     ViewBag.ButtonHome = "active";
     ViewBag.ButtonOverview = "";
@@ -544,25 +544,9 @@
                     </table>
                 </div>
             </div>
-            <!-- RIGHT: BOM SẢN XUẤT -->
-            <div class="bom-panel">
-                <div class="panel-header">
-                    <span class="header-accent"></span>
-                    <h3>BOM sản xuất</h3>
-                </div>
-                <table class="bom-table">
-                    <thead>
-                        <tr>
-                            <th class="th-code">Mã hàng</th>
-                            <th class="th-name">Tên nguyên vật liệu</th>
-                            <th class="th-ratio">Tổng xuất</th>
-                            <th class="th-unit">Đơn vị tính</th>
-                            <th class="th-lot">Lot/No</th>
-                        </tr>
-                    </thead>
-                    <tbody id="bomTableBody">
-                    </tbody>
-                </table>
+            <!-- RIGHT: BOM SẢN XUẤT CONTAINER -->
+            <div id="bomTablesContainer" style="display: flex; flex-direction: column; gap: 20px;">
+                <!-- Dynamic BOM tables will be rendered here -->
             </div>
         </div>
     </div>
@@ -740,23 +724,71 @@
         container.innerHTML = html;
     }
     function renderBOMTable(bom) {
-        const tbody = document.getElementById('bomTableBody');
-        if (!tbody) return;
+        const container = document.getElementById('bomTablesContainer');
+        if (!container) return;
         if (!bom || bom.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="color: #94a3b8; padding: 20px; text-align: center;">Không có dữ liệu BOM</td></tr>';
+            container.innerHTML = `
+                <div class="bom-panel">
+                    <div class="panel-header">
+                        <span class="header-accent" style="background: #3b82f6;"></span>
+                        <h3>BOM sản xuất</h3>
+                    </div>
+                    <div style="color: #94a3b8; padding: 20px; text-align: center; background: rgba(15, 23, 42, 0.45); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px;">Không có dữ liệu BOM</div>
+                </div>`;
             return;
         }
-        let html = '';
+
+        // Group BOM by run_number
+        const groups = {};
         bom.forEach(item => {
-            html += `<tr>
-                <td class="td-code">${item.code || '-'}</td>
-                <td class="td-name">${item.material_code || '-'}</td>
-                <td class="td-ratio">${item.quantity !== null && item.quantity !== undefined ? item.quantity : '-'}</td>
-                <td class="td-unit">${item.unit || '-'}</td>
-                <td class="td-lot">${item.batch_no || '-'}</td>
-            </tr>`;
+            const runNum = item.run_number || 1;
+            if (!groups[runNum]) {
+                groups[runNum] = [];
+            }
+            groups[runNum].push(item);
         });
-        tbody.innerHTML = html;
+
+        // Sort run numbers ascending
+        const runNumbers = Object.keys(groups).sort((a, b) => Number(a) - Number(b));
+
+        let html = '';
+        runNumbers.forEach(runNum => {
+            const items = groups[runNum];
+            html += `
+            <div class="bom-panel">
+                <div class="panel-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px;">
+                    <span class="header-accent" style="background: #10b981;"></span>
+                    <h3>BOM sản xuất - Mẻ ${runNum}</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="bom-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th class="th-code">Mã hàng</th>
+                                <th class="th-name">Tên nguyên vật liệu</th>
+                                <th class="th-ratio">Tổng xuất</th>
+                                <th class="th-unit">Đơn vị tính</th>
+                                <th class="th-lot">Lot/No</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+            items.forEach(item => {
+                html += `
+                            <tr>
+                                <td class="td-code">${item.code || '-'}</td>
+                                <td class="td-name">${item.material_code || '-'}</td>
+                                <td class="td-ratio">${item.quantity !== null && item.quantity !== undefined ? item.quantity : '-'}</td>
+                                <td class="td-unit">${item.unit || '-'}</td>
+                                <td class="td-lot">${item.batch_no || '-'}</td>
+                            </tr>`;
+            });
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+        });
+        container.innerHTML = html;
     }
 </script>
 <atscada-task at-interval="1000"></atscada-task>

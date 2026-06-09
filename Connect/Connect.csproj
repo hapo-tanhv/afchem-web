@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -38,6 +38,19 @@
     </Reference>
     <Reference Include="iWebService">
       <HintPath>..\..\..\..\..\Program Files\ATPro\ATSCADA\iWebService.dll</HintPath>
+    </Reference>
+    <Reference Include="DriverPluginInterface">
+      <HintPath>..\..\..\..\..\Program Files\ATPro\ATSCADA\DriverPluginInterface.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="iTools">
+      <HintPath>..\..\..\..\..\Program Files\ATPro\ATSCADA\iTools.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Visualization">
+      <HintPath>..\..\..\..\..\Program Files\ATPro\ATSCADA\Visualization.dll</HintPath>
+      <Private>True</Private>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -86,6 +99,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Tag_file.XML">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
