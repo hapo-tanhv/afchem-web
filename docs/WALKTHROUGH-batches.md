@@ -138,17 +138,18 @@ Khi mẻ xả hàng hoàn tất (Công đoạn 8 kết thúc, các tag rung và 
 
 Phương thức này áp dụng logic phân giải chuẩn hóa với thứ tự ưu tiên:
 1. **Theo `runId` cụ thể:** Nếu client truyền lên `runId` > 0, hệ thống lấy chính xác mẻ đó và batch cha tương ứng.
-2. **Theo `batchId` cụ thể:** Nếu client chọn một batch từ dropdown, hệ thống sẽ tự động xác định mẻ con:
-   - Ưu tiên mẻ đang chạy (`status = 'Active'`).
-   - Nếu không có, ưu tiên mẻ đã hoàn thành gần nhất (`status = 'Completed' ORDER BY end_time DESC, id DESC`).
-   - Nếu batch chưa chạy (cả batch và các mẻ đều `Pending`), lấy **mẻ con đầu tiên / cũ nhất** (`ORDER BY id ASC LIMIT 1`).
+2. **Theo `batchId` cụ thể:** Nếu client chọn một batch từ dropdown, hệ thống sẽ tự động xác định mẻ con theo thứ tự ưu tiên thống nhất:
+   - **Mẻ đang chạy (`Active`):** Mẻ đang chạy (`status = 'Active'`). Lấy mẻ mới nhất.
+   - **Mẻ đã hoàn thành (`Completed`):** Mẻ đã hoàn thành (`status = 'Completed'`), sắp xếp theo thời gian kết thúc thực tế (`end_time DESC`) kết hợp ID giảm dần (`id DESC`) để lấy mẻ hoàn thành gần nhất.
+   - **Mẻ chưa chạy (`Pending`/`Waiting`/`Created`):** Lấy mẻ con đầu tiên theo trình tự (`ORDER BY id ASC`).
+   - **Mẻ bị lỗi (`Error`/`Failed`):** Mẻ chạy lỗi (`status = 'Error'/'Failed'`). Sắp xếp theo ID giảm dần.
 3. **Theo ngày (`date`):** Nếu client truyền ngày, lấy batch mới nhất của ngày đó, sau đó áp dụng cơ chế xác định mẻ con như bước 2.
 4. **Fallback mặc định (Tải trang lần đầu):** Áp dụng logic ưu tiên toàn hệ thống:
-   - Run đang chạy (`Active run`) / Batch đang chạy (`Active batch`).
-   - Mẻ con hoàn thành gần nhất (`Completed run`).
-   - Batch đang chờ trong ngày (`Pending batch` ngày hôm nay), chọn mẻ con đầu tiên.
-   - Batch đang chờ bất kỳ, chọn mẻ con đầu tiên.
-   - Fallback cuối cùng: Batch mới nhất hệ thống, chọn mẻ con đầu tiên.
+   - Mẻ đang chạy trên toàn hệ thống (`Active run`).
+   - Nếu không có mẻ Active nào, tìm Batch đang chạy (`Active batch`), sau đó áp dụng logic ưu tiên mẻ con như ở bước 2 (cho phép tìm mẻ Completed gần nhất của lô này thay vì mặc định lấy mẻ lỗi đầu tiên).
+   - Nếu không có mẻ/lô Active, tìm mẻ con hoàn thành gần nhất trên toàn hệ thống (`Completed run`).
+   - Nếu không có mẻ Completed, tìm Batch đang chờ trong ngày (`Pending batch` ngày hôm nay) hoặc Batch đang chờ bất kỳ, sau đó áp dụng logic ưu tiên mẻ con như ở bước 2.
+   - Fallback cuối cùng: Batch mới nhất hệ thống, áp dụng logic ưu tiên mẻ con như ở bước 2.
 
 ### 5.2. Các API được nâng cấp sử dụng `BatchResolver`
 Toàn bộ các điểm cuối sau đã được sửa đổi để sử dụng chung một logic phân giải thông qua `BatchResolver`, đảm bảo tính đồng nhất 100% giữa UI hiển thị và dữ liệu xuất báo cáo:

@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using CsvHelper;
+﻿﻿﻿using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -1092,7 +1092,7 @@ namespace LongDucProject.Controllers
                 var bomList = new List<object>();
                 if (resolvedBatchId != -1)
                 {
-                    var dtBOM = connector.ExecuteQuery($"SELECT ri.code, ri.material_code, ri.quantity, ri.value, ri.unit, ri.batch_no, r.run_number, ri.run_id FROM run_info ri JOIN runs r ON ri.run_id = r.id WHERE r.batch_id = {resolvedBatchId} ORDER BY r.run_number ASC, ri.id ASC");
+                    var dtBOM = connector.ExecuteQuery($"SELECT ri.code, ri.material_code, ri.quantity, ri.value, ri.unit, ri.batch_no, r.run_number, ri.run_id FROM run_info ri JOIN runs r ON ri.run_id = r.id WHERE r.batch_id = {resolvedBatchId} AND r.status != 'Error' ORDER BY r.run_number ASC, ri.id ASC");
                     if (dtBOM != null)
                     {
                         foreach (DataRow row in dtBOM.Rows)
