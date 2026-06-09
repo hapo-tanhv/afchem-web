@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             activepower = Math.floor(Math.random() * 90) + 10; // 10-100 kW
             temperature = Math.floor(Math.random() * 50) + 25;    // 25-75 °C
-            pressure = Math.floor(Math.random() * 10) + 10;    // 10-20 Pa
+            pressure = Math.floor(Math.random() * 90) + 10;    // 10-20 Pa
 
             // Separate values for line chart (realistic temperature ranges)
 
@@ -653,7 +653,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (window.pressureChartInstance && window.pressureChartInstance.series && window.pressureChartInstance.series[0]) {
                     var val = Number(latestApSuat) || 0;
                     window.pressureChartInstance.series[0].update({ data: [val] });
-                    updateChartWithDynamicBands(window.pressureChartInstance, val, 20, {
+                    updateChartWithDynamicBands(window.pressureChartInstance, val, 100, {
                         color1: '#a2f7f7',
                         color2: 'rgba(239, 68, 68, 0.1)'
                     });
@@ -995,14 +995,14 @@ function PressureChart() {
     return Highcharts.chart('container-pressure', Highcharts.merge(gaugeOptions, {
         yAxis: {
             min: 0,
-            max: 20,
-            tickPositions: [0, 20],
+            max: 100,
+            tickPositions: [0, 100],
             plotBands: [{
                 id: 'green-band',
                 from: 0, to: 0, color: '#a2f7f7', thickness: 15
             }, {
                 id: 'red-band',
-                from: 0, to: 20, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
+                from: 0, to: 100, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
             }],
             labels: {
                 rotation: 'auto',
