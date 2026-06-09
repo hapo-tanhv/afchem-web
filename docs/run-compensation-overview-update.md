@@ -1,4 +1,4 @@
-# Tài liệu cập nhật hiển thị mẻ bù trừ (Run Compensation) trên trang Overview và trang Event
+# Tài liệu cập nhật hiển thị mẻ bù trừ (Run Compensation) và định dạng nhiệt độ (chia 10) trên trang Overview và trang Event
 
 ## 1. Vấn đề hiện tại
 Khi một Batch có cơ chế bù trừ mẻ chạy lỗi:
@@ -8,6 +8,7 @@ Khi một Batch có cơ chế bù trừ mẻ chạy lỗi:
 - **Lỗi hiển thị mẻ trên Overview:** Trang Overview hiển thị thông tin của mẻ 1 (bị lỗi `Error`) thay vì hiển thị mẻ vừa hoàn thành gần nhất (mẻ 3).
 - **Lỗi hiển thị BOM:** Dữ liệu bảng BOM sản xuất và tổng lượng nguyên liệu vẫn lấy cả thông tin định mức của mẻ bị lỗi (`Error`).
 - **Lỗi hiển thị Ghi chú trên Event:** Khi chọn xem mẻ lỗi (`Error`), trang Event hiển thị nhầm nhãn trạng thái và ghi chú chất lượng là "Chu kỳ hoàn tất thành công" và "Chất lượng sản phẩm: ĐẠT".
+- **Lỗi hiển thị nhiệt độ (chưa chia 10):** Trong bảng "Thống kê mẻ hiện tại" và các mô tả cảnh báo của từng bước, nhiệt độ thực tế lấy từ database hiển thị dạng số nguyên thô (ví dụ: `350` °C thay vì `35.0` °C) do chưa được chia cho 10.
 
 ---
 
@@ -42,6 +43,15 @@ Trong phương thức `GetEventLogRealtime` của [EventController.cs](file:///c
    * Nếu mẻ bị lỗi, nhãn sẽ hiển thị là `"Chu kỳ bị lỗi"` thay vì nhãn mặc định `"Chu kỳ hoàn tất thành công"`.
 2. **Ghi chú chất lượng (`note`):**
    * Nếu mẻ bị lỗi, ghi chú sẽ hiển thị là `"Chu kỳ bị lỗi. Chất lượng sản phẩm: KHÔNG ĐẠT (LỖI)"` với màu chữ đỏ tương ứng của lớp `text-danger`, giúp người vận hành nhận biết nhanh các mẻ chạy không thành công.
+
+### D. Định dạng trị số nhiệt độ trong Thống kê mẻ hiện tại và Cảnh báo
+Để sửa lỗi các giá trị nhiệt độ hiển thị dạng số nguyên thô (ví dụ: `350` thay vì `35.0` °C):
+1. **Trong `OverviewController.GetCurrentBatchStats`:**
+   * Khi lấy dữ liệu nhiệt độ từ bảng lịch sử `alarmreport`, các giá trị `NhietDoBonTronTren`, `NhietDoBonTronGiua`, `NhietDoBonTronDuoi` sẽ được chia cho `10.0` để định dạng về kiểu số thực có 1 chữ số phần thập phân.
+   * Khi lấy các đỉnh nhiệt độ lỗi từ `realtime_alarms` để ghép vào dải nhiệt độ từng bước, các trị số này cũng được chia cho `10.0`.
+   * Các ngưỡng cảnh báo nhiệt độ (`topThreshold`, `midThreshold`, `botThreshold`) được chia `10.0` tương ứng để đảm bảo so sánh hiển thị màu đỏ vượt ngưỡng hoạt động chính xác.
+2. **Trong thông báo chi tiết của Cảnh báo (`GetCurrentBatchStats`, `GetRecentAlarms`, `GetEventLogRealtime`):**
+   * Đối với các tag có tên chứa `"NhietDo"`, giá trị đo được (`val`) và giá trị ngưỡng (`threshold`) hiển thị trong chuỗi `detailMessage` (ví dụ: `Giá trị: 35.2 °C (ngưỡng: 35.0 °C)`) được tự động chia cho `10.0` trước khi kết xuất chuỗi thông báo.
 
 ---
 

@@ -1,4 +1,4 @@
-﻿﻿using CsvHelper;
+﻿using CsvHelper;
 
 using Hino.Getdata.Common;
 
@@ -374,6 +374,11 @@ namespace LongDucProject.Controllers
                             string tagName = row["TagName"].ToString();
                             double val = Convert.ToDouble(row["Value"]);
                             double threshold = Convert.ToDouble(row["Threshold"]);
+                            if (tagName.IndexOf("NhietDo", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                val = val / 10.0;
+                                threshold = threshold / 10.0;
+                            }
                             string msg = row["Message"].ToString();
 
                             string unit = tagName.IndexOf("NhietDo", StringComparison.OrdinalIgnoreCase) >= 0 ? "°C" :
