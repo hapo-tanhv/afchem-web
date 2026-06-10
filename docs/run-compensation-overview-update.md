@@ -9,6 +9,7 @@ Khi một Batch có cơ chế bù trừ mẻ chạy lỗi:
 - **Lỗi hiển thị BOM:** Dữ liệu bảng BOM sản xuất và tổng lượng nguyên liệu vẫn lấy cả thông tin định mức của mẻ bị lỗi (`Error`).
 - **Lỗi hiển thị Ghi chú trên Event:** Khi chọn xem mẻ lỗi (`Error`), trang Event hiển thị nhầm nhãn trạng thái và ghi chú chất lượng là "Chu kỳ hoàn tất thành công" và "Chất lượng sản phẩm: ĐẠT".
 - **Lỗi hiển thị nhiệt độ (chưa chia 10):** Trong bảng "Thống kê mẻ hiện tại" và các mô tả cảnh báo của từng bước, nhiệt độ thực tế lấy từ database hiển thị dạng số nguyên thô (ví dụ: `350` °C thay vì `35.0` °C) do chưa được chia cho 10.
+- **Lỗi hiển thị Lô chạy xuyên ngày:** Khi một Lô được tạo/bắt đầu hôm qua nhưng hôm nay mới chạy nốt mẻ còn lại, Lô đó biến mất khỏi bảng "Tổng số batch sản xuất trong ngày" hôm nay (vì chỉ lọc theo ngày bắt đầu Lô).
 
 ---
 
@@ -47,11 +48,22 @@ Trong phương thức `GetEventLogRealtime` của [EventController.cs](file:///c
 ### D. Định dạng trị số nhiệt độ trong Thống kê mẻ hiện tại và Cảnh báo
 Để sửa lỗi các giá trị nhiệt độ hiển thị dạng số nguyên thô (ví dụ: `350` thay vì `35.0` °C):
 1. **Trong `OverviewController.GetCurrentBatchStats`:**
-   * Khi lấy dữ liệu nhiệt độ từ bảng lịch sử `alarmreport`, các giá trị `NhietDoBonTronTren`, `NhietDoBonTronGiua`, `NhietDoBonTronDuoi` sẽ được chia cho `10.0` để định dạng về kiểu số thực có 1 chữ số phần thập phân.
-   * Khi lấy các đỉnh nhiệt độ lỗi từ `realtime_alarms` để ghép vào dải nhiệt độ từng bước, các trị số này cũng được chia cho `10.0`.
-   * Các ngưỡng cảnh báo nhiệt độ (`topThreshold`, `midThreshold`, `botThreshold`) được chia `10.0` tương ứng để đảm bảo so sánh hiển thị màu đỏ vượt ngưỡng hoạt động chính xác.
+   * Khi lấy dữ liệu nhiệt độ từ bảng lịch sử `alarmreport`, các giá trị `NhietDoBonTronTren`, `NhietDoBonTronGiua`, `NhietDoBonTronDuoi` được chia cho `10.0` để định dạng về kiểu số thực có 1 chữ số phần thập phân.
+   * Các đỉnh nhiệt độ từ `realtime_alarms` để ghép vào dải nhiệt độ từng bước cũng được chia cho `10.0`.
+   * Các ngưỡng cảnh báo nhiệt độ (`topThreshold`, `midThreshold`, `botThreshold`) được chia `10.0` để đảm bảo logic tô đỏ hoạt động đúng.
 2. **Trong thông báo chi tiết của Cảnh báo (`GetCurrentBatchStats`, `GetRecentAlarms`, `GetEventLogRealtime`):**
-   * Đối với các tag có tên chứa `"NhietDo"`, giá trị đo được (`val`) và giá trị ngưỡng (`threshold`) hiển thị trong chuỗi `detailMessage` (ví dụ: `Giá trị: 35.2 °C (ngưỡng: 35.0 °C)`) được tự động chia cho `10.0` trước khi kết xuất chuỗi thông báo.
+   * Đối với các tag đo lường nhiệt độ (`NhietDo`), giá trị đo được (`val`) và giá trị ngưỡng (`threshold`) hiển thị trong chuỗi `detailMessage` được tự động chia cho `10.0` trước khi kết xuất thông báo.
+
+### E. Mở rộng bộ lọc Lô trong ngày và Cảnh báo mẻ còn thiếu chạy xuyên ngày
+1. **Hiển thị Lô chạy xuyên ngày:**
+   * Cập nhật lại câu lệnh SQL lấy Lô sản xuất trong ngày tại trang Overview. Ngoài việc lọc theo ngày tạo/ngày bắt đầu lô là hôm nay, hệ thống lọc thêm:
+     * Các Lô đang ở trạng thái `Active`.
+     * Hoặc các Lô có bất kỳ mẻ con nào chạy (bắt đầu hoặc kết thúc) trong ngày hôm nay.
+   * Nhờ đó, Lô chạy xuyên ngày sẽ luôn hiển thị trong bảng "Tổng số batch sản xuất trong ngày" của cả hai ngày hoạt động.
+2. **Banner Cảnh báo mẻ còn thiếu:**
+   * Trong phương thức `GetCurrentBatchStats`, hệ thống tự động quét cơ sở dữ liệu để kiểm tra xem có Lô đang chạy (`batches.status = 'Active'`) nào được bắt đầu từ ngày hôm trước (`DATE(start_time) < CURDATE()`) nhưng vẫn còn các mẻ con chưa chạy xong (trạng thái `Pending`/`Waiting`/`Created`).
+   * Nếu phát hiện, hệ thống tự động sinh ghi chú dạng: `Batch đang chạy (tên batch) ngày [ngày bắt đầu], mẻ còn thiếu chưa chạy (tên mẻ)`.
+   * Trên giao diện [Overview.cshtml](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Views/Home/Overview.cshtml) và [OverviewRealtime.js](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/JavaScript/RealTime/OverviewRealtime.js), chúng tôi bổ sung một Banner cảnh báo màu cam nổi bật đặt ngay trên phần **"Trạng thái quy trình"**. Banner này sẽ tự động hiện lên khi có mẻ chưa chạy xuyên ngày và ẩn đi khi tất cả các mẻ của Lô trước đó đã hoàn tất.
 
 ---
 
@@ -59,3 +71,5 @@ Trong phương thức `GetEventLogRealtime` của [EventController.cs](file:///c
 * [BatchResolver.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Service/BatchResolver.cs)
 * [OverviewController.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Controllers/OverviewController.cs)
 * [EventController.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Controllers/EventController.cs)
+* [Overview.cshtml](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Views/Home/Overview.cshtml)
+* [OverviewRealtime.js](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/JavaScript/RealTime/OverviewRealtime.js)

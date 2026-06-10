@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿var activepower;
+﻿﻿﻿﻿﻿var activepower;
 
 var temperature;
 
@@ -239,6 +239,18 @@ document.addEventListener("DOMContentLoaded", function () {
             data: queryData,
             dataType: 'json',
             success: function (data) {
+                // Toggle warning banner for pending runs across days
+                var pendingRunBanner = document.getElementById("pendingRunBanner");
+                var pendingRunBannerText = document.getElementById("pendingRunBannerText");
+                if (pendingRunBanner && pendingRunBannerText) {
+                    if (data && data.pendingRunNote) {
+                        pendingRunBannerText.innerHTML = data.pendingRunNote;
+                        pendingRunBanner.style.display = "flex";
+                    } else {
+                        pendingRunBanner.style.display = "none";
+                    }
+                }
+
                 // Update common header stats first
                 if (typeof updateHeaderStats === 'function') {
                     updateHeaderStats(data);

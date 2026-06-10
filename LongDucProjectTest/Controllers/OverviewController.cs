@@ -1,4 +1,4 @@
-﻿﻿using CsvHelper;
+﻿using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -1035,7 +1035,16 @@ namespace LongDucProject.Controllers
 
                 // 5. Fetch daily batches produced today
                 var dailyBatchesList = new List<object>();
-                var dtDaily = connector.ExecuteQuery($"SELECT id, name, status, start_time, end_time, target_weight FROM batches WHERE DATE(created_at) = '{DateTime.Today.ToString("yyyy-MM-dd")}' OR DATE(start_time) = '{DateTime.Today.ToString("yyyy-MM-dd")}' ORDER BY id ASC");
+                var todayStr = DateTime.Today.ToString("yyyy-MM-dd");
+                var dtDaily = connector.ExecuteQuery($@"
+                    SELECT id, name, status, start_time, end_time, target_weight 
+                    FROM batches 
+                    WHERE DATE(created_at) = '{todayStr}' 
+                       OR DATE(start_time) = '{todayStr}' 
+                       OR status = 'Active' 
+                       OR id IN (SELECT DISTINCT batch_id FROM runs WHERE DATE(start_time) = '{todayStr}' OR DATE(end_time) = '{todayStr}') 
+                    ORDER BY id ASC");
+
                 if (dtDaily != null)
                 {
                     foreach (DataRow row in dtDaily.Rows)
@@ -1094,6 +1103,34 @@ namespace LongDucProject.Controllers
                     }
                 }
 
+                // Check for pending runs of active batches started on a previous day
+                string pendingRunNote = "";
+                var dtPendingRunsCheck = connector.ExecuteQuery($@"
+                    SELECT b.name AS batch_name, b.start_time AS batch_start, r.name AS run_name 
+                    FROM runs r 
+                    JOIN batches b ON r.batch_id = b.id 
+                    WHERE b.status = 'Active' 
+                      AND DATE(b.start_time) < '{todayStr}' 
+                      AND r.status IN ('Pending', 'Waiting', 'Created') 
+                    ORDER BY b.id ASC, r.run_number ASC");
+
+                if (dtPendingRunsCheck != null && dtPendingRunsCheck.Rows.Count > 0)
+                {
+                    var pendingGroups = dtPendingRunsCheck.AsEnumerable()
+                        .GroupBy(row => new { 
+                            BatchName = row["batch_name"].ToString(), 
+                            Start = Convert.ToDateTime(row["batch_start"]).ToString("yyyy-MM-dd") 
+                        });
+                    
+                    var groupNotes = new List<string>();
+                    foreach (var group in pendingGroups)
+                    {
+                        var runNames = string.Join(", ", group.Select(r => r["run_name"].ToString()));
+                        groupNotes.Add($"Batch đang chạy ({group.Key.BatchName}) ngày {group.Key.Start}, mẻ còn thiếu chưa chạy ({runNames})");
+                    }
+                    pendingRunNote = string.Join(" | ", groupNotes);
+                }
+
                 // Fetch BOM (run_info) for all runs in the active/resolved batch
                 var bomList = new List<object>();
                 if (resolvedBatchId != -1)
@@ -1118,7 +1155,7 @@ namespace LongDucProject.Controllers
                     }
                 }
 
-                return Json(new { steps = stepsList, globalAlarms = sortedGlobalAlarms, batchInfo = batchInfo, dailyBatches = dailyBatchesList, bom = bomList }, JsonRequestBehavior.AllowGet);
+                return Json(new { steps = stepsList, globalAlarms = sortedGlobalAlarms, batchInfo = batchInfo, dailyBatches = dailyBatchesList, bom = bomList, pendingRunNote = pendingRunNote }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {
