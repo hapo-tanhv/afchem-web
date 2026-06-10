@@ -366,6 +366,7 @@ namespace LongDucProject.Controllers
                         FROM run_info ri 
                         JOIN runs r ON ri.run_id = r.id 
                         WHERE r.batch_id = {resolvedBatchId}
+                          AND LOWER(ri.unit) = 'kg'
                         GROUP BY ri.run_id");
                     if (dtRunWeights != null)
                     {
@@ -1164,11 +1165,89 @@ namespace LongDucProject.Controllers
                         double bWeight = row["target_weight"] != DBNull.Value ? Convert.ToDouble(row["target_weight"]) : 0;
                         string bWeightStr = bWeight > 0 ? $"{bWeight.ToString("0.##", CultureInfo.InvariantCulture)} KG" : "-";
 
+                        double bProducedWeight = 0;
+                        var dtRunsForBatch = connector.ExecuteQuery($"SELECT id, status FROM runs WHERE batch_id = {bId}");
+                        if (dtRunsForBatch != null && dtRunsForBatch.Rows.Count > 0)
+                        {
+                            var runBOMWeights = new Dictionary<int, double>();
+                            var dtBOMWeights = connector.ExecuteQuery($@"
+                                SELECT ri.run_id, SUM(ri.quantity) as run_weight 
+                                FROM run_info ri 
+                                JOIN runs r ON ri.run_id = r.id 
+                                WHERE r.batch_id = {bId}
+                                  AND LOWER(ri.unit) = 'kg'
+                                GROUP BY ri.run_id");
+                            if (dtBOMWeights != null)
+                            {
+                                foreach (DataRow rRow in dtBOMWeights.Rows)
+                                {
+                                    int rId = Convert.ToInt32(rRow["run_id"]);
+                                    double w = rRow["run_weight"] != DBNull.Value ? Convert.ToDouble(rRow["run_weight"]) : 0;
+                                    runBOMWeights[rId] = w;
+                                }
+                            }
+
+                            int totalRunsForBatch = dtRunsForBatch.Rows.Count;
+                            double averageRunWeightForBatch = bWeight / (totalRunsForBatch > 0 ? totalRunsForBatch : 1);
+
+                            foreach (DataRow rRow in dtRunsForBatch.Rows)
+                            {
+                                int rId = Convert.ToInt32(rRow["id"]);
+                                string rStatus = rRow["status"] != DBNull.Value ? rRow["status"].ToString().Trim() : "";
+
+                                if (rStatus.Equals("Error", StringComparison.OrdinalIgnoreCase) || 
+                                    rStatus.Equals("Failed", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    continue;
+                                }
+
+                                double runWeight = averageRunWeightForBatch;
+                                if (runBOMWeights.ContainsKey(rId) && runBOMWeights[rId] > 0)
+                                {
+                                    runWeight = runBOMWeights[rId];
+                                }
+
+                                if (rStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    bProducedWeight += runWeight;
+                                }
+                                else if (rStatus.Equals("Active", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    int rActiveStepCode = 0;
+                                    var dtActiveStep = connector.ExecuteQuery($"SELECT Description FROM alarmlog WHERE runId = {rId} AND Status = 'Alarm' ORDER BY OccurrenceTime DESC LIMIT 1");
+                                    if (dtActiveStep != null && dtActiveStep.Rows.Count > 0)
+                                    {
+                                        string desc = dtActiveStep.Rows[0]["Description"].ToString();
+                                        if (desc.Contains("Cấp Liệu") || desc.Contains("Cap Lieu")) rActiveStepCode = 1;
+                                        else if (desc.Contains("Trộn 1") || desc.Contains("Tron 1")) rActiveStepCode = 2;
+                                        else if (desc.Contains("Xả Đáy") || desc.Contains("Xa Day")) rActiveStepCode = 3;
+                                        else if (desc.Contains("Rung Xả Đ") || desc.Contains("Rung Xa D")) rActiveStepCode = 4;
+                                        else if (desc.Contains("Hút Xả Đáy") || desc.Contains("Hut Xa Day")) rActiveStepCode = 5;
+                                        else if (desc.Contains("Trộn 2") || desc.Contains("Tron 2")) rActiveStepCode = 6;
+                                        else if (desc.Contains("Xả Hàng") || desc.Contains("Xa Hang")) rActiveStepCode = 7;
+                                        else if (desc.Contains("Rung Xả H") || desc.Contains("Rung Xa H")) rActiveStepCode = 8;
+                                    }
+                                    if (rActiveStepCode > 0)
+                                    {
+                                        bProducedWeight += (rActiveStepCode / 8.0) * runWeight;
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (bStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+                            {
+                                bProducedWeight = bWeight;
+                            }
+                        }
+
                         dailyBatchesList.Add(new
                         {
                             id = bId,
                             name = bName,
                             weight = bWeightStr,
+                            producedWeight = bProducedWeight,
                             duration = durationStr,
                             status = bStatus
                         });

@@ -1,4 +1,4 @@
-﻿﻿// Machine Dropdown Functions
+﻿// Machine Dropdown Functions
 
 function toggleMachineDropdown() {
 
@@ -193,29 +193,9 @@ function updateHeaderStats(data) {
 
         let totalOutput = 0;
 
-        let activeStepCode = 0;
-
-        if (data.batchInfo && data.batchInfo.batchStatus === "Active") {
-
-            activeStepCode = data.batchInfo.activeStepCode || 0;
-
-        }
-
         data.dailyBatches.forEach(function (batch) {
 
-            if (batch.status === "Completed") {
-
-                totalOutput += 500;
-
-            } else if (batch.status === "Active") {
-
-                if (activeStepCode > 0) {
-
-                    totalOutput += Math.round((activeStepCode / 8) * 500);
-
-                }
-
-            }
+            totalOutput += batch.producedWeight || 0;
 
         });
 
@@ -223,7 +203,7 @@ function updateHeaderStats(data) {
 
         if (currentOutputEl) {
 
-            currentOutputEl.innerHTML = totalOutput;
+            currentOutputEl.innerHTML = Math.round(totalOutput);
 
         }
 

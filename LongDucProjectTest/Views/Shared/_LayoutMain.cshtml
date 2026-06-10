@@ -1,4 +1,4 @@
-﻿﻿﻿
+﻿﻿
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -717,7 +717,7 @@
     <!-- AdminLTE dashboard demo (This is only for demo purposes) -->
     <script src="~/AdminLTE-master/dist/js/pages/dashboard.js"></script>
     @*<script src="~/JavaScript/Common/Count.js"></script>*@
-    <script src="~/JavaScript/Common/LayoutMain.js"></script>
+    <script src="~/JavaScript/Common/LayoutMain.js?v=@DateTime.Now.Ticks"></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

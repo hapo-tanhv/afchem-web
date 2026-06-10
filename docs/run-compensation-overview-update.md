@@ -73,10 +73,13 @@ Trong phương thức `GetEventLogRealtime` của [EventController.cs](file:///c
    * Thay vì chia trung bình cơ học thô sơ (`target_weight / total_runs` nhân với số mẻ completed), hệ thống truy vấn tổng định mức thực tế từ `run_info` cho từng mẻ con:
      * Loại bỏ hoàn toàn các mẻ lỗi (`status = 'Error'` hoặc `'Failed'`).
      * Cộng dồn chính xác khối lượng của các mẻ đã hoàn thành (`status = 'Completed'`) dựa trên định mức BOM chi tiết của mẻ đó.
+     * Sửa lỗi cộng dồn sai lệch (ví dụ ra 1201.2 KG thay vì ~1000 KG) bằng cách lọc các bản ghi định mức nguyên liệu chỉ tính đơn vị khối lượng (`'kg'`) trong câu truy vấn SUM, tránh cộng dồn các vật tư đóng gói tính bằng đơn vị `chiếc` (như túi nilon, tem, dây thắt).
      * Cập nhật số liệu `totalRuns` và `completedRuns` trên giao diện theo số lượng mẻ hợp lệ (không lỗi), giúp hiển thị tỷ lệ % sản lượng chính xác (100% khi tất cả các mẻ thành công hoàn tất, kể cả khi có mẻ bù).
 3. **Định dạng thời gian bắt đầu và dự kiến kết thúc (Tổng quan Batch):**
    * Trong [OverviewController.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Controllers/OverviewController.cs), trả về thời gian bắt đầu lô dạng đầy đủ `yyyy-MM-dd HH:mm:ss`.
    * Trong [OverviewRealtime.js](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/JavaScript/RealTime/OverviewRealtime.js), định dạng lại "Thời gian bắt đầu" và "Thời gian dự kiến kết thúc" thành `dd/MM/yyyy HH:mm` bằng hàm trợ giúp `formatDateTimeString`.
+4. **Sửa lỗi hiển thị sản lượng hiện tại trên Header:**
+   * Loại bỏ cơ chế cộng cứng `500` KG cho mỗi lô hoàn thành ở file [LayoutMain.js](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/JavaScript/Common/LayoutMain.js). Thay vào đó, backend tự động tính toán chính xác sản lượng đã đạt được của mỗi lô (`producedWeight` tính từ các mẻ con thành công) và truyền sang để JS cộng dồn động lên Header.
 
 ---
 
