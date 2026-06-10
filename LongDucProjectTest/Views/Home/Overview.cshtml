@@ -1,4 +1,4 @@
-﻿﻿﻿@{
+﻿﻿@{
     ViewBag.Title = "SOLAR SCADA SYSTEM - OVERVIEW";
     ViewBag.ButtonHome = "active";
     ViewBag.ButtonOverview = "";
@@ -175,7 +175,7 @@
 <!-- Main content -->
 <div class="overview-dashboard">
     <!-- BANNER CẢNH BÁO MẺ CHƯA CHẠY XUYÊN NGÀY -->
-    <div id="pendingRunBanner" class="pending-run-banner" style="display: none; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 15px 20px; margin-bottom: 20px; color: #f59e0b; display: flex; align-items: center; gap: 12px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);">
+    <div id="pendingRunBanner" class="pending-run-banner" style="display: none; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 15px 20px; margin-bottom: 20px; color: #f59e0b; align-items: center; gap: 12px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);">
         <i class="fas fa-exclamation-triangle" style="font-size: 18px;"></i>
         <span id="pendingRunBannerText"></span>
     </div>
@@ -799,4 +799,4 @@
 </script>
 <atscada-task at-interval="1000"></atscada-task>
 <script type="module" src="~/JavaScript/Core/Component/Task/atscada-task-element.js"></script>
-<script src="~/JavaScript/RealTime/OverviewRealtime.js?v=now()"></script>
+<script src="~/JavaScript/RealTime/OverviewRealtime.js?v=@DateTime.Now.Ticks"></script>
