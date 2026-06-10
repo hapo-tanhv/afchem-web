@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿var activepower;
+﻿﻿﻿﻿var activepower;
 
 var temperature;
 
@@ -64,6 +64,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function formatRunningTime(totalSeconds) {
         return totalSeconds + "s";
+    }
+
+    function formatDateTimeString(dateStr) {
+        if (!dateStr || dateStr === "-" || dateStr === "") return "-";
+        var parts = dateStr.split(/[ T]/);
+        if (parts.length < 2) {
+            if (dateStr.indexOf('/') >= 0 && dateStr.indexOf(':') >= 0) {
+                return dateStr;
+            }
+            return dateStr;
+        }
+        var dateParts = parts[0].split(/[-/]/);
+        var timeParts = parts[1].split(':');
+        if (dateParts.length < 3 || timeParts.length < 2) return dateStr;
+        var year = dateParts[0].length === 4 ? dateParts[0] : dateParts[2];
+        var day = dateParts[0].length === 4 ? dateParts[2] : dateParts[0];
+        var month = dateParts[1];
+        return day + '/' + month + '/' + year + ' ' + timeParts[0] + ':' + timeParts[1];
     }
 
     function updateCalculatedTime() {
@@ -308,7 +326,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     var batchStartTimeInfoEl = document.getElementById("batchStartTimeInfo");
                     if (batchStartTimeInfoEl) {
-                        batchStartTimeInfoEl.innerHTML = batchInfo.batchActualStart || "-";
+                        batchStartTimeInfoEl.innerHTML = formatDateTimeString(batchInfo.batchActualStart) || "-";
                     }
 
                     var stepEl = document.getElementById("step");
@@ -442,8 +460,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (batchInfo.batchStatus === "Completed" || batchInfo.machineStatus === "COMPLETED") {
                             if (batchEstimatedEndTimeEl) {
                                 if (batchInfo.batchEndTime) {
-                                    var timePart = batchInfo.batchEndTime.split(' ')[1] || batchInfo.batchEndTime;
-                                    batchEstimatedEndTimeEl.innerHTML = timePart;
+                                    batchEstimatedEndTimeEl.innerHTML = formatDateTimeString(batchInfo.batchEndTime);
                                 } else {
                                     batchEstimatedEndTimeEl.innerHTML = "-";
                                 }
@@ -475,9 +492,11 @@ document.addEventListener("DOMContentLoaded", function () {
                             if (batchEstimatedEndTimeEl) {
                                 var now = new Date();
                                 var estEnd = new Date(now.getTime() + remainingSeconds * 1000);
-                                var estEndStr = (estEnd.getHours() < 10 ? '0' : '') + estEnd.getHours() + ':' +
-                                                (estEnd.getMinutes() < 10 ? '0' : '') + estEnd.getMinutes() + ':' +
-                                                (estEnd.getSeconds() < 10 ? '0' : '') + estEnd.getSeconds();
+                                var estEndStr = (estEnd.getDate() < 10 ? '0' : '') + estEnd.getDate() + '/' +
+                                                ((estEnd.getMonth() + 1) < 10 ? '0' : '') + (estEnd.getMonth() + 1) + '/' +
+                                                estEnd.getFullYear() + ' ' +
+                                                (estEnd.getHours() < 10 ? '0' : '') + estEnd.getHours() + ':' +
+                                                (estEnd.getMinutes() < 10 ? '0' : '') + estEnd.getMinutes();
                                 batchEstimatedEndTimeEl.innerHTML = estEndStr;
                             }
                         }

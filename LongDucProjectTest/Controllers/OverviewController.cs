@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -317,6 +317,9 @@ namespace LongDucProject.Controllers
                 int totalRuns = 0;
                 int completedRuns = 0;
                 string batchActualStart = "-";
+                double totalTargetWeight = 0;
+                double totalProducedWeight = 0;
+                double percent = 0;
 
                 if (resolvedBatchId != -1)
                 {
@@ -327,20 +330,89 @@ namespace LongDucProject.Controllers
                         productName = row["product_name"] != DBNull.Value ? row["product_name"].ToString() : "-";
                         targetWeight = row["target_weight"] != DBNull.Value ? Convert.ToDouble(row["target_weight"]) : 0;
                         totalRuns = row["total_runs"] != DBNull.Value ? Convert.ToInt32(row["total_runs"]) : 0;
-                        batchActualStart = row["start_time"] != DBNull.Value ? Convert.ToDateTime(row["start_time"]).ToString("HH:mm:ss") : "-";
+                        batchActualStart = row["start_time"] != DBNull.Value ? Convert.ToDateTime(row["start_time"]).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) : "-";
                     }
 
-                    var dtCompRuns = connector.ExecuteQuery($"SELECT COUNT(*) FROM runs WHERE batch_id = {resolvedBatchId} AND status = 'Completed'");
-                    if (dtCompRuns != null && dtCompRuns.Rows.Count > 0)
+                    // Count valid (non-error) runs and completed runs
+                    int validRunsCount = 0;
+                    int completedRunsCount = 0;
+                    var runsListForWeight = new List<Tuple<int, string>>();
+
+                    var dtRunsAll = connector.ExecuteQuery($"SELECT id, status FROM runs WHERE batch_id = {resolvedBatchId}");
+                    if (dtRunsAll != null)
                     {
-                        completedRuns = Convert.ToInt32(dtCompRuns.Rows[0][0]);
+                        foreach (DataRow row in dtRunsAll.Rows)
+                        {
+                            int rId = Convert.ToInt32(row["id"]);
+                            string statusVal = row["status"] != DBNull.Value ? row["status"].ToString().Trim() : "";
+                            runsListForWeight.Add(Tuple.Create(rId, statusVal));
+
+                            if (!statusVal.Equals("Error", StringComparison.OrdinalIgnoreCase) && 
+                                !statusVal.Equals("Failed", StringComparison.OrdinalIgnoreCase))
+                            {
+                                validRunsCount++;
+                            }
+                            if (statusVal.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+                            {
+                                completedRunsCount++;
+                            }
+                        }
                     }
+
+                    // Query the sum of quantities in run_info for all runs in the batch
+                    var runWeightsDict = new Dictionary<int, double>();
+                    var dtRunWeights = connector.ExecuteQuery($@"
+                        SELECT ri.run_id, SUM(ri.quantity) as run_weight 
+                        FROM run_info ri 
+                        JOIN runs r ON ri.run_id = r.id 
+                        WHERE r.batch_id = {resolvedBatchId}
+                        GROUP BY ri.run_id");
+                    if (dtRunWeights != null)
+                    {
+                        foreach (DataRow row in dtRunWeights.Rows)
+                        {
+                            int rId = Convert.ToInt32(row["run_id"]);
+                            double w = row["run_weight"] != DBNull.Value ? Convert.ToDouble(row["run_weight"]) : 0;
+                            runWeightsDict[rId] = w;
+                        }
+                    }
+
+                    double averageRunWeight = targetWeight / (totalRuns > 0 ? totalRuns : 1);
+
+                    foreach (var run in runsListForWeight)
+                    {
+                        // Exclude error runs completely
+                        if (run.Item2.Equals("Error", StringComparison.OrdinalIgnoreCase) || 
+                            run.Item2.Equals("Failed", StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+
+                        double runWeight = averageRunWeight;
+                        if (runWeightsDict.ContainsKey(run.Item1) && runWeightsDict[run.Item1] > 0)
+                        {
+                            runWeight = runWeightsDict[run.Item1];
+                        }
+
+                        totalTargetWeight += runWeight;
+                        if (run.Item2.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+                        {
+                            totalProducedWeight += runWeight;
+                        }
+                    }
+
+                    totalRuns = validRunsCount;
+                    completedRuns = completedRunsCount;
                 }
 
-                string targetWeightStr = targetWeight > 0 ? $"{targetWeight.ToString("0.##", CultureInfo.InvariantCulture)} KG" : "-";
-                double producedWeight = completedRuns * (targetWeight / (totalRuns > 0 ? totalRuns : 1));
-                double percent = totalRuns > 0 ? ((double)completedRuns / totalRuns * 100) : 0;
-                string actualWeightStr = totalRuns > 0 ? $"{producedWeight.ToString("0.##", CultureInfo.InvariantCulture)} KG ({Math.Round(percent)}%)" : "-";
+                if (totalTargetWeight <= 0)
+                {
+                    totalTargetWeight = targetWeight;
+                }
+
+                string targetWeightStr = totalTargetWeight > 0 ? $"{totalTargetWeight.ToString("0.##", CultureInfo.InvariantCulture)} KG" : "-";
+                percent = totalTargetWeight > 0 ? ((double)totalProducedWeight / totalTargetWeight * 100) : 0;
+                string actualWeightStr = totalTargetWeight > 0 ? $"{totalProducedWeight.ToString("0.##", CultureInfo.InvariantCulture)} KG ({Math.Round(percent)}%)" : "-";
 
                 // 2. Fetch alarmlog for active run (fallback to batchId if no runId resolved)
                 DataTable dtAlarmLog = null;
@@ -1072,20 +1144,20 @@ namespace LongDucProject.Controllers
                             if (row["start_time"] != DBNull.Value)
                             {
                                 DateTime startTimeVal = Convert.ToDateTime(row["start_time"]);
-                                durationStr = $"{startTimeVal.ToString("H:mm")} - {DateTime.Now.ToString("H:mm")}";
+                                durationStr = $"{startTimeVal.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)} - {DateTime.Now.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)}";
                             }
                         }
                         else
                         {
                             if (firstOccurrence.HasValue && lastRestore.HasValue)
                             {
-                                durationStr = $"{firstOccurrence.Value.ToString("H:mm")} - {lastRestore.Value.ToString("H:mm")}";
+                                durationStr = $"{firstOccurrence.Value.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)} - {lastRestore.Value.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)}";
                             }
                             else if (row["start_time"] != DBNull.Value && row["end_time"] != DBNull.Value)
                             {
                                 DateTime startTimeVal = Convert.ToDateTime(row["start_time"]);
                                 DateTime endTimeVal = Convert.ToDateTime(row["end_time"]);
-                                durationStr = $"{startTimeVal.ToString("H:mm")} - {endTimeVal.ToString("H:mm")}";
+                                durationStr = $"{startTimeVal.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)} - {endTimeVal.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)}";
                             }
                         }
                         

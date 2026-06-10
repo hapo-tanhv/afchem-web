@@ -39,7 +39,17 @@ Trước khi thực hiện kiểm thử, cần chuẩn bị sẵn 2 tài khoản
 ### 1.3. Bảng Thống kê Mẻ & BOM Sản xuất
 - [ ] **Thống kê mẻ hiện tại:** Bảng danh sách các công đoạn hiển thị đầy đủ thời gian bắt đầu, kết thúc, nhiệt độ bồn trên/giữa/dưới.
   - [ ] Dòng cảnh báo có thể click để mở rộng xem chi tiết lỗi (thời gian xảy ra, ngưỡng vượt...).
-- [ ] **BOM Sản xuất:** Hiển thị đúng danh sách nguyên vật liệu (NVL), tỉ lệ, tổng xuất thực tế và mã LOT tương ứng của mẻ hiện tại.
+  - [ ] **Định dạng nhiệt độ (chia 10):** Xác nhận các trị số nhiệt độ bồn trên, giữa, dưới, đỉnh nhiệt độ, và các ngưỡng cảnh báo nhiệt độ được chia cho `10.0` để hiển thị đúng dạng số thực (ví dụ: `35.0` °C thay vì `350` °C).
+  - [ ] **Thứ tự ưu tiên hiển thị mẻ (BatchResolver):** Khi không chỉ định cụ thể, mẻ được chọn mặc định để hiển thị phải tuân thủ đúng thứ tự ưu tiên của bộ phân giải: `Active` (đang chạy) $\rightarrow$ `Completed` (hoàn thành gần nhất) $\rightarrow$ `Pending` (chờ chạy đầu tiên) $\rightarrow$ `Error` (chỉ hiển thị khi không còn mẻ nào khác).
+- [ ] **BOM Sản xuất (Loại trừ mẻ lỗi):** Hiển thị đúng danh sách nguyên vật liệu (NVL), tỉ lệ, tổng xuất thực tế và mã LOT tương ứng của mẻ hiện tại.
+  - [ ] Xác nhận các mẻ bị lỗi (`status = 'Error'`) hoàn toàn bị loại bỏ khỏi bảng BOM sản xuất trên giao diện.
+  - [ ] Tổng lượng nguyên liệu tiêu hao chỉ được tính toán dựa trên các mẻ hợp lệ (không bao gồm mẻ lỗi).
+- [ ] **Tổng số Batch trong ngày & Lô chạy xuyên ngày:**
+  - [ ] Bảng "Tổng số batch sản xuất trong ngày" hiển thị đúng các Batch được tạo/bắt đầu hôm nay.
+  - [ ] *Kiểm thử lô chạy xuyên ngày:* Lô bắt đầu từ hôm qua nhưng hôm nay mới chạy nốt mẻ còn lại $\rightarrow$ Lô đó vẫn phải hiển thị bình thường trong bảng "Tổng số batch sản xuất trong ngày" hôm nay (lọc theo lô đang `Active` hoặc có mẻ con hoạt động trong ngày).
+- [ ] **Banner Cảnh báo mẻ còn thiếu (Pending Run Banner):**
+  - [ ] Khi có Lô đang chạy (`Active`) bắt đầu từ hôm trước nhưng vẫn còn mẻ con chưa chạy (`Pending`/`Waiting`/`Created`): Hệ thống phải hiển thị một Banner màu cam cảnh báo nổi bật ở đầu trang Overview dạng: *"Batch đang chạy (tên batch) ngày [ngày bắt đầu], mẻ còn thiếu chưa chạy (tên mẻ)"*.
+  - [ ] Khi toàn bộ mẻ con của Lô đó chạy xong hoặc không có Lô xuyên ngày bị thiếu mẻ, Banner này phải tự động ẩn đi (không hiển thị đè hoặc chừa khoảng trắng trống trên UI).
 
 ### 1.4. Kiểm thử Mối liên hệ Dữ liệu & Tác động Giao diện (Data-Driven UI Impact Testing)
 *Mục tiêu: Đảm bảo khi số liệu đo đạc (Telemetry) vượt ngưỡng an toàn hoặc thay đổi trạng thái, giao diện người dùng (UI) sẽ tự động phản hồi trực quan về màu sắc, thông báo lỗi, trạng thái thiết bị và cập nhật thời gian đồng bộ chính xác theo đúng thiết kế mã nguồn Frontend & Backend.*
@@ -127,6 +137,21 @@ Trước khi thực hiện kiểm thử, cần chuẩn bị sẵn 2 tài khoản
 - [ ] **Bộ lọc thời gian:** Chọn ngày sản xuất mẻ và bấm truy vấn. Hệ thống hiển thị danh sách các mẻ hoàn thành hoặc đang chạy trong ngày đó.
 - [ ] **Tìm kiếm theo tên sản phẩm / số mẻ:** Nhập số Batch hoặc mã sản phẩm $\rightarrow$ Bảng DataTables hiển thị dữ liệu lọc tương ứng.
 - [ ] **Độ hiển thị:** Đảm bảo toàn bộ chữ mô tả bảng và các nhãn điều hướng rõ nét, dễ đọc trên giao diện tối.
+- [ ] **Hiển thị thông tin mẻ lỗi (Error/Failed Run):**
+  - [ ] Chọn một mẻ bị lỗi (`status = 'Error'` hoặc `'Failed'`) từ dropdown/bảng danh sách.
+  - [ ] Xác nhận nhãn trạng thái chu kỳ hiển thị là **`"Chu kỳ bị lỗi"`** (không hiển thị nhãn mặc định *"Chu kỳ hoàn tất thành công"*).
+  - [ ] Ghi chú chất lượng của mẻ lỗi hiển thị đúng nội dung: **`"Chu kỳ bị lỗi. Chất lượng sản phẩm: KHÔNG ĐẠT (LỖI)"`** và có chữ màu đỏ nổi bật (`class="text-danger"`).
+- [ ] **Kiểm thử chu trình Dừng mẻ (Pause) và Chạy tiếp mẻ (Resume):**
+  - [ ] *Trường hợp Dừng mẻ:* Khi mẻ đang hoạt động bị tạm dừng chạy (tín hiệu PLC dừng hoặc chuyển trạng thái):
+    - [ ] Đồng hồ hiển thị thời gian chạy mẻ (`#headerRunningTime`) phải dừng tăng thời gian và giữ nguyên giá trị hiện tại.
+    - [ ] Hệ thống giữ nguyên trạng thái hiển thị của công đoạn hiện hành, không nhảy bước hoặc cập nhật sai chu trình.
+  - [ ] *Trường hợp Chạy tiếp mẻ:* Khi mẻ tiếp tục vận hành:
+    - [ ] Thời gian chạy mẻ tiếp tục tăng tích lũy bình thường.
+    - [ ] Các thông số PLC thực tế cập nhật liên tục trở lại.
+    - [ ] Các sự kiện cảnh báo phát sinh trong quá trình dừng/chạy tiếp được ghi nhận đầy đủ với mốc thời gian chính xác.
+- [ ] **Đồng bộ hóa dữ liệu (BatchResolver Integration):**
+  - [ ] Khi chọn một Batch từ bộ lọc dropdown, mẻ con mặc định được tải lên phải khớp theo đúng độ ưu tiên phân giải của `BatchResolver`.
+  - [ ] Dữ liệu kết xuất từ API xuất báo cáo Excel (`/Event/ExportEventExcel`) và CSV (`/Event/ExportEventCsv`) phải trùng khớp 100% với dữ liệu mẻ con đang hiển thị trên giao diện của trang Event.
 
 ### 3.2. Kiểm thử Bảo mật & Phân quyền Xuất dữ liệu
 - [ ] **Tài khoản Admin:** Xem được đầy đủ nút Export và tải xuống file Excel/CSV báo cáo mẻ thành công.

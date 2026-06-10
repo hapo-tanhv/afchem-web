@@ -66,6 +66,18 @@ Trong phương thức `GetEventLogRealtime` của [EventController.cs](file:///c
    * Trên giao diện [Overview.cshtml](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Views/Home/Overview.cshtml) và [OverviewRealtime.js](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/JavaScript/RealTime/OverviewRealtime.js), chúng tôi bổ sung một Banner cảnh báo màu cam nổi bật đặt ngay trên phần **"Trạng thái quy trình"**. Banner này sẽ tự động hiện lên khi có mẻ chưa chạy xuyên ngày và ẩn đi khi tất cả các mẻ của Lô trước đó đã hoàn tất.
    * *Cập nhật sửa lỗi (10/06/2026):* Khắc phục hiện tượng banner trống hiển thị đè lên giao diện khi chưa có dữ liệu bằng cách loại bỏ thuộc tính `display: flex;` trùng lặp trong thuộc tính `style` nội tuyến của phần tử `#pendingRunBanner`, chỉ giữ lại `display: none;` lúc khởi tạo. Đồng thời, thay đổi query parameter cache-buster cho file script `OverviewRealtime.js` từ chuỗi tĩnh `?v=now()` thành `@DateTime.Now.Ticks` để buộc trình duyệt nạp lại mã script mới nhất chứa logic xử lý ẩn/hiện động.
 
+### F. Cải tiến hiển thị thời gian và sản lượng trên Overview (Cập nhật 10/06/2026)
+1. **Thời gian sản xuất (bảng tổng số lô):**
+   * Định dạng trường `durationStr` trong [OverviewController.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Controllers/OverviewController.cs) được chuyển sang định dạng đầy đủ ngày giờ: `dd/MM/yyyy HH:mm - dd/MM/yyyy HH:mm` (sử dụng `CultureInfo.InvariantCulture`).
+2. **Hiển thị sản lượng cộng dồn (Tổng quan Batch):**
+   * Thay vì chia trung bình cơ học thô sơ (`target_weight / total_runs` nhân với số mẻ completed), hệ thống truy vấn tổng định mức thực tế từ `run_info` cho từng mẻ con:
+     * Loại bỏ hoàn toàn các mẻ lỗi (`status = 'Error'` hoặc `'Failed'`).
+     * Cộng dồn chính xác khối lượng của các mẻ đã hoàn thành (`status = 'Completed'`) dựa trên định mức BOM chi tiết của mẻ đó.
+     * Cập nhật số liệu `totalRuns` và `completedRuns` trên giao diện theo số lượng mẻ hợp lệ (không lỗi), giúp hiển thị tỷ lệ % sản lượng chính xác (100% khi tất cả các mẻ thành công hoàn tất, kể cả khi có mẻ bù).
+3. **Định dạng thời gian bắt đầu và dự kiến kết thúc (Tổng quan Batch):**
+   * Trong [OverviewController.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Controllers/OverviewController.cs), trả về thời gian bắt đầu lô dạng đầy đủ `yyyy-MM-dd HH:mm:ss`.
+   * Trong [OverviewRealtime.js](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/JavaScript/RealTime/OverviewRealtime.js), định dạng lại "Thời gian bắt đầu" và "Thời gian dự kiến kết thúc" thành `dd/MM/yyyy HH:mm` bằng hàm trợ giúp `formatDateTimeString`.
+
 ---
 
 ## 3. Các tệp đã thay đổi (Modified Files)
