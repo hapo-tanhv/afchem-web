@@ -356,7 +356,12 @@
 
             // Bind cascading batchId changes
             $('#batchId').on('change', function () {
+                $('#runSearch').val('');
                 loadRuns($(this).val());
+            });
+
+            $('#runId').on('change', function () {
+                $('#runSearch').val('');
             });
 
             // Init Autocomplete Search

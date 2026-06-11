@@ -38,12 +38,16 @@ Trong phương thức `GetCurrentBatchStats` của [OverviewController.cs](file:
   ```
 - **Kết quả:** Các mẻ bị lỗi sẽ không xuất hiện trong bảng BOM sản xuất trên giao diện, và tổng lượng nguyên liệu tiêu hao sẽ chỉ tính toán dựa trên các mẻ hợp lệ (không lỗi).
 
-### C. Hiển thị thông tin ghi chú trạng thái lỗi trên trang Event (`EventController.cs`)
+### C. Hiển thị thông tin ghi chú trạng thái lỗi trên trang Event (`EventController.cs`, `EventPage.js`, `Event.css`)
 Trong phương thức `GetEventLogRealtime` của [EventController.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Controllers/EventController.cs), chúng tôi đã cập nhật logic sinh các nhãn trạng thái và ghi chú đánh giá chất lượng cho các mẻ bị lỗi hoặc thất bại (`Error` hoặc `Failed`):
 1. **Trạng thái chu kỳ (`statusLabel`):**
    * Nếu mẻ bị lỗi, nhãn sẽ hiển thị là `"Chu kỳ bị lỗi"` thay vì nhãn mặc định `"Chu kỳ hoàn tất thành công"`.
 2. **Ghi chú chất lượng (`note`):**
    * Nếu mẻ bị lỗi, ghi chú sẽ hiển thị là `"Chu kỳ bị lỗi. Chất lượng sản phẩm: KHÔNG ĐẠT (LỖI)"` với màu chữ đỏ tương ứng của lớp `text-danger`, giúp người vận hành nhận biết nhanh các mẻ chạy không thành công.
+3. **Hiển thị Icon lỗi của mẻ trên Event Page (Cập nhật 11/06/2026):**
+   * Trong [EventPage.js](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/JavaScript/Event/EventPage.js), trước đây khi mẻ bị lỗi (`status` = `Error`/`Failed`), hệ thống vẫn hiển thị icon tích xanh (`fas fa-check`) tương tự như mẻ đã hoàn thành bình thường.
+   * Đã cập nhật logic kiểm tra trạng thái mẻ trong `renderCycleSummary`. Nếu mẻ có trạng thái `Error` hoặc `Failed` (không phân biệt hoa thường), iconClass sẽ đổi thành `failed` và hiển thị icon dấu X đỏ (`fas fa-times`) bọc trong vòng tròn đỏ.
+   * Thêm class CSS `.evt-cycle-icon.failed` trong [Event.css](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Css/Event.css) để tô đỏ cả màu nền, viền và icon của trạng thái lỗi này đồng nhất với bảng cảnh báo.
 
 ### D. Định dạng trị số nhiệt độ trong Thống kê mẻ hiện tại và Cảnh báo
 Để sửa lỗi các giá trị nhiệt độ hiển thị dạng số nguyên thô (ví dụ: `350` thay vì `35.0` °C):
@@ -80,6 +84,25 @@ Trong phương thức `GetEventLogRealtime` của [EventController.cs](file:///c
    * Trong [OverviewRealtime.js](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/JavaScript/RealTime/OverviewRealtime.js), định dạng lại "Thời gian bắt đầu" và "Thời gian dự kiến kết thúc" thành `dd/MM/yyyy HH:mm` bằng hàm trợ giúp `formatDateTimeString`.
 4. **Sửa lỗi hiển thị sản lượng hiện tại trên Header:**
    * Loại bỏ cơ chế cộng cứng `500` KG cho mỗi lô hoàn thành ở file [LayoutMain.js](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/JavaScript/Common/LayoutMain.js). Thay vào đó, backend tự động tính toán chính xác sản lượng đã đạt được của mỗi lô (`producedWeight` tính từ các mẻ con thành công) và truyền sang để JS cộng dồn động lên Header.
+5. **Sửa lỗi lệch Thời gian còn lại khi mẻ vừa hoàn thành:**
+   * Trong [OverviewRealtime.js](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/JavaScript/RealTime/OverviewRealtime.js), khi các tag cài đặt thời gian chuẩn từ PLC thay đổi, hàm `updateCalculatedTimeAndStandards` cập nhật thời gian chuẩn trên giao diện nhưng không tính lại thời gian còn lại. Điều này dẫn tới hiện tượng lệch giao diện tạm thời (ví dụ: Chuẩn = 365s, Đã chạy = 405s, nhưng Còn lại vẫn giữ giá trị cũ của 6300s là 5895s).
+   * Đã bổ sung logic tính toán lại và cập nhật `#statRemainingTime` ngay lập tức trong `updateCalculatedTimeAndStandards` để đưa giá trị còn lại về `0` (hoặc giá trị đúng theo chuẩn mới) một cách tức thời, không bị trễ theo chu kỳ polling.
+
+### G. Tự động reset ô nhập liệu "Tìm nhanh mẻ" khi chọn Batch hoặc Mẻ (Cập nhật 11/06/2026)
+1. **Vấn đề:**
+   * Trên các trang **Alarm**, **Event**, và **Report**, có tính năng tìm kiếm nhanh theo mẻ ("Tìm nhanh mẻ" - `#runSearch`).
+   * Khi người dùng thay đổi thủ công lựa chọn lô (Batch) hoặc mẻ con (Run) qua dropdown, nội dung đã gõ trong ô "Tìm nhanh mẻ" không được reset, có thể gây hiểu lầm về bộ lọc hiện tại.
+2. **Giải pháp:**
+   * Bổ sung trình lắng nghe sự kiện thay đổi (`change`) trên các phần tử `#batchId` và `#runId` tại các file giao diện (hoặc file JavaScript điều khiển tương ứng).
+   * Khi các dropdown này được thay đổi thủ công trên giao diện, ô nhập liệu `#runSearch` sẽ được gán lại giá trị rỗng (`""`).
+   * Việc xóa này không tự động kích hoạt lọc hay tải lại dữ liệu mà chỉ hỗ trợ đồng bộ mặt giao diện; dữ liệu sẽ chỉ được cập nhật lại khi người dùng chủ động nhấn nút **"Tìm kiếm"**.
+### H. Sửa đổi hiển thị số thập phân và hướng sắp xếp trang Báo cáo (Cập nhật 11/06/2026)
+1. **Lỗi hiển thị số thập phân (Nhiệt độ/Độ ẩm/Áp suất):**
+   * **Vấn đề:** Do cấu hình định dạng vùng trên máy chủ Windows là tiếng Việt (sử dụng dấu phẩy `,` làm dấu phân cách thập phân và dấu chấm `.` làm dấu phân cách phần nghìn), hàm `double.TryParse` mặc định trong `TryGetDouble` hiểu sai dấu chấm của chuỗi dữ liệu (ví dụ: `"32.2"`) thành phân cách phần nghìn, dẫn tới hiển thị sai thành `322`.
+   * **Giải pháp:** Chuyển đổi phương thức `TryGetDouble` trong [HomeController.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Controllers/HomeController.cs) sang sử dụng `CultureInfo.InvariantCulture` để luôn phân tích chính xác dấu chấm làm dấu thập phân bất kể cấu hình Windows của máy chủ.
+2. **Thay đổi hướng sắp xếp bảng Báo cáo:**
+   * **Vấn đề:** Dữ liệu trang Báo cáo trước đây được sắp xếp giảm dần (mới nhất hiển thị trước - `DateTime DESC`). Người dùng muốn chuyển sang sắp xếp tăng dần (cũ nhất hiển thị trước - `DateTime ASC`).
+   * **Giải pháp:** Thay đổi mệnh đề `ORDER BY a.DateTime DESC, a.ID DESC` thành `ORDER BY a.DateTime ASC, a.ID ASC` trong các phương thức của `HomeController.cs`: `GetReportData` (trả về JSON cho màn hình), `ExportReportExcel` (xuất file Excel), và `ExportReportCsv` (xuất file CSV).
 
 ---
 
@@ -87,5 +110,10 @@ Trong phương thức `GetEventLogRealtime` của [EventController.cs](file:///c
 * [BatchResolver.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Service/BatchResolver.cs)
 * [OverviewController.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Controllers/OverviewController.cs)
 * [EventController.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Controllers/EventController.cs)
+* [HomeController.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Controllers/HomeController.cs)
 * [Overview.cshtml](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Views/Home/Overview.cshtml)
 * [OverviewRealtime.js](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/JavaScript/RealTime/OverviewRealtime.js)
+* [Alarm.cshtml](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Views/Home/Alarm.cshtml)
+* [EventPage.js](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/JavaScript/Event/EventPage.js)
+* [Event.css](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Css/Event.css)
+* [Report.cshtml](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Views/Home/Report.cshtml)

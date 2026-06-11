@@ -1,4 +1,4 @@
-﻿﻿﻿﻿var activepower;
+﻿﻿﻿var activepower;
 
 var temperature;
 
@@ -606,13 +606,23 @@ document.addEventListener("DOMContentLoaded", function () {
             function updateCalculatedTimeAndStandards() {
                 updateCalculatedTime();
                 var stdTimeEl = document.getElementById("statStandardTime");
+                var total = 0;
+                for (var code in window.plcStandardTimes) {
+                    total += window.plcStandardTimes[code];
+                }
                 if (stdTimeEl) {
-                    var total = 0;
-                    for (var code in window.plcStandardTimes) {
-                        total += window.plcStandardTimes[code];
-                    }
                     stdTimeEl.innerHTML = total;
                 }
+                
+                // Recalculate remaining time immediately to avoid UI mismatch
+                var elapsedEl = document.getElementById("statElapsedTime");
+                var remainingEl = document.getElementById("statRemainingTime");
+                if (elapsedEl && remainingEl) {
+                    var elapsed = parseInt(elapsedEl.innerHTML) || 0;
+                    var remaining = Math.max(0, total - elapsed);
+                    remainingEl.innerHTML = remaining;
+                }
+
                 if (typeof renderBatchTable === 'function' && window.currentSteps) {
                     renderBatchTable(window.currentSteps);
                 }
@@ -716,11 +726,7 @@ function updateTag(dataTag, element, onValueChangeCallback, divideBy10 = false) 
                 var val = data.e.newValue;
                 if (divideBy10 && !isNaN(val) && val !== null && val !== '') {
                     var numVal = Number(val) / 10;
-                    if (element.id === 'TankDiagramPressure' || element.id === 'TankDiagramPressureStandard') {
-                        val = numVal.toFixed(2);
-                    } else {
-                        val = numVal.toFixed(1);
-                    }
+                    val = numVal.toFixed(1);
                 }
                 element.innerHTML = val;
                 if (typeof onValueChangeCallback === 'function') {

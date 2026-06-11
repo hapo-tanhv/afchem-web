@@ -7,8 +7,17 @@
 
     function renderCycleSummary(d) {
         if (!d) return;
-        var iconClass = d.status === 'ACTIVE' ? 'in-progress' : 'completed';
-        var iconHtml = d.status === 'ACTIVE' ? '<i class="fas fa-spinner fa-spin"></i>' : '<i class="fas fa-check"></i>';
+        var statusUpper = (d.status || "").toUpperCase();
+        var iconClass = 'completed';
+        var iconHtml = '<i class="fas fa-check"></i>';
+
+        if (statusUpper === 'ACTIVE') {
+            iconClass = 'in-progress';
+            iconHtml = '<i class="fas fa-spinner fa-spin"></i>';
+        } else if (statusUpper === 'ERROR' || statusUpper === 'FAILED') {
+            iconClass = 'failed';
+            iconHtml = '<i class="fas fa-times"></i>';
+        }
 
         var html = '<div class="evt-cycle-status">' +
             '<div class="evt-cycle-icon ' + iconClass + '">' + iconHtml + '</div>' +
@@ -361,7 +370,12 @@
     function init() {
         // Bind cascading batchId changes
         $('#batchId').on('change', function () {
+            $('#runSearch').val('');
             loadRuns($(this).val());
+        });
+
+        $('#runId').on('change', function () {
+            $('#runSearch').val('');
         });
 
         // Init Autocomplete Search

@@ -1,4 +1,4 @@
-﻿/* ================= EVENT PAGE LAYOUT ================= */
+/* ================= EVENT PAGE LAYOUT ================= */
 .event-top-grid {
     display: grid;
     grid-template-columns: 1fr 550px;
@@ -46,6 +46,12 @@
     background: rgba(0, 229, 255, 0.15);
     color: #00e5ff;
     border: 2px solid #00e5ff;
+}
+
+.evt-cycle-icon.failed {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 2px solid #ef4444;
 }
 
 .evt-cycle-label {

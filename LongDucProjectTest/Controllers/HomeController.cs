@@ -316,7 +316,7 @@ namespace LongDucProject.Controllers
                 int recordsFiltered = Convert.ToInt32(connector.ExecuteScalarQuery(countQuery));
                 int recordsTotal = recordsFiltered;
 
-                string dataQuery = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime DESC, a.ID DESC LIMIT {length} OFFSET {start}";
+                string dataQuery = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime ASC, a.ID ASC LIMIT {length} OFFSET {start}";
 
                 var data = new List<object>();
                 var dt = connector.ExecuteQuery(dataQuery);
@@ -448,7 +448,7 @@ namespace LongDucProject.Controllers
                 filterQuery += $" AND (b.name LIKE '%{searchValue.Replace("'", "''")}%' OR a.ApSuat LIKE '%{searchValue.Replace("'", "''")}%' OR a.NhietDoMoiTruong LIKE '%{searchValue.Replace("'", "''")}%' OR a.NhietDoBonTronTren LIKE '%{searchValue.Replace("'", "''")}%')";
             }
 
-            string query = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime DESC, a.ID DESC";
+            string query = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime ASC, a.ID ASC";
 
             var list = new List<ReportExportDto>();
             var dt = connector.ExecuteQuery(query);
@@ -559,7 +559,7 @@ namespace LongDucProject.Controllers
                 filterQuery += $" AND (b.name LIKE '%{searchValue.Replace("'", "''")}%' OR a.ApSuat LIKE '%{searchValue.Replace("'", "''")}%' OR a.NhietDoMoiTruong LIKE '%{searchValue.Replace("'", "''")}%' OR a.NhietDoBonTronTren LIKE '%{searchValue.Replace("'", "''")}%')";
             }
 
-            string query = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime DESC, a.ID DESC";
+            string query = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime ASC, a.ID ASC";
 
             var list = new List<ReportExportDto>();
             var dt = connector.ExecuteQuery(query);
@@ -678,7 +678,7 @@ namespace LongDucProject.Controllers
         {
             if (value == null || value == DBNull.Value) return 0;
             double res;
-            if (double.TryParse(value.ToString(), out res)) return res;
+            if (double.TryParse(value.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out res)) return res;
             return 0;
         }
         [HttpGet]
