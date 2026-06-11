@@ -1,4 +1,4 @@
-using CsvHelper;
+﻿using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -1421,7 +1421,7 @@ namespace LongDucProject.Controllers
                 {
                     ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
                 };
-                var dt = connector.ExecuteQuery($"SELECT id, name, status, run_number FROM runs WHERE batch_id = {batch_id} ORDER BY run_number ASC");
+                var dt = connector.ExecuteQuery($"SELECT id, name, status, run_number FROM runs WHERE batch_id = {batch_id} ORDER BY id ASC");
                 var list = new List<object>();
                 if (dt != null)
                 {

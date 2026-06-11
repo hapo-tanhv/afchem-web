@@ -104,6 +104,14 @@ Trong phương thức `GetEventLogRealtime` của [EventController.cs](file:///c
    * **Vấn đề:** Dữ liệu trang Báo cáo trước đây được sắp xếp giảm dần (mới nhất hiển thị trước - `DateTime DESC`). Người dùng muốn chuyển sang sắp xếp tăng dần (cũ nhất hiển thị trước - `DateTime ASC`).
    * **Giải pháp:** Thay đổi mệnh đề `ORDER BY a.DateTime DESC, a.ID DESC` thành `ORDER BY a.DateTime ASC, a.ID ASC` trong các phương thức của `HomeController.cs`: `GetReportData` (trả về JSON cho màn hình), `ExportReportExcel` (xuất file Excel), và `ExportReportCsv` (xuất file CSV).
 
+### I. Cấu hình sắp xếp danh sách mẻ con (GetRuns API) theo thứ tự ID tăng dần (Cập nhật 11/06/2026)
+1. **Vấn đề:**
+   * API lấy danh sách mẻ con của một lô `/Overview/GetRuns` trước đây được sắp xếp theo `ORDER BY run_number ASC`.
+   * Người dùng muốn danh sách mẻ con trả về được sắp xếp tăng dần theo ID của mẻ con (`ORDER BY id ASC`).
+2. **Giải pháp:**
+   * Thay đổi câu truy vấn SQL trong phương thức `GetRuns` của [OverviewController.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Controllers/OverviewController.cs) từ `ORDER BY run_number ASC` thành `ORDER BY id ASC`.
+   * Thay đổi này sẽ ảnh hưởng đồng bộ tới dropdown chọn mẻ (Run select) trên cả 4 giao diện (Overview, Alarm, Event, Report) vốn dùng chung API này.
+
 ---
 
 ## 3. Các tệp đã thay đổi (Modified Files)
