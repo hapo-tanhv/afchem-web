@@ -184,8 +184,11 @@ function updateHeaderStats(data) {
         }
 
         const alarmCountEl = document.getElementById("alarmCount");
+        const sidebarAlarmCountEl = document.getElementById("sidebarAlarmCount");
+        const alarmCountVal = batchInfo.alarmCount !== undefined ? batchInfo.alarmCount : "0";
 
-        if (alarmCountEl) alarmCountEl.innerHTML = batchInfo.alarmCount !== undefined ? batchInfo.alarmCount : "0";
+        if (alarmCountEl) alarmCountEl.innerHTML = alarmCountVal;
+        if (sidebarAlarmCountEl) sidebarAlarmCountEl.innerHTML = alarmCountVal;
 
     }
 

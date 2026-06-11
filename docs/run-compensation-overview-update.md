@@ -112,6 +112,14 @@ Trong phương thức `GetEventLogRealtime` của [EventController.cs](file:///c
    * Thay đổi câu truy vấn SQL trong phương thức `GetRuns` của [OverviewController.cs](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Controllers/OverviewController.cs) từ `ORDER BY run_number ASC` thành `ORDER BY id ASC`.
    * Thay đổi này sẽ ảnh hưởng đồng bộ tới dropdown chọn mẻ (Run select) trên cả 4 giao diện (Overview, Alarm, Event, Report) vốn dùng chung API này.
 
+### J. Bổ sung số lượng cảnh báo hiển thị trên Sidebar (Cập nhật 11/06/2026)
+1. **Vấn đề:**
+   * Người dùng muốn xem trực tiếp số lượng cảnh báo đang hoạt động ngay trên Sidebar ở vị trí cạnh phải của mục "Cảnh báo" để dễ theo dõi.
+   * Số lượng này cần giống hệt với giá trị hiển thị ở góc trên bên phải Header (bên cạnh icon quả chuông).
+2. **Giải pháp:**
+   * Cập nhật [_LayoutMain.cshtml](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Views/Shared/_LayoutMain.cshtml): Thêm một thẻ `<span class="right badge" id="sidebarAlarmCount">` vào phần tử `<p>` của liên kết Menu "Cảnh báo", cấu hình màu nền của badge là `#f59e0b` và màu chữ tối tương phản `#111827`.
+   * Cập nhật [LayoutMain.js](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/JavaScript/Common/LayoutMain.js): Trong hàm `updateHeaderStats`, đồng thời cập nhật cả `#alarmCount` (trên Header) và `#sidebarAlarmCount` (trên Sidebar) với cùng giá trị cảnh báo lấy được từ API để đảm bảo đồng bộ thời gian thực.
+
 ---
 
 ## 3. Các tệp đã thay đổi (Modified Files)
@@ -125,3 +133,5 @@ Trong phương thức `GetEventLogRealtime` của [EventController.cs](file:///c
 * [EventPage.js](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/JavaScript/Event/EventPage.js)
 * [Event.css](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Css/Event.css)
 * [Report.cshtml](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Views/Home/Report.cshtml)
+* [_LayoutMain.cshtml](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/Views/Shared/_LayoutMain.cshtml)
+* [LayoutMain.js](file:///c:/Users/tanhv/Project/WebApp_LongDuc_22012025Phase2/WebApp_LongDuc_22012025Phase2/LongDucProjectTest/JavaScript/Common/LayoutMain.js)
