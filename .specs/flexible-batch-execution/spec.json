@@ -1,0 +1,39 @@
+{
+  "feature_name": "flexible-batch-execution",
+  "created_at": "2026-06-12T09:24:54+07:00",
+  "updated_at": "2026-06-12T10:21:00+07:00",
+  "language": "vi",
+  "phase": "implemented",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "scope_lock": {
+    "source": "KH mã hàng AF101 có 2 mẻ, đã chạy mẻ 1, phải dừng để chạy sang mã hàng AF102 (1 mẻ) sau đó mới quay lại chạy tiếp mẻ còn lại của AF101. \nLúc này phải tạo 2 lệnh sx trên base cho 2 mã, làm sao để biết rằng mẻ chạy thứ 2 kia là của mã AF102\nkiểu chạy 3 mẻ, có 2 request: \n1- mã 101, 2 mẻ\n2- mã 102, 1 mẻ\nLẽ ra chạy xong (1) mới đến (2)\nNhưng đang chạy 1/2 (1) -> (2) -> quay lại 1/2 (1)\n\nNghĩa là cần implement tính năng chọn mẻ để chạy, ví dụ có 2 batches đang standby\nbatch 1: 2 mẻ\nbatch 2: 1 mẻ\ncó thể ấn vào batch 1 > chọn bắt đầu mẻ 1 > xong mẻ 1 trả result - sau đó có thể chọn bắt đầu mẻ 2 của batch 1 hoặc sang batch khác để bắt đầu mẻ của batch tương ứng",
+    "in_scope": [],
+    "out_of_scope": [],
+    "expansion_policy": "requires-user-approval"
+  },
+  "design_context": {
+    "discovery_mode": "light",
+    "discovery_reason": "Extension of existing Overview page batch and run tracking logic with database status updates and UI select controls, with limited integration risk",
+    "validation_recommended": false
+  },
+  "validation": {
+    "status": "completed",
+    "session_count": 1,
+    "questions_asked": 3,
+    "last_validated_at": "2026-06-12T10:16:15+07:00"
+  },
+  "ready_for_implementation": true
+}

@@ -1,4 +1,4 @@
-﻿﻿@{
+﻿@{
     ViewBag.Title = "SOLAR SCADA SYSTEM - OVERVIEW";
     ViewBag.ButtonHome = "active";
     ViewBag.ButtonOverview = "";
@@ -178,6 +178,57 @@
     <div id="pendingRunBanner" class="pending-run-banner" style="display: none; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 15px 20px; margin-bottom: 20px; color: #f59e0b; align-items: center; gap: 12px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);">
         <i class="fas fa-exclamation-triangle" style="font-size: 18px;"></i>
         <span id="pendingRunBannerText"></span>
+    </div>
+
+    <!-- BẢNG ĐIỀU KHIỂN LỰA CHỌN BATCH CHẠY -->
+    <div class="batch-selection-panel history-panel" id="batchSelectionPanel" style="margin-bottom: 20px;">
+        <div class="panel-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center;">
+                <span class="header-accent" style="background: #00e5ff;"></span>
+                <h3 style="margin-bottom: 0;">Lựa chọn Batch chạy linh hoạt</h3>
+            </div>
+            <span class="badge-active-status" id="activeStatusBadge" style="font-size: 11px; padding: 4px 10px; border-radius: 4px; font-weight: bold; display: none;"></span>
+        </div>
+        <div class="batch-selection-content" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+            <!-- Bên trái: Thống kê số lượng mẻ/batch chờ -->
+            <div class="standby-stats-container" style="display: flex; gap: 20px; flex: 1; min-width: 300px;">
+                <div class="standby-stat-card" style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 12px 20px; display: flex; align-items: center; gap: 15px; flex: 1;">
+                    <div style="font-size: 24px; color: #00e5ff;"><i class="fas fa-layer-group"></i></div>
+                    <div>
+                        <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 600;">Batch chờ (Standby)</div>
+                        <div id="standbyBatchesCount" style="font-size: 22px; color: #fff; font-weight: bold; line-height: 1;">0</div>
+                    </div>
+                </div>
+                <div class="standby-stat-card" style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 12px 20px; display: flex; align-items: center; gap: 15px; flex: 1;">
+                    <div style="font-size: 24px; color: #10b981;"><i class="fas fa-tasks"></i></div>
+                    <div>
+                        <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 600;">Mẻ chờ (Standby)</div>
+                        <div id="standbyRunsCount" style="font-size: 22px; color: #fff; font-weight: bold; line-height: 1;">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bên phải: Hộp chọn dropdown và nút Bắt đầu mẻ -->
+            <div class="selection-controls-container" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; min-width: 450px; justify-content: flex-end;">
+                <div class="control-group" style="display: flex; flex-direction: column; gap: 4px;">
+                    <label style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Chọn Lệnh SX (Batch)</label>
+                    <select id="batchSelect" class="dark-input" style="width: 300px; height: 36px; padding: 6px 12px; background: #0a0a0a; border: 1px solid #334155; border-radius: 6px; color: #fff; font-weight: bold;">
+                        <option value="">-- Chọn Batch --</option>
+                    </select>
+                </div>
+                <div class="control-group" style="display: flex; flex-direction: column; gap: 4px;">
+                    <label style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Chọn Mẻ (Run)</label>
+                    <select id="runSelect" class="dark-input" style="width: 350px; height: 36px; padding: 6px 12px; background: #0a0a0a; border: 1px solid #334155; border-radius: 6px; color: #fff; font-weight: bold;">
+                        <option value="">-- Chọn Mẻ --</option>
+                    </select>
+                </div>
+                <div class="control-group" style="display: flex; flex-direction: column; gap: 4px; margin-top: 28px;" id="startButtonWrapper">
+                    <button id="btnStartBatch" class="btn-scada btn-excel" style="height: 36px; margin-left: 0; padding: 0 20px; display: flex; align-items: center; gap: 8px; border-radius: 6px; transition: all 0.3s;" disabled>
+                        <i class="fas fa-play"></i> Bắt đầu ngay
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- TRẠNG THÁI QUY TRÌNH -->

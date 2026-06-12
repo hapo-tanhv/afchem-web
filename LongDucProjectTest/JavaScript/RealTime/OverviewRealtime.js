@@ -1,4 +1,4 @@
-﻿﻿﻿var activepower;
+﻿var activepower;
 
 var temperature;
 
@@ -304,6 +304,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     var batchInfo = data.batchInfo;
                     currentBatchInfo = batchInfo;
 
+                    // Update standby selectors UI state
+                    updateStandbyUIState(batchInfo.runStatus);
+
                     // Track resolved run IDs
                     if (batchInfo.runId) {
                         selectedRunId = batchInfo.runId;
@@ -515,7 +518,209 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // --- FLEXIBLE BATCH EXECUTION ---
+    window.standbyData = null;
 
+    function updateStandbyUIState(runStatus) {
+        var isActive = (runStatus === "Active");
+        
+        var batchSelect = document.getElementById("batchSelect");
+        var runSelect = document.getElementById("runSelect");
+        var btnStartBatch = document.getElementById("btnStartBatch");
+        var activeStatusBadge = document.getElementById("activeStatusBadge");
+        
+        if (isActive) {
+            // Disable inputs with visual indicator (opacity) and helpful tooltips
+            if (batchSelect) {
+                batchSelect.disabled = true;
+                batchSelect.style.opacity = "0.6";
+                batchSelect.title = "Hệ thống đang chạy mẻ sản xuất hoạt động, không thể thay đổi.";
+            }
+            if (runSelect) {
+                runSelect.disabled = true;
+                runSelect.style.opacity = "0.6";
+                runSelect.title = "Hệ thống đang chạy mẻ sản xuất hoạt động, không thể thay đổi.";
+            }
+            if (btnStartBatch) {
+                btnStartBatch.disabled = true;
+                btnStartBatch.style.opacity = "0.6";
+                btnStartBatch.title = "Đang có mẻ sản xuất hoạt động, không thể kích hoạt mẻ mới.";
+                btnStartBatch.style.cursor = "not-allowed";
+            }
+            if (activeStatusBadge) {
+                activeStatusBadge.style.display = "inline-block";
+                activeStatusBadge.style.background = "rgba(239, 68, 68, 0.15)";
+                activeStatusBadge.style.color = "#ef4444";
+                activeStatusBadge.style.border = "1px solid rgba(239, 68, 68, 0.3)";
+                activeStatusBadge.innerHTML = "<i class='fas fa-lock'></i> HỆ THỐNG ĐANG CHẠY";
+            }
+        } else {
+            // Enable inputs
+            if (batchSelect) {
+                batchSelect.disabled = false;
+                batchSelect.style.opacity = "1";
+                batchSelect.title = "";
+            }
+            if (runSelect) {
+                runSelect.disabled = false;
+                runSelect.style.opacity = "1";
+                runSelect.title = "";
+            }
+            if (btnStartBatch) {
+                var hasSelection = (batchSelect && batchSelect.value) && (runSelect && runSelect.value);
+                btnStartBatch.disabled = !hasSelection;
+                btnStartBatch.style.opacity = hasSelection ? "1" : "0.6";
+                btnStartBatch.title = hasSelection ? "" : "Vui lòng chọn Batch và Mẻ chạy trước khi kích hoạt.";
+                btnStartBatch.style.cursor = hasSelection ? "pointer" : "not-allowed";
+            }
+            if (activeStatusBadge) {
+                activeStatusBadge.style.display = "inline-block";
+                activeStatusBadge.style.background = "rgba(16, 185, 129, 0.15)";
+                activeStatusBadge.style.color = "#10b981";
+                activeStatusBadge.style.border = "1px solid rgba(16, 185, 129, 0.3)";
+                activeStatusBadge.innerHTML = "<i class='fas fa-lock-open'></i> HỆ THỐNG SẴN SÀNG";
+            }
+        }
+    }
+
+    function loadStandbyData() {
+        $.ajax({
+            url: '/Overview/GetStandbyBatchesAndRuns',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                if (data && data.success) {
+                    window.standbyData = data.batches;
+                    
+                    // Update stats counts
+                    var standbyBatchesCount = document.getElementById("standbyBatchesCount");
+                    var standbyRunsCount = document.getElementById("standbyRunsCount");
+                    if (standbyBatchesCount) standbyBatchesCount.innerHTML = data.total_batches;
+                    if (standbyRunsCount) standbyRunsCount.innerHTML = data.total_runs;
+                    
+                    // Populate batchSelect
+                    var batchSelect = document.getElementById("batchSelect");
+                    if (batchSelect) {
+                        var currentSelectedVal = batchSelect.value;
+                        batchSelect.innerHTML = '<option value="">-- Chọn Batch --</option>';
+                        data.batches.forEach(function (batch) {
+                            var option = document.createElement("option");
+                            option.value = batch.id;
+                            option.text = batch.name;
+                            batchSelect.appendChild(option);
+                        });
+                        
+                        // Restore selection if it still exists
+                        if (currentSelectedVal && $(batchSelect).find("option[value='" + currentSelectedVal + "']").length > 0) {
+                            batchSelect.value = currentSelectedVal;
+                            filterRunsForSelectedBatch(currentSelectedVal);
+                        } else {
+                            var runSelect = document.getElementById("runSelect");
+                            if (runSelect) {
+                                runSelect.innerHTML = '<option value="">-- Chọn Mẻ --</option>';
+                            }
+                        }
+                    }
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error fetching standby batches and runs:', error);
+            }
+        });
+    }
+
+    function filterRunsForSelectedBatch(batchId) {
+        var runSelect = document.getElementById("runSelect");
+        if (!runSelect) return;
+        
+        runSelect.innerHTML = '<option value="">-- Chọn Mẻ --</option>';
+        
+        if (!batchId || !window.standbyData) {
+            updateStartButtonState();
+            return;
+        }
+        
+        var selectedBatch = window.standbyData.find(function (b) {
+            return b.id == batchId;
+        });
+        
+        if (selectedBatch && selectedBatch.runs) {
+            selectedBatch.runs.forEach(function (run) {
+                var option = document.createElement("option");
+                option.value = run.id;
+                option.text = "Mẻ " + run.run_number + " (" + run.name + ")";
+                runSelect.appendChild(option);
+            });
+        }
+        updateStartButtonState();
+    }
+
+    function updateStartButtonState() {
+        var batchSelect = document.getElementById("batchSelect");
+        var runSelect = document.getElementById("runSelect");
+        var btnStartBatch = document.getElementById("btnStartBatch");
+        if (!btnStartBatch) return;
+        
+        if (currentBatchInfo && currentBatchInfo.runStatus === "Active") {
+            return; // Managed by updateStandbyUIState
+        }
+        
+        var hasSelection = (batchSelect && batchSelect.value) && (runSelect && runSelect.value);
+        btnStartBatch.disabled = !hasSelection;
+        btnStartBatch.style.opacity = hasSelection ? "1" : "0.6";
+        btnStartBatch.title = hasSelection ? "" : "Vui lòng chọn Batch và Mẻ chạy trước khi kích hoạt.";
+        btnStartBatch.style.cursor = hasSelection ? "pointer" : "not-allowed";
+    }
+
+    // Bind event handlers
+    $(document).on('change', '#batchSelect', function() {
+        filterRunsForSelectedBatch(this.value);
+    });
+
+    $(document).on('change', '#runSelect', function() {
+        updateStartButtonState();
+    });
+
+    $(document).on('click', '#btnStartBatch', function() {
+        var batchSelect = document.getElementById("batchSelect");
+        var runSelect = document.getElementById("runSelect");
+        if (!batchSelect || !runSelect) return;
+        
+        var batchId = batchSelect.value;
+        var runId = runSelect.value;
+        if (!batchId || !runId) return;
+        
+        var batchName = batchSelect.options[batchSelect.selectedIndex].text;
+        var runName = runSelect.options[runSelect.selectedIndex].text;
+        
+        if (confirm("XÁC NHẬN BẮT ĐẦU MẺ SẢN XUẤT:\n\n- Lệnh SX: " + batchName + "\n- Mẻ chạy: " + runName + "\n\nBạn có chắc chắn muốn kích hoạt mẻ sản xuất này không? Trạng thái mẻ sẽ được chuyển sang Active.")) {
+            $.ajax({
+                url: '/Overview/SelectBatchRun',
+                type: 'POST',
+                data: { batchId: batchId, runId: runId },
+                dataType: 'json',
+                success: function (response) {
+                    if (response && response.success) {
+                        alert(response.message);
+                        
+                        // Reset selections
+                        batchSelect.value = "";
+                        runSelect.innerHTML = '<option value="">-- Chọn Mẻ --</option>';
+                        
+                        // Reload data immediately
+                        loadStandbyData();
+                        fetchCurrentBatchStats();
+                    } else {
+                        alert(response.message || "Lỗi không xác định");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error starting batch:', error);
+                    alert("Lỗi kết nối máy chủ, vui lòng thử lại!");
+                }
+            });
+        }
+    });
 
     // Polling recent alarms from real database every 2 seconds for high-speed realtime display
 
@@ -541,6 +746,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     fetchCurrentBatchStats();
     fetchRecentAlarms();
+    loadStandbyData();
 
     // Set polling intervals
 
@@ -763,6 +969,7 @@ var gaugeOptions = {
     pane: {
         startAngle: -100,
         endAngle: 100,
+        size: '100%',
         background: [{
             backgroundColor: 'transparent',
             borderWidth: 0,
@@ -781,10 +988,11 @@ var gaugeOptions = {
         tickPixelInterval: 30,
         tickWidth: 2,
         tickPosition: 'inside',
-        tickLength: 12,
+        tickLength: 0,
         tickColor: '#94a3b8',
         labels: {
-            distance: -25, // Đẩy con số vào sâu bên trong vòng cung
+            distance: -25,
+            rotation: 0,
             style: {
                 color: '#a9b7cb',
                 fontSize: '10px'
@@ -827,7 +1035,6 @@ function AcivePowerChart() {
                 from: 0, to: 100, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
             }],
             labels: {
-                rotation: 'auto',
                 style: { color: '#94a3b8' }
             }
         },
@@ -1042,7 +1249,6 @@ function PressureChart() {
                 from: 0, to: 100, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
             }],
             labels: {
-                rotation: 'auto',
                 style: { color: '#94a3b8' }
             }
         },

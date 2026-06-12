@@ -13,6 +13,7 @@ using System.Web.Mvc;
 using System.Windows.Forms;
 using Hino.DatabaseConnector;
 using System.Data;
+using MySql.Data.MySqlClient;
 
 namespace LongDucProject.Controllers
 {
@@ -1479,6 +1480,146 @@ namespace LongDucProject.Controllers
             catch (Exception ex)
             {
                 return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpGet]
+        public JsonResult GetStandbyBatchesAndRuns()
+        {
+            try
+            {
+                var connector = new MySQLConnect()
+                {
+                    ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
+                };
+
+                // Query standby batches (status IN ('Active', 'Pending'))
+                var dtBatches = connector.ExecuteQuery("SELECT id, name, status FROM batches WHERE status IN ('Active', 'Pending') ORDER BY id ASC");
+                var batchesList = new List<object>();
+                int totalBatches = 0;
+                int totalRuns = 0;
+
+                if (dtBatches != null)
+                {
+                    foreach (DataRow batchRow in dtBatches.Rows)
+                    {
+                        int batchId = Convert.ToInt32(batchRow["id"]);
+                        string batchName = batchRow["name"] != DBNull.Value ? batchRow["name"].ToString() : "";
+                        string batchStatus = batchRow["status"] != DBNull.Value ? batchRow["status"].ToString() : "";
+
+                        // Query standby runs (status IN ('Pending', 'Waiting', 'Created')) for this batch
+                        var dtRuns = connector.ExecuteQuery($"SELECT id, run_number, name, status FROM runs WHERE batch_id = {batchId} AND status IN ('Pending', 'Waiting', 'Created') ORDER BY run_number ASC, id ASC");
+                        var runsList = new List<object>();
+
+                        if (dtRuns != null && dtRuns.Rows.Count > 0)
+                        {
+                            totalBatches++;
+                            foreach (DataRow runRow in dtRuns.Rows)
+                            {
+                                totalRuns++;
+                                runsList.Add(new
+                                {
+                                    id = Convert.ToInt32(runRow["id"]),
+                                    run_number = Convert.ToInt32(runRow["run_number"]),
+                                    name = runRow["name"] != DBNull.Value ? runRow["name"].ToString() : "",
+                                    status = runRow["status"] != DBNull.Value ? runRow["status"].ToString() : ""
+                                });
+                            }
+
+                            batchesList.Add(new
+                            {
+                                id = batchId,
+                                name = batchName,
+                                status = batchStatus,
+                                runs = runsList
+                            });
+                        }
+                    }
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    batches = batchesList,
+                    total_batches = totalBatches,
+                    total_runs = totalRuns
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpPost]
+        public JsonResult SelectBatchRun(int batchId, int runId)
+        {
+            string connStr = "Server=localhost;Database=scada;Uid=root;Pwd=101101;";
+            using (var conn = new MySqlConnection(connStr))
+            {
+                try
+                {
+                    conn.Open();
+                    
+                    // 1. Check if there is any run in the database with status 'Active'
+                    using (var checkCmd = new MySqlCommand("SELECT COUNT(*) FROM runs WHERE status = 'Active'", conn))
+                    {
+                        long activeCount = Convert.ToInt64(checkCmd.ExecuteScalar());
+                        if (activeCount > 0)
+                        {
+                            return Json(new { success = false, message = "Không thể bắt đầu vì đang có mẻ chạy đang hoạt động!" });
+                        }
+                    }
+
+                    // Start a transaction
+                    using (var transaction = conn.BeginTransaction())
+                    {
+                        try
+                        {
+                            // 2. Query MAX execution_order
+                            int maxOrder = 0;
+                            using (var maxCmd = new MySqlCommand("SELECT COALESCE(MAX(execution_order), 0) FROM runs", conn, transaction))
+                            {
+                                maxOrder = Convert.ToInt32(maxCmd.ExecuteScalar());
+                            }
+
+                            // 3. Update currently 'Active' batches to 'Pending'
+                            using (var updateBatchPendingCmd = new MySqlCommand("UPDATE batches SET status = 'Pending' WHERE status = 'Active'", conn, transaction))
+                            {
+                                updateBatchPendingCmd.ExecuteNonQuery();
+                            }
+
+                            // 4. Update selected batch to 'Active'
+                            using (var updateBatchActiveCmd = new MySqlCommand("UPDATE batches SET status = 'Active' WHERE id = @batchId", conn, transaction))
+                            {
+                                updateBatchActiveCmd.Parameters.AddWithValue("@batchId", batchId);
+                                updateBatchActiveCmd.ExecuteNonQuery();
+                            }
+
+                            // 5. Update selected run to 'Active', start_time to NOW, execution_order to maxOrder + 1
+                            using (var updateRunActiveCmd = new MySqlCommand("UPDATE runs SET status = 'Active', start_time = NOW(), execution_order = @newOrder WHERE id = @runId", conn, transaction))
+                            {
+                                updateRunActiveCmd.Parameters.AddWithValue("@newOrder", maxOrder + 1);
+                                updateRunActiveCmd.Parameters.AddWithValue("@runId", runId);
+                                updateRunActiveCmd.ExecuteNonQuery();
+                            }
+
+                            // Commit the transaction
+                            transaction.Commit();
+                            return Json(new { success = true, message = "Đã kích hoạt mẻ chạy thành công!" });
+                        }
+                        catch (Exception ex)
+                        {
+                            // Rollback if any error occurs
+                            transaction.Rollback();
+                            return Json(new { success = false, message = "Lỗi trong quá trình cập nhật dữ liệu: " + ex.Message });
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return Json(new { success = false, message = "Lỗi kết nối cơ sở dữ liệu: " + ex.Message });
+                }
             }
         }
 
