@@ -1576,39 +1576,66 @@ namespace LongDucProject.Controllers
                     {
                         try
                         {
-                            // 1. Query MAX execution_order
-                            int maxOrder = 0;
-                            using (var maxCmd = new MySqlCommand("SELECT COALESCE(MAX(execution_order), 0) FROM runs", conn, transaction))
-                            {
-                                maxOrder = Convert.ToInt32(maxCmd.ExecuteScalar());
-                            }
-
-                            // 2. Update currently 'Active' runs of any batch to 'Pending' to prevent parallel execution
-                            using (var updateRunsPendingCmd = new MySqlCommand("UPDATE runs SET status = 'Pending' WHERE status = 'Active'", conn, transaction))
-                            {
-                                updateRunsPendingCmd.ExecuteNonQuery();
-                            }
-
-                            // 3. Update currently 'Active' batches to 'Pending'
-                            using (var updateBatchPendingCmd = new MySqlCommand("UPDATE batches SET status = 'Pending' WHERE status = 'Active'", conn, transaction))
-                            {
-                                updateBatchPendingCmd.ExecuteNonQuery();
-                            }
-
-                            // 4. Update selected batch to 'Active'
-                            using (var updateBatchActiveCmd = new MySqlCommand("UPDATE batches SET status = 'Active' WHERE id = @batchId", conn, transaction))
-                            {
-                                updateBatchActiveCmd.Parameters.AddWithValue("@batchId", batchId);
-                                updateBatchActiveCmd.ExecuteNonQuery();
-                            }
-
-                            // 5. Update selected run's execution_order to maxOrder + 1 (keeping status as Pending)
-                            using (var updateRunActiveCmd = new MySqlCommand("UPDATE runs SET execution_order = @newOrder WHERE id = @runId", conn, transaction))
-                            {
-                                updateRunActiveCmd.Parameters.AddWithValue("@newOrder", maxOrder + 1);
-                                updateRunActiveCmd.Parameters.AddWithValue("@runId", runId);
-                                updateRunActiveCmd.ExecuteNonQuery();
-                            }
+                             // 1. Query MIN execution_order of other pending runs and MAX execution_order of all runs
+                             int minPendingOrder = 0;
+                             int maxOrder = 0;
+                             using (var minCmd = new MySqlCommand("SELECT COALESCE(MIN(execution_order), 0) FROM runs WHERE status = 'Pending' AND id != @runId", conn, transaction))
+                             {
+                                 minCmd.Parameters.AddWithValue("@runId", runId);
+                                 minPendingOrder = Convert.ToInt32(minCmd.ExecuteScalar());
+                             }
+                             using (var maxCmd = new MySqlCommand("SELECT COALESCE(MAX(execution_order), 0) FROM runs", conn, transaction))
+                             {
+                                 maxOrder = Convert.ToInt32(maxCmd.ExecuteScalar());
+                             }
+ 
+                             // 2. Update currently 'Active' runs of any batch to 'Pending' to prevent parallel execution
+                             using (var updateRunsPendingCmd = new MySqlCommand("UPDATE runs SET status = 'Pending' WHERE status = 'Active'", conn, transaction))
+                             {
+                                 updateRunsPendingCmd.ExecuteNonQuery();
+                             }
+ 
+                             // 3. Update currently 'Active' batches to 'Pending'
+                             using (var updateBatchPendingCmd = new MySqlCommand("UPDATE batches SET status = 'Pending' WHERE status = 'Active'", conn, transaction))
+                             {
+                                 updateBatchPendingCmd.ExecuteNonQuery();
+                             }
+ 
+                             // 4. Update selected batch to 'Active'
+                             using (var updateBatchActiveCmd = new MySqlCommand("UPDATE batches SET status = 'Active' WHERE id = @batchId", conn, transaction))
+                             {
+                                 updateBatchActiveCmd.Parameters.AddWithValue("@batchId", batchId);
+                                 updateBatchActiveCmd.ExecuteNonQuery();
+                             }
+ 
+                             // 5. Update execution orders to make the selected run next in queue
+                             if (minPendingOrder > 0)
+                             {
+                                 // Shift other pending runs up to make room for the selected run
+                                 using (var shiftCmd = new MySqlCommand("UPDATE runs SET execution_order = execution_order + 1 WHERE status = 'Pending' AND id != @runId", conn, transaction))
+                                 {
+                                     shiftCmd.Parameters.AddWithValue("@runId", runId);
+                                     shiftCmd.ExecuteNonQuery();
+                                 }
+ 
+                                 // Set selected run to have the lowest pending order
+                                 using (var updateRunActiveCmd = new MySqlCommand("UPDATE runs SET execution_order = @newOrder WHERE id = @runId", conn, transaction))
+                                 {
+                                     updateRunActiveCmd.Parameters.AddWithValue("@newOrder", minPendingOrder);
+                                     updateRunActiveCmd.Parameters.AddWithValue("@runId", runId);
+                                     updateRunActiveCmd.ExecuteNonQuery();
+                                 }
+                             }
+                             else
+                             {
+                                 // No other pending runs exist, set selected run to maxOrder + 1
+                                 using (var updateRunActiveCmd = new MySqlCommand("UPDATE runs SET execution_order = @newOrder WHERE id = @runId", conn, transaction))
+                                 {
+                                     updateRunActiveCmd.Parameters.AddWithValue("@newOrder", maxOrder + 1);
+                                     updateRunActiveCmd.Parameters.AddWithValue("@runId", runId);
+                                     updateRunActiveCmd.ExecuteNonQuery();
+                                 }
+                             }
 
                             // Commit the transaction
                             transaction.Commit();
