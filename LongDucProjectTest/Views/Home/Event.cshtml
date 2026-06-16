@@ -115,6 +115,7 @@
             {
                 <button onclick="ExportExcel()" class="btn-custom btn-export"><i class="fas fa-file-excel"></i> Export Excel</button>
                 <button onclick="ExportCSV()" class="btn-custom btn-export"><i class="fas fa-file-csv"></i> Export CSV</button>
+                <button onclick="ExportBatchRecord()" class="btn-custom btn-export" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; color: #fff !important; border: none !important;"><i class="fas fa-file-signature"></i> Nhật ký sản xuất</button>
             }
         </div>
     </div>
@@ -230,6 +231,15 @@
             var dateVal = $('#starttime').val() || "";
             var formattedDate = dateVal.replace(/\//g, '-');
             window.location.href = "/Event/ExportEventCsv?batchId=" + batchId + "&runId=" + runId + "&starttime=" + formattedDate;
+        }
+
+        function ExportBatchRecord() {
+            var batchId = $('#batchId').val() || "";
+            if (!batchId) {
+                alert("Vui lòng chọn một lô sản xuất (Batch) trước khi xuất báo cáo.");
+                return;
+            }
+            window.location.href = "/Event/ExportBatchRecordExcel?batchId=" + batchId;
         }
     </script>
 }

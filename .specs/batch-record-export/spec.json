@@ -1,0 +1,50 @@
+{
+  "feature_name": "batch-record-export",
+  "created_at": "2026-06-16T13:50:00Z",
+  "updated_at": "2026-06-16T13:54:00Z",
+  "language": "vi",
+  "phase": "tasks-generated",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": false
+    }
+  },
+  "scope_lock": {
+    "source": "Chức năng export Excel Báo cáo Lô sản xuất (Batch Production Record) theo layout của file docs/structure_batch_export.xlsx tại trang Batches (Event) từ các bảng batches, runs, run_info, webhook_logs.",
+    "in_scope": [
+      "Đọc file template Excel docs/structure_batch_export.xlsx",
+      "Truy vấn thông tin chung và BOM nguyên vật liệu từ webhook_logs và run_info cho mẻ/batch tương ứng",
+      "Truy vấn thông số quá trình và nhiệt độ/áp suất mẻ từ alarmreport, alarmlog và realtime_alarms",
+      "Hỗ trợ số lượng mẻ (runs) động bằng cách nhân bản / chèn thêm dòng và các section tương ứng trong Excel",
+      "Lưu file Excel kết quả với tên format batch_record_{batch_id}_{yyyymmdd}.xlsx",
+      "Tích hợp nút xuất báo cáo tại trang Event (Batches)"
+    ],
+    "out_of_scope": [
+      "Tự động vẽ lại style Excel từ đầu bằng code (dùng template Excel làm gốc)",
+      "Thay đổi cấu trúc webhook nhận dữ liệu hiện tại",
+      "Chỉnh sửa dữ liệu trực tiếp trên file Excel xuất ra"
+    ],
+    "expansion_policy": "requires-user-approval"
+  },
+  "design_context": {
+    "discovery_mode": "light",
+    "discovery_reason": "Tích hợp tính năng xuất báo cáo Excel nâng cao dựa trên EPPlus và dữ liệu sẵn có của SCADA và Webhook",
+    "validation_recommended": false
+  },
+  "validation": {
+    "status": "not-run",
+    "session_count": 0,
+    "questions_asked": 0,
+    "last_validated_at": null
+  },
+  "ready_for_implementation": false
+}

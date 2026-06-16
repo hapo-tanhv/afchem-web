@@ -4,6 +4,8 @@ using Hino.Getdata.Common;
 
 using OfficeOpenXml;
 
+using LongDucProjectTest.Service;
+
 using System;
 
 using System.Collections.Generic;
@@ -461,7 +463,32 @@ namespace LongDucProject.Controllers
             }
         }
 
+        [HttpGet]
+        public ActionResult ExportBatchRecordExcel(string batchId)
+        {
+            if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
+            {
+                throw new HttpException(403, "Bạn không có quyền thực hiện hành động này.");
+            }
 
+            if (string.IsNullOrEmpty(batchId) || !int.TryParse(batchId, out int id) || id <= 0)
+            {
+                throw new HttpException(400, "Mã Batch không hợp lệ.");
+            }
+
+            var connector = new Hino.DatabaseConnector.MySQLConnect()
+            {
+                ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
+            };
+
+            var templatePath = Server.MapPath("~/docs/structure_batch_export.xlsx");
+            var exportService = new BatchRecordExportService(connector, templatePath);
+
+            string fileName;
+            byte[] fileBytes = exportService.ExportBatchRecord(id, out fileName);
+
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        }
 
         [HttpGet]
         public FileResult ExportEventExcel(string starttime, string endtime, string batchId, string runId, string searchValue)

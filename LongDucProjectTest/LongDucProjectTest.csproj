@@ -184,6 +184,8 @@
     <Compile Include="Service\ExportUtility.cs" />
     <Compile Include="Service\RealtimeService.cs" />
     <Compile Include="Service\BatchResolver.cs" />
+    <Compile Include="Service\IBatchRecordExportService.cs" />
+    <Compile Include="Service\BatchRecordExportService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AdminLTE-master\.babelrc.js" />
