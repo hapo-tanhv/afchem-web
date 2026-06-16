@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -1602,8 +1602,8 @@ namespace LongDucProject.Controllers
                                 updateBatchActiveCmd.ExecuteNonQuery();
                             }
 
-                            // 5. Update selected run to 'Active', start_time to NOW, execution_order to maxOrder + 1
-                            using (var updateRunActiveCmd = new MySqlCommand("UPDATE runs SET status = 'Active', start_time = NOW(), execution_order = @newOrder WHERE id = @runId", conn, transaction))
+                            // 5. Update selected run's execution_order to maxOrder + 1 (keeping status as Pending)
+                            using (var updateRunActiveCmd = new MySqlCommand("UPDATE runs SET execution_order = @newOrder WHERE id = @runId", conn, transaction))
                             {
                                 updateRunActiveCmd.Parameters.AddWithValue("@newOrder", maxOrder + 1);
                                 updateRunActiveCmd.Parameters.AddWithValue("@runId", runId);
