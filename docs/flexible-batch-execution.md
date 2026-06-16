@@ -17,8 +17,8 @@ Tài liệu này chi tiết hóa các bước thực hiện, kế hoạch kiểm
     - Lọc động danh sách Run khi thay đổi dropdown Batch.
     - Khóa/Mở khóa (Disable/Enable) bộ chọn và nút khi có mẻ đang `Active` dựa trên dữ liệu polling từ `GetCurrentBatchStats` kèm opacity và tooltip.
     - Hiển thị modal xác nhận và gửi yêu cầu AJAX POST kích hoạt mẻ chạy mới, sau đó gọi load realtime ngay lập tức.
-- [ ] **3. Xác minh và Kiểm thử**
-  - [ ] 3.1 Kiểm tra luồng hoạt động chuyển đổi mẻ chạy trên môi trường local.
+- [/] **3. Xác minh và Kiểm thử**
+  - [/] 3.1 Kiểm tra luồng hoạt động chuyển đổi mẻ chạy trên môi trường local (Đã sửa lỗi xung đột chạy song song).
   - [ ] 3.2 Xác minh tính toàn vẹn của dữ liệu trong bảng `batches` và `runs` trên MySQL.
 
 ---
@@ -32,12 +32,12 @@ Tài liệu này chi tiết hóa các bước thực hiện, kế hoạch kiểm
    - Trả về danh sách lồng kèm theo tổng số lượng Batch và Run chờ.
 
 2. `/Overview/SelectBatchRun`
-   - Nhận `batchId` và `runId`.
-   - Kiểm tra xem có mẻ nào có `status = 'Active'` trong bảng `runs` không. Nếu có -> Báo lỗi.
-   - Nếu không có, thực hiện cập nhật:
-     - `UPDATE batches SET status = 'Pending' WHERE status = 'Active'`
-     - `UPDATE batches SET status = 'Active' WHERE id = {batchId}`
-     - `UPDATE runs SET status = 'Active', start_time = NOW(), execution_order = (SELECT COALESCE(MAX(execution_order), 0) + 1 FROM runs) WHERE id = {runId}` (Sử dụng subquery để tìm Max Order an toàn).
+   - Nhận `batchId` and `runId`.
+   - Thực hiện cập nhật trong một Database Transaction:
+     - `UPDATE runs SET status = 'Pending' WHERE status = 'Active'` (Dừng toàn bộ mẻ đang active của Batch cũ trước để tránh chạy song song).
+     - `UPDATE batches SET status = 'Pending' WHERE status = 'Active'` (Đưa toàn bộ Batch đang active cũ về Pending).
+     - `UPDATE batches SET status = 'Active' WHERE id = {batchId}` (Kích hoạt Batch mới).
+     - `UPDATE runs SET status = 'Active', start_time = NOW(), execution_order = @newOrder WHERE id = {runId}` (Kích hoạt run mới và tăng execution_order).
 
 ### Frontend UI (HTML/CSS/JS)
 - Vị trí Panel: Đặt trên cùng của màn hình Overview (ngay trên thẻ Trạng thái quy trình).

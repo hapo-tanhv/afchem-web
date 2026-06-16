@@ -1576,11 +1576,17 @@ namespace LongDucProject.Controllers
                     {
                         try
                         {
-                            // 2. Query MAX execution_order
+                            // 1. Query MAX execution_order
                             int maxOrder = 0;
                             using (var maxCmd = new MySqlCommand("SELECT COALESCE(MAX(execution_order), 0) FROM runs", conn, transaction))
                             {
                                 maxOrder = Convert.ToInt32(maxCmd.ExecuteScalar());
+                            }
+
+                            // 2. Update currently 'Active' runs of any batch to 'Pending' to prevent parallel execution
+                            using (var updateRunsPendingCmd = new MySqlCommand("UPDATE runs SET status = 'Pending' WHERE status = 'Active'", conn, transaction))
+                            {
+                                updateRunsPendingCmd.ExecuteNonQuery();
                             }
 
                             // 3. Update currently 'Active' batches to 'Pending'
