@@ -1,4 +1,4 @@
-﻿// Machine Dropdown Functions
+// Machine Dropdown Functions
 
 function toggleMachineDropdown() {
 
@@ -192,30 +192,18 @@ function updateHeaderStats(data) {
 
     }
 
-    if (data.dailyBatches) {
-
-        let totalOutput = 0;
-
-        data.dailyBatches.forEach(function (batch) {
-
-            totalOutput += batch.producedWeight || 0;
-
-        });
-
-        const currentOutputEl = document.getElementById("headerCurrentOutput");
-
-        if (currentOutputEl) {
-
-            currentOutputEl.innerHTML = Math.round(totalOutput);
-
-        }
-
+    const currentOutputEl = document.getElementById("headerCurrentOutput");
+    if (currentOutputEl) {
+        currentOutputEl.innerHTML = (data.batchInfo && data.batchInfo.totalProducedWeight !== undefined)
+            ? Math.round(data.batchInfo.totalProducedWeight)
+            : "0";
     }
 
     const targetOutputEl = document.getElementById("headerTargetOutput");
-
     if (targetOutputEl) {
-        targetOutputEl.innerHTML = (data.batchInfo && data.batchInfo.targetWeightStr) ? data.batchInfo.targetWeightStr : "2000";
+        targetOutputEl.innerHTML = (data.batchInfo && data.batchInfo.totalTargetWeight !== undefined)
+            ? Math.round(data.batchInfo.totalTargetWeight)
+            : "2000";
     }
 }
 

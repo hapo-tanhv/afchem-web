@@ -1091,6 +1091,10 @@ namespace LongDucProject.Controllers
                     totalRuns = totalRuns,
                     completedRuns = completedRuns,
                     batchEndTime = batchEnd,
+                    
+                    // Raw weight properties
+                    totalProducedWeight = totalProducedWeight,
+                    totalTargetWeight = totalTargetWeight,
 
                     // Run specific metadata
                     runId = resolvedRunId,
@@ -1325,33 +1329,11 @@ namespace LongDucProject.Controllers
                     ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
                 };
 
-                // 1. Get active run
-                var dtActive = connector.ExecuteQuery("SELECT id FROM runs WHERE status = 'Active' LIMIT 1");
-                int runId = -1;
-                if (dtActive != null && dtActive.Rows.Count > 0)
-                {
-                    runId = Convert.ToInt32(dtActive.Rows[0]["id"]);
-                }
-                else
-                {
-                    // Fallback to the most recently completed run
-                    var dtCompleted = connector.ExecuteQuery("SELECT id FROM runs WHERE status = 'Completed' ORDER BY id DESC LIMIT 1");
-                    if (dtCompleted != null && dtCompleted.Rows.Count > 0)
-                    {
-                        runId = Convert.ToInt32(dtCompleted.Rows[0]["id"]);
-                    }
-                    else
-                    {
-                        // Final fallback to the latest run of any status
-                        var dtLatest = connector.ExecuteQuery("SELECT id FROM runs ORDER BY id DESC LIMIT 1");
-                        if (dtLatest != null && dtLatest.Rows.Count > 0)
-                        {
-                            runId = Convert.ToInt32(dtLatest.Rows[0]["id"]);
-                        }
-                    }
-                }
+                // 1. Get active run via BatchResolver
+                var resolution = LongDucProject.Helpers.BatchResolver.Resolve(connector, null, null);
+                int runId = resolution.RunId;
 
-                if (runId == -1)
+                if (runId <= 0)
                 {
                     return Json(new List<object>(), JsonRequestBehavior.AllowGet);
                 }

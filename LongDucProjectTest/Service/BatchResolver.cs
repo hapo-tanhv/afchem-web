@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -90,7 +90,7 @@ namespace LongDucProject.Helpers
                     }
 
                     // Priority 2: Completed run with latest end_time
-                    if (selectedRunId == -1)
+                    if (selectedRunId == -1 && selectedBatchId == -1)
                     {
                         var dtDoneRun = connector.ExecuteQuery("SELECT id, batch_id FROM runs WHERE status = 'Completed' ORDER BY end_time DESC, id DESC LIMIT 1");
                         if (dtDoneRun != null && dtDoneRun.Rows.Count > 0)
@@ -101,7 +101,7 @@ namespace LongDucProject.Helpers
                     }
 
                     // Priority 3: Pending batch of today
-                    if (selectedRunId == -1)
+                    if (selectedRunId == -1 && selectedBatchId == -1)
                     {
                         var dtPendingBatch = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Pending' AND (DATE(created_at) = CURDATE() OR DATE(start_time) = CURDATE()) ORDER BY id ASC LIMIT 1");
                         if (dtPendingBatch != null && dtPendingBatch.Rows.Count > 0)
