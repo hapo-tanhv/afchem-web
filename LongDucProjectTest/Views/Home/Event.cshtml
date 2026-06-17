@@ -113,9 +113,8 @@
             <button onclick="Submit()" class="btn-custom btn-submit"><i class="fas fa-search"></i> Tìm kiếm</button>
             @if (Session["Role"] != null && (int)Session["Role"] == (int)Hino.Getdata.Common.Role.Admin)
             {
-                <button onclick="ExportExcel()" class="btn-custom btn-export"><i class="fas fa-file-excel"></i> Export Excel</button>
+                <button onclick="ExportBatchRecord()" class="btn-custom btn-export"><i class="fas fa-file-excel"></i> Export Excel</button>
                 <button onclick="ExportCSV()" class="btn-custom btn-export"><i class="fas fa-file-csv"></i> Export CSV</button>
-                <button onclick="ExportBatchRecord()" class="btn-custom btn-export" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; color: #fff !important; border: none !important;"><i class="fas fa-file-signature"></i> Nhật ký sản xuất</button>
             }
         </div>
     </div>
@@ -215,14 +214,6 @@
 
         function Submit() {
             EventPage.loadEventData();
-        }
-
-        function ExportExcel() {
-            var batchId = $('#batchId').val() || "";
-            var runId = $('#runId').val() || "";
-            var dateVal = $('#starttime').val() || "";
-            var formattedDate = dateVal.replace(/\//g, '-');
-            window.location.href = "/Event/ExportEventExcel?batchId=" + batchId + "&runId=" + runId + "&starttime=" + formattedDate;
         }
 
         function ExportCSV() {

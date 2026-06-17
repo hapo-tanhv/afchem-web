@@ -49,7 +49,7 @@ namespace LongDucProjectTest.Service
             string endTimeStr = batchRow["end_time"] != DBNull.Value ? Convert.ToDateTime(batchRow["end_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "-";
 
             // 2. Fetch runs
-            var dtRuns = _connector.ExecuteQuery($"SELECT id, name, run_number, status, start_time, end_time FROM runs WHERE batch_id = {batchId} ORDER BY run_number ASC");
+            var dtRuns = _connector.ExecuteQuery($"SELECT id, name, run_number, status, start_time, end_time, sp_thoi_gian_cap_lieu, sp_thoi_gian_tron1, sp_thoi_gian_xa_day, sp_thoi_gian_rung_xa_day, sp_thoi_gian_hut_xa_day_them, sp_thoi_gian_tron2, sp_thoi_gian_xa_hang, sp_thoi_gian_rung_xa_hang FROM runs WHERE batch_id = {batchId} ORDER BY run_number ASC");
             var runsList = new List<RunDto>();
             if (dtRuns != null)
             {
@@ -62,7 +62,15 @@ namespace LongDucProjectTest.Service
                         RunNumber = Convert.ToInt32(r["run_number"]),
                         Status = r["status"].ToString(),
                         StartTime = r["start_time"] != DBNull.Value ? Convert.ToDateTime(r["start_time"]) : (DateTime?)null,
-                        EndTime = r["end_time"] != DBNull.Value ? Convert.ToDateTime(r["end_time"]) : (DateTime?)null
+                        EndTime = r["end_time"] != DBNull.Value ? Convert.ToDateTime(r["end_time"]) : (DateTime?)null,
+                        SpCapLieu = r["sp_thoi_gian_cap_lieu"] != DBNull.Value ? Convert.ToInt32(r["sp_thoi_gian_cap_lieu"]) : 0,
+                        SpTron1 = r["sp_thoi_gian_tron1"] != DBNull.Value ? Convert.ToInt32(r["sp_thoi_gian_tron1"]) : 0,
+                        SpXaDay = r["sp_thoi_gian_xa_day"] != DBNull.Value ? Convert.ToInt32(r["sp_thoi_gian_xa_day"]) : 0,
+                        SpRungXaDay = r["sp_thoi_gian_rung_xa_day"] != DBNull.Value ? Convert.ToInt32(r["sp_thoi_gian_rung_xa_day"]) : 0,
+                        SpHutXaDay = r["sp_thoi_gian_hut_xa_day_them"] != DBNull.Value ? Convert.ToInt32(r["sp_thoi_gian_hut_xa_day_them"]) : 0,
+                        SpTron2 = r["sp_thoi_gian_tron2"] != DBNull.Value ? Convert.ToInt32(r["sp_thoi_gian_tron2"]) : 0,
+                        SpXaHang = r["sp_thoi_gian_xa_hang"] != DBNull.Value ? Convert.ToInt32(r["sp_thoi_gian_xa_hang"]) : 0,
+                        SpRungXaHang = r["sp_thoi_gian_rung_xa_hang"] != DBNull.Value ? Convert.ToInt32(r["sp_thoi_gian_rung_xa_hang"]) : 0
                     });
                 }
             }
@@ -79,6 +87,13 @@ namespace LongDucProjectTest.Service
                 dtWebhook = _connector.ExecuteQuery($"SELECT payload FROM webhook_logs WHERE payload LIKE '%{batchName}%' ORDER BY id DESC LIMIT 1");
             }
 
+            if (dtWebhook == null || dtWebhook.Rows.Count == 0)
+            {
+                // Secondary search: search in payload for product code and device name
+                dtWebhook = _connector.ExecuteQuery($"SELECT payload FROM webhook_logs WHERE payload LIKE '%{dbProductCode}%' AND payload LIKE '%{deviceName}%' ORDER BY id DESC LIMIT 1");
+            }
+
+
             var webhookFields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             if (dtWebhook != null && dtWebhook.Rows.Count > 0)
             {
@@ -94,6 +109,113 @@ namespace LongDucProjectTest.Service
             string prodDate = GetField(webhookFields, "custom_ngay_san_xuat", createdAt.ToString("dd/MM/yyyy"));
             string packingSpec = GetField(webhookFields, "custom_quy_cach", "-");
             string unitStr = GetField(webhookFields, "custom_don_vi_tinh", "kg");
+
+            // Extract confirmation names and times from Webhook fields
+            string operatorName = GetField(webhookFields, "custom_nguoi_van_hanh", GetField(webhookFields, "nguoi_van_hanh", ""));
+            string supervisorName = "";
+            string qcName = "";
+            string managerName = "";
+
+            if (webhookFields.ContainsKey("follower_list"))
+            {
+                try
+                {
+                    var followerObj = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(webhookFields["follower_list"]);
+                    if (followerObj != null && followerObj.ContainsKey("name_titles"))
+                    {
+                        string nameTitles = followerObj["name_titles"];
+                        var parts = nameTitles.Split(',');
+                        foreach (var part in parts)
+                        {
+                            var trimmed = part.Trim();
+                            int openParen = trimmed.IndexOf('(');
+                            int closeParen = trimmed.IndexOf(')');
+                            if (openParen > 0 && closeParen > openParen)
+                            {
+                                string name = trimmed.Substring(0, openParen).Trim();
+                                string title = trimmed.Substring(openParen + 1, closeParen - openParen - 1).Trim();
+
+                                string titleLower = title.ToLower();
+                                if (titleLower.Contains("trưởng khối") || titleLower.Contains("quản lý") || titleLower.Contains("giám đốc"))
+                                {
+                                    managerName = name;
+                                }
+                                else if (titleLower.Contains("trưởng phòng qc") || titleLower.Contains("tổ trưởng") || titleLower.Contains("giám sát"))
+                                {
+                                    supervisorName = name;
+                                }
+                                else if (titleLower.Contains("nhân viên kế hoạch sản xuất - qc") || titleLower.Contains("nhân viên qc") || (qcName == "" && titleLower.Contains("qc")))
+                                {
+                                    qcName = name;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            // Fallback for QC name to creator
+            if (string.IsNullOrEmpty(qcName) && webhookFields.ContainsKey("creator"))
+            {
+                try
+                {
+                    var creatorObj = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(webhookFields["creator"]);
+                    if (creatorObj != null && creatorObj.ContainsKey("name"))
+                    {
+                        qcName = creatorObj["name"];
+                    }
+                }
+                catch { }
+            }
+
+            // Extract confirmation times
+            string operatorTime = "";
+            string supervisorTime = "";
+            string qcTime = "";
+            string managerTime = "";
+
+            if (webhookFields.ContainsKey("moves"))
+            {
+                try
+                {
+                    var movesList = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(webhookFields["moves"]);
+                    if (movesList != null)
+                    {
+                        for (int i = 0; i < movesList.Count; i++)
+                        {
+                            var move = movesList[i];
+                            string stageId = move.ContainsKey("stage_id") ? move["stage_id"]?.ToString() : "";
+                            string endVal = move.ContainsKey("stage_end") ? move["stage_end"]?.ToString() : "";
+                            if (!string.IsNullOrEmpty(endVal) && long.TryParse(endVal, out long unixTime) && unixTime > 0)
+                            {
+                                DateTime dt = DateTimeOffset.FromUnixTimeSeconds(unixTime).LocalDateTime;
+                                string timeStr = dt.ToString("dd/MM/yyyy HH:mm");
+                                
+                                if (stageId == "104048" || i == 0)
+                                {
+                                    qcTime = timeStr;
+                                    operatorTime = dt.ToString("dd/MM/yyyy");
+                                }
+                                else if (stageId == "104155" || i == 1)
+                                {
+                                    supervisorTime = timeStr;
+                                }
+                                else if (i == 2)
+                                {
+                                    managerTime = timeStr;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            if (string.IsNullOrEmpty(operatorTime)) operatorTime = prodDate;
+            if (string.IsNullOrEmpty(qcTime)) qcTime = prodDate;
+            if (string.IsNullOrEmpty(supervisorTime)) supervisorTime = prodDate;
+            if (string.IsNullOrEmpty(managerTime)) managerTime = prodDate;
             double targetWeight = 0;
             if (webhookFields.ContainsKey("custom_khoi_luong_muc_tieu") && double.TryParse(webhookFields["custom_khoi_luong_muc_tieu"], out double wVal))
             {
@@ -186,6 +308,7 @@ namespace LongDucProjectTest.Service
                     FROM run_info ri 
                     JOIN runs r ON ri.run_id = r.id 
                     WHERE r.batch_id = {batchId}
+                      AND LOWER(ri.unit) = 'kg'
                     GROUP BY ri.run_id");
                 if (dtRunWeights != null)
                 {
@@ -249,6 +372,10 @@ namespace LongDucProjectTest.Service
                     ws.Cells[r, 6].Value = item.ActualQuantity;
                     ws.Cells[r, 7].Value = item.BatchNo;
                     ws.Cells[r, 8].Value = item.Note;
+
+                    // Force uniform row height of 14
+                    ws.Row(r).Height = 14;
+                    ws.Row(r).CustomHeight = true;
                 }
 
                 // --- POPULATE SECTION 3: THÔNG SỐ QUÁ TRÌNH (RUNS) ---
@@ -298,7 +425,7 @@ namespace LongDucProjectTest.Service
                     var logRows = dtAlarmLog != null ? dtAlarmLog.AsEnumerable().ToList() : new List<DataRow>();
 
                     // Fetch telemetry data
-                    var dtTelemetry = _connector.ExecuteQuery($"SELECT DateTime, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi FROM alarmreport WHERE runId = {run.Id} ORDER BY DateTime ASC");
+                    var dtTelemetry = _connector.ExecuteQuery($"SELECT DateTime, NhietDoMoiTruong, DoAmMoiTruong, ApSuat, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi FROM alarmreport WHERE runId = {run.Id} ORDER BY DateTime ASC");
                     var telemetryRows = dtTelemetry != null ? dtTelemetry.AsEnumerable().ToList() : new List<DataRow>();
 
                     // Fetch alarms for stage warnings
@@ -355,20 +482,62 @@ namespace LongDucProjectTest.Service
                                 }).ToList();
                             }
 
+                            var envTemps = new List<double>();
+                            var envHumids = new List<double>();
+                            var pressures = new List<double>();
                             var topTemps = new List<double>();
                             var midTemps = new List<double>();
                             var botTemps = new List<double>();
 
                             foreach (var tr in stepTelemetry)
                             {
-                                if (tr["NhietDoBonTronTren"] != DBNull.Value) topTemps.Add(Convert.ToDouble(tr["NhietDoBonTronTren"]) / 10.0);
-                                if (tr["NhietDoBonTronGiua"] != DBNull.Value) midTemps.Add(Convert.ToDouble(tr["NhietDoBonTronGiua"]) / 10.0);
-                                if (tr["NhietDoBonTronDuoi"] != DBNull.Value) botTemps.Add(Convert.ToDouble(tr["NhietDoBonTronDuoi"]) / 10.0);
+                                if (tr["NhietDoMoiTruong"] != DBNull.Value && double.TryParse(tr["NhietDoMoiTruong"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double et))
+                                {
+                                    envTemps.Add(et);
+                                }
+                                if (tr["DoAmMoiTruong"] != DBNull.Value && double.TryParse(tr["DoAmMoiTruong"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double eh))
+                                {
+                                    envHumids.Add(eh);
+                                }
+                                if (tr["ApSuat"] != DBNull.Value && double.TryParse(tr["ApSuat"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double ap))
+                                {
+                                    pressures.Add(ap);
+                                }
+                                if (tr["NhietDoBonTronTren"] != DBNull.Value && double.TryParse(tr["NhietDoBonTronTren"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double t1))
+                                {
+                                    topTemps.Add(t1);
+                                }
+                                if (tr["NhietDoBonTronGiua"] != DBNull.Value && double.TryParse(tr["NhietDoBonTronGiua"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double t2))
+                                {
+                                    midTemps.Add(t2);
+                                }
+                                if (tr["NhietDoBonTronDuoi"] != DBNull.Value && double.TryParse(tr["NhietDoBonTronDuoi"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double t3))
+                                {
+                                    botTemps.Add(t3);
+                                }
                             }
 
+                            // Get setup parameter for this step
+                            int spVal = 0;
+                            switch (stepIdx)
+                            {
+                                case 0: spVal = run.SpCapLieu; break;
+                                case 1: spVal = run.SpTron1; break;
+                                case 2: spVal = run.SpXaDay; break;
+                                case 3: spVal = run.SpRungXaDay; break;
+                                case 4: spVal = run.SpHutXaDay; break;
+                                case 5: spVal = run.SpTron2; break;
+                                case 6: spVal = run.SpXaHang; break;
+                                case 7: spVal = run.SpRungXaHang; break;
+                            }
+
+                            ws.Cells[r, 3].Value = $"{spVal}s"; // Column C: Thông số cài đặt
+                            ws.Cells[r, 7].Value = FormatRangeForExcel(envTemps, "°C"); // Ambient Temp
+                            ws.Cells[r, 8].Value = FormatRangeForExcel(envHumids, "%"); // Ambient Humid
                             ws.Cells[r, 9].Value = FormatTempForExcel(topTemps); // Top Temp
                             ws.Cells[r, 10].Value = FormatTempForExcel(midTemps); // Mid Temp
                             ws.Cells[r, 11].Value = FormatTempForExcel(botTemps); // Bot Temp
+                            ws.Cells[r, 12].Value = FormatRangeForExcel(pressures, ""); // Pressure
 
                             // Warnings/Alarms count as Note
                             var stepAlarmsCount = alarmRows.Count(ar => {
@@ -388,12 +557,28 @@ namespace LongDucProjectTest.Service
                         }
                         else
                         {
+                            int spVal = 0;
+                            switch (stepIdx)
+                            {
+                                case 0: spVal = run.SpCapLieu; break;
+                                case 1: spVal = run.SpTron1; break;
+                                case 2: spVal = run.SpXaDay; break;
+                                case 3: spVal = run.SpRungXaDay; break;
+                                case 4: spVal = run.SpHutXaDay; break;
+                                case 5: spVal = run.SpTron2; break;
+                                case 6: spVal = run.SpXaHang; break;
+                                case 7: spVal = run.SpRungXaHang; break;
+                            }
+                            ws.Cells[r, 3].Value = $"{spVal}s"; // Column C: Thông số cài đặt
                             ws.Cells[r, 4].Value = "-";
                             ws.Cells[r, 5].Value = "-";
                             ws.Cells[r, 6].Value = "-";
+                            ws.Cells[r, 7].Value = "-";
+                            ws.Cells[r, 8].Value = "-";
                             ws.Cells[r, 9].Value = "-";
                             ws.Cells[r, 10].Value = "-";
                             ws.Cells[r, 11].Value = "-";
+                            ws.Cells[r, 12].Value = "-";
                             ws.Cells[r, 13].Value = "Chưa thực hiện";
                         }
                     }
@@ -456,6 +641,27 @@ namespace LongDucProjectTest.Service
                     ws.Cells[incidentSectionStart + 2, 2].Value = "Không có sự cố phát sinh.";
                 }
 
+                // --- POPULATE SECTION 7: XÁC NHẬN ---
+                int signSectionStart = incidentSectionStart + 7;
+                
+                // Write names
+                ws.Cells[signSectionStart + 2, 2].Value = operatorName; // Người vận hành
+                ws.Cells[signSectionStart + 3, 2].Value = supervisorName; // Tổ trưởng / Giám sát
+                ws.Cells[signSectionStart + 4, 2].Value = qcName; // QC xác nhận
+                ws.Cells[signSectionStart + 5, 2].Value = managerName; // Quản lý sản xuất
+
+                // Write confirmation status
+                ws.Cells[signSectionStart + 2, 3].Value = !string.IsNullOrEmpty(operatorName) ? "Đã xác nhận" : "";
+                ws.Cells[signSectionStart + 3, 3].Value = !string.IsNullOrEmpty(supervisorName) ? "Đã duyệt (Base.vn)" : "";
+                ws.Cells[signSectionStart + 4, 3].Value = !string.IsNullOrEmpty(qcName) ? "Đã ký (Base.vn)" : "";
+                ws.Cells[signSectionStart + 5, 3].Value = !string.IsNullOrEmpty(managerName) ? "Đã duyệt (Base.vn)" : "";
+
+                // Write confirmation time
+                ws.Cells[signSectionStart + 2, 4].Value = operatorTime;
+                ws.Cells[signSectionStart + 3, 4].Value = supervisorTime;
+                ws.Cells[signSectionStart + 4, 4].Value = qcTime;
+                ws.Cells[signSectionStart + 5, 4].Value = managerTime;
+
                 // Clean up: delete other sheets
                 if (package.Workbook.Worksheets["Nhat ky san xuat"] != null)
                 {
@@ -466,6 +672,128 @@ namespace LongDucProjectTest.Service
                     package.Workbook.Worksheets.Delete("Huong dan");
                 }
                 
+                // Widen columns C, F and J, K, L, M
+                ws.Column(3).Width = 30;
+                ws.Column(6).Width = 18;
+                ws.Column(7).Width = 18;
+                ws.Column(9).Width = 18;
+                ws.Column(10).Width = 20;
+                ws.Column(11).Width = 20;
+                ws.Column(12).Width = 20;
+                ws.Column(13).Width = 20;
+
+                // Remove medium bottom border from Section 4 last row
+                for (int col = 1; col <= 13; col++)
+                {
+                    ws.Cells[qcSectionStart + 4, col].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                }
+
+                // Add medium bottom border to Section 7 last row
+                for (int col = 1; col <= 13; col++)
+                {
+                    ws.Cells[signSectionStart + 5, col].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Medium;
+                }
+
+                // Dynamically expand backgrounds and merge ranges to column M (13 columns)
+                int maxRow = ws.Dimension.End.Row;
+                for (int r = 1; r <= maxRow; r++)
+                {
+                    var cellA = ws.Cells[r, 1];
+                    string textA = cellA.Text;
+
+                    if (ws.Cells[r, 1].Merge && ws.Cells[r, 10].Merge == false)
+                    {
+                        if (textA.StartsWith("MẪU") || textA.Contains("1. THÔNG") || textA.Contains("2. ĐẦU") || textA.Contains("3. THÔNG SỐ") || textA.Contains("4. KẾT QUẢ") || textA.Contains("5. QC LÔ") || textA.Contains("6. SỰ CỐ") || textA.Contains("7. XÁC NHẬN"))
+                        {
+                            ExpandHeaderRowToColumnM(ws, r);
+                        }
+                    }
+
+                    // Expand sub-header rows with specific starts (Mục, STT, Mẻ, Chỉ tiêu, Thời điểm, Vai trò)
+                    string cleanText = textA.Normalize(System.Text.NormalizationForm.FormC).Trim().ToLower();
+                    bool isSubHeader = cleanText.StartsWith("mục") || 
+                                       cleanText.StartsWith("stt") || 
+                                       cleanText.StartsWith("mẻ") || 
+                                       cleanText.StartsWith("chỉ tiêu") || 
+                                       cleanText.StartsWith("thời điểm") || 
+                                       cleanText.StartsWith("vai trò");
+
+                    if (isSubHeader)
+                    {
+                        ExpandColoredRowToColumnM(ws, r, 2);
+                    }
+                    else
+                    {
+                        var fillH = ws.Cells[r, 8].Style.Fill;
+                        var fillI = ws.Cells[r, 9].Style.Fill;
+                        var fillJ = ws.Cells[r, 10].Style.Fill;
+                        
+                        bool hasBgH = fillH.PatternType != OfficeOpenXml.Style.ExcelFillStyle.None;
+                        bool hasBgI = fillI.PatternType != OfficeOpenXml.Style.ExcelFillStyle.None;
+                        bool hasBgJ = fillJ.PatternType != OfficeOpenXml.Style.ExcelFillStyle.None;
+
+                        if ((hasBgH || hasBgI) && !hasBgJ)
+                        {
+                            int sourceCol = hasBgI ? 9 : 8;
+                            ExpandColoredRowToColumnM(ws, r, sourceCol);
+                        }
+                    }
+                }
+
+                // Fix borders for the entire sheet to make them continuous and correct
+                int runStartRow = run1StartRow - 1;
+                int bottomRow = signSectionStart + 5;
+                for (int r = 1; r <= bottomRow; r++)
+                {
+                    // Outer left and right borders
+                    ws.Cells[r, 1].Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Medium;
+                    ws.Cells[r, 13].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Medium;
+
+                    // If row is a merged header row starting at Column 1 (A:M)
+                    if (ws.Cells[r, 1].Merge)
+                    {
+                        // Clear all internal vertical borders
+                        ws.Cells[r, 1].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                        for (int col = 2; col <= 13; col++)
+                        {
+                            ws.Cells[r, col].Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                            if (col < 13)
+                            {
+                                ws.Cells[r, col].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Non-merged row
+                        if (r >= runStartRow && r < qcSectionStart)
+                        {
+                            // Section 3 (Runs): draw thin vertical borders for J to M
+                            ws.Cells[r, 9].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                            ws.Cells[r, 10].Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                            
+                            for (int col = 10; col < 13; col++)
+                            {
+                                ws.Cells[r, col].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                                ws.Cells[r, col + 1].Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                            }
+                        }
+                        else
+                        {
+                            // Section 1, 2, 4, 5, 6, 7: clear vertical borders at Column 9 and between J to M
+                            ws.Cells[r, 9].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                            for (int col = 10; col <= 13; col++)
+                            {
+                                ws.Cells[r, col].Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                                if (col < 13)
+                                {
+                                    ws.Cells[r, col].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Rename primary sheet
                 ws.Name = "Nhật ký sản xuất";
 
@@ -473,6 +801,63 @@ namespace LongDucProjectTest.Service
                 fileName = $"batch_record_{batchId}_{createdAt:yyyyMMdd}.xlsx";
 
                 return package.GetAsByteArray();
+            }
+        }
+
+        private void ExpandHeaderRowToColumnM(ExcelWorksheet ws, int row)
+        {
+            // Get style of first cell BEFORE any copy or merge
+            var styleSrc = ws.Cells[row, 1].Style;
+            
+            try
+            {
+                File.AppendAllText(@"c:\Users\tanhv\Project\WebApp_LongDuc_22012025Phase2\WebApp_LongDuc_22012025Phase2\scratch\debug_log.txt", 
+                    $"[ExpandHeaderRowToColumnM] Row {row}: Text='{ws.Cells[row, 1].Text}', PatternType={styleSrc.Fill.PatternType}, ColorRgb='{styleSrc.Fill.BackgroundColor.Rgb}'\n");
+            }
+            catch {}
+
+            try
+            {
+                ws.Cells[row, 1, row, 9].Merge = false;
+            }
+            catch { }
+            
+            // Copy style to columns 2 to 13 BEFORE merging
+            for (int col = 2; col <= 13; col++)
+            {
+                CopyStyle(styleSrc, ws.Cells[row, col].Style);
+                // Clear left/right borders for internal cells of the merged range
+                ws.Cells[row, col].Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                ws.Cells[row, col].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+            }
+            // Clear right border of column 1 to prevent internal line between col 1 and 2
+            ws.Cells[row, 1].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+
+            ws.Cells[row, 1, row, 13].Merge = true;
+            
+            ws.Cells[row, 1].Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Medium;
+            ws.Cells[row, 13].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Medium;
+
+            // Clear background fill for column 14 onwards to limit background to column M
+            for (int col = 14; col <= Math.Max(20, ws.Dimension.End.Column); col++)
+            {
+                ws.Cells[row, col].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.None;
+            }
+        }
+
+        private void ExpandColoredRowToColumnM(ExcelWorksheet ws, int row, int sourceCol = 9)
+        {
+            var styleSrc = ws.Cells[row, sourceCol].Style;
+            for (int col = sourceCol + 1; col <= 13; col++)
+            {
+                CopyStyle(styleSrc, ws.Cells[row, col].Style);
+            }
+            ws.Cells[row, 13].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Medium;
+
+            // Clear background fill for column 14 onwards to limit background to column M
+            for (int col = 14; col <= Math.Max(20, ws.Dimension.End.Column); col++)
+            {
+                ws.Cells[row, col].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.None;
             }
         }
 
@@ -485,6 +870,7 @@ namespace LongDucProjectTest.Service
         private void CopyRowStyles(ExcelWorksheet ws, int sourceRow, int destRow)
         {
             ws.Row(destRow).Height = ws.Row(sourceRow).Height;
+            ws.Row(destRow).CustomHeight = true;
             for (int col = 1; col <= ws.Dimension.End.Column; col++)
             {
                 var sourceCell = ws.Cells[sourceRow, col];
@@ -501,6 +887,7 @@ namespace LongDucProjectTest.Service
                 int srcRow = sourceStartRow + i;
                 int dstRow = destStartRow + i;
                 ws.Row(dstRow).Height = ws.Row(srcRow).Height;
+                ws.Row(dstRow).CustomHeight = true;
 
                 for (int col = 1; col <= 13; col++)
                 {
@@ -529,7 +916,12 @@ namespace LongDucProjectTest.Service
             {
                 try
                 {
-                    dest.SetColor(System.Drawing.ColorTranslator.FromHtml("#" + source.Rgb));
+                    string hex = source.Rgb;
+                    if (hex.Length == 8)
+                    {
+                        hex = hex.Substring(2);
+                    }
+                    dest.SetColor(System.Drawing.ColorTranslator.FromHtml("#" + hex));
                 }
                 catch
                 {
@@ -605,6 +997,18 @@ namespace LongDucProjectTest.Service
             
             if (minStr == maxStr) return $"{minStr}°C";
             return $"{minStr} - {maxStr}°C";
+        }
+
+        private string FormatRangeForExcel(List<double> values, string suffix = "")
+        {
+            if (values == null || values.Count == 0) return "-";
+            double min = values.Min();
+            double max = values.Max();
+            string minStr = Math.Round(min, 1).ToString("0.#", CultureInfo.InvariantCulture);
+            string maxStr = Math.Round(max, 1).ToString("0.#", CultureInfo.InvariantCulture);
+            
+            if (minStr == maxStr) return $"{minStr}{suffix}";
+            return $"{minStr} - {maxStr}{suffix}";
         }
 
         private Dictionary<string, string> ParseUrlEncodedPayload(string payload)
@@ -688,6 +1092,14 @@ namespace LongDucProjectTest.Service
             public string Status { get; set; }
             public DateTime? StartTime { get; set; }
             public DateTime? EndTime { get; set; }
+            public int SpCapLieu { get; set; }
+            public int SpTron1 { get; set; }
+            public int SpXaDay { get; set; }
+            public int SpRungXaDay { get; set; }
+            public int SpHutXaDay { get; set; }
+            public int SpTron2 { get; set; }
+            public int SpXaHang { get; set; }
+            public int SpRungXaHang { get; set; }
         }
 
         private class BomItemDto
