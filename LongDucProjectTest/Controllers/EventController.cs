@@ -212,7 +212,8 @@ namespace LongDucProject.Controllers
                             }
                             else
                             {
-                                double totalSeconds = (DateTime.Now - runStart).TotalSeconds;
+                                int telemetryDuration = GetActiveRunDurationFromTelemetry(connector, selectedRunId);
+                                double totalSeconds = telemetryDuration > 0 ? telemetryDuration : (DateTime.Now - runStart).TotalSeconds;
                                 durationStr = FormatDuration(totalSeconds);
                             }
                         }
@@ -749,6 +750,39 @@ namespace LongDucProject.Controllers
 
             return string.Format("{0}m {1}s", t.Minutes, t.Seconds);
 
+        }
+
+        private static int GetActiveRunDurationFromTelemetry(Hino.DatabaseConnector.MySQLConnect connector, int runId)
+        {
+            try
+            {
+                var dt = connector.ExecuteQuery($@"
+                    SELECT ThoiGianCapLieu, ThoiGianTron1, ThoiGianXaDay, ThoiGianRungXaDay, 
+                           ThoiGianHutXaDay, ThoiGianTron2, ThoiGianXaHang, ThoiGianRungXaHang 
+                    FROM alarmreport 
+                    WHERE runId = {runId} 
+                    ORDER BY id DESC LIMIT 1");
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    var row = dt.Rows[0];
+                    int total = 0;
+                    string[] cols = { "ThoiGianCapLieu", "ThoiGianTron1", "ThoiGianXaDay", "ThoiGianRungXaDay", 
+                                      "ThoiGianHutXaDay", "ThoiGianTron2", "ThoiGianXaHang", "ThoiGianRungXaHang" };
+                    foreach (var col in cols)
+                    {
+                        if (row.Table.Columns.Contains(col) && row[col] != DBNull.Value)
+                        {
+                            if (int.TryParse(row[col].ToString(), out int val))
+                            {
+                                total += val;
+                            }
+                        }
+                    }
+                    return total;
+                }
+            }
+            catch { }
+            return 0;
         }
 
     }

@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using Hino.Getdata.Common;
 using Microsoft.Win32;
 using OfficeOpenXml;
@@ -83,7 +83,7 @@ namespace LongDucProject.Controllers
         }
 
         [HttpPost]
-        public JsonResult GetAlarmsData(string starttime, string endtime, string batchId, string runId, int draw, int start, int length, bool? isInitialLoad)
+        public JsonResult GetAlarmsData(string starttime, string endtime, string batchId, string runId, int draw, int start, int length, bool? isInitialLoad, string severity = "")
         {
             try
             {
@@ -222,6 +222,16 @@ namespace LongDucProject.Controllers
                     {
                         filterQuery += $" AND a.batchId = {parsedBatchId}";
                     }
+                }
+
+                if (!string.IsNullOrEmpty(severity))
+                {
+                    filterQuery += $" AND a.Severity = '{severity.Replace("'", "''")}'";
+                }
+                var searchValue = Request.Form["search[value]"];
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    filterQuery += $" AND (a.Message LIKE '%{searchValue.Replace("'", "''")}%' OR a.TagName LIKE '%{searchValue.Replace("'", "''")}%')";
                 }
 
                 string countQuery = $"SELECT COUNT(*) {baseQuery} {filterQuery}";
@@ -384,11 +394,12 @@ namespace LongDucProject.Controllers
         }
 
         [HttpGet]
-        public FileResult ExportAlarmsExcel(string starttime, string endtime, string batchId, string runId, string searchValue)
+        public ActionResult ExportAlarmsExcel(string starttime, string endtime, string batchId, string runId, string searchValue, string severity = "")
         {
             if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
             {
-                throw new HttpException(403, "Bạn không có quyền thực hiện hành động này.");
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện hành động này. (Mã lỗi: 403 Forbidden)";
+                return RedirectToAction("Alarm", "Home");
             }
 
             var connector = new MySQLConnect()
@@ -435,6 +446,15 @@ namespace LongDucProject.Controllers
             else if (hasBatchFilter)
             {
                 filterQuery += $" AND a.batchId = {parsedBatchId}";
+            }
+
+            if (!string.IsNullOrEmpty(severity))
+            {
+                filterQuery += $" AND a.Severity = '{severity.Replace("'", "''")}'";
+            }
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                filterQuery += $" AND (a.Message LIKE '%{searchValue.Replace("'", "''")}%' OR a.TagName LIKE '%{searchValue.Replace("'", "''")}%')";
             }
 
             string query = $"SELECT a.id, a.DateTime, a.restore_time, a.Message, a.Severity, a.TagName, b.name AS BatchName {baseQuery} {filterQuery} ORDER BY a.DateTime DESC, a.id DESC";
@@ -470,11 +490,12 @@ namespace LongDucProject.Controllers
         }
 
         [HttpGet]
-        public FileResult ExportAlarmsCsv(string starttime, string endtime, string batchId, string runId, string searchValue)
+        public ActionResult ExportAlarmsCsv(string starttime, string endtime, string batchId, string runId, string searchValue, string severity = "")
         {
             if (Session["Role"] is null || (int)Session["Role"] != (int)Role.Admin)
             {
-                throw new HttpException(403, "Bạn không có quyền thực hiện hành động này.");
+                TempData["ErrorMessage"] = "Bạn không có quyền thực hiện hành động này. (Mã lỗi: 403 Forbidden)";
+                return RedirectToAction("Alarm", "Home");
             }
 
             var connector = new MySQLConnect()
@@ -521,6 +542,15 @@ namespace LongDucProject.Controllers
             else if (hasBatchFilter)
             {
                 filterQuery += $" AND a.batchId = {parsedBatchId}";
+            }
+
+            if (!string.IsNullOrEmpty(severity))
+            {
+                filterQuery += $" AND a.Severity = '{severity.Replace("'", "''")}'";
+            }
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                filterQuery += $" AND (a.Message LIKE '%{searchValue.Replace("'", "''")}%' OR a.TagName LIKE '%{searchValue.Replace("'", "''")}%')";
             }
 
             string query = $"SELECT a.id, a.DateTime, a.restore_time, a.Message, a.Severity, a.TagName, b.name AS BatchName {baseQuery} {filterQuery} ORDER BY a.DateTime DESC, a.id DESC";

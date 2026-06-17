@@ -693,9 +693,10 @@
                 const alarmCount = step.alerts.filter(a => a.type === 'ALARM').length;
                 const mainType = alarmCount > 0 ? 'ALARM' : 'WARNING';
                 const iconColor = mainType === 'ALARM' ? '#ef4444' : '#f59e0b';
+                const blinkClass = mainType === 'ALARM' ? 'blink-alarm' : '';
                 html += `<td class="td-alerts text-warning" colspan="3" style="padding: 0; vertical-align: middle;">
     <div class="alarm-summary" onclick="toggleAlarmCollapse(this)" style="display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; padding: 12px 10px; height: 100%;">
-    <div class="alarm-icon warning" style="color: ${iconColor}; font-size: 20px;">
+    <div class="alarm-icon warning ${blinkClass}" style="color: ${iconColor}; font-size: 20px;">
     <i class="fas fa-exclamation-triangle"></i>
     </div>
     <span style="font-weight: bold; font-size: 14px; color: ${iconColor}">${step.alerts.length}</span>

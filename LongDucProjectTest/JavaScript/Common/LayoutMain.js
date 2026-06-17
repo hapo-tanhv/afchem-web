@@ -1,4 +1,4 @@
-// Machine Dropdown Functions
+﻿// Machine Dropdown Functions
 
 function toggleMachineDropdown() {
 

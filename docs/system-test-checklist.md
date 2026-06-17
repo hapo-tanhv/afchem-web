@@ -54,16 +54,16 @@ Trước khi thực hiện kiểm thử, cần chuẩn bị sẵn 2 tài khoản
 ### 1.4. Kiểm thử Mối liên hệ Dữ liệu & Tác động Giao diện (Data-Driven UI Impact Testing)
 *Mục tiêu: Đảm bảo khi số liệu đo đạc (Telemetry) vượt ngưỡng an toàn hoặc thay đổi trạng thái, giao diện người dùng (UI) sẽ tự động phản hồi trực quan về màu sắc, thông báo lỗi, trạng thái thiết bị và cập nhật thời gian đồng bộ chính xác theo đúng thiết kế mã nguồn Frontend & Backend.*
 
-- [ ] **Đồng bộ lệch chu kỳ khi xảy ra sự cố vượt ngưỡng (Ví dụ: Cảm biến vượt ngưỡng 40°C):**
-  - [ ] **Mô tả hành vi dữ liệu:** Khi nhiệt độ bồn trên đo được vượt quá ngưỡng cảnh báo (Ví dụ: `NhietDoBonTronTren >= 40°C` được ghi nhận vào database ở bảng `realtime_alarms`):
-    - [ ] **Pha 1 - Cảnh báo nhanh xuất hiện lập tức (Tối đa 2 giây):**
-      - [ ] Trình duyệt chạy ngầm hàm AJAX `fetchRecentAlarms()` gọi lên API `/Overview/GetRecentAlarms` với tần suất **2 giây/lần** (`2000ms`).
-      - [ ] Xác nhận: Dòng cảnh báo sự cố mới phải xuất hiện trong widget **Cảnh báo nhanh** ở góc dưới bên phải Header **trong vòng tối đa 2 giây** kể từ khi dữ liệu vượt ngưỡng được ghi nhận.
-    - [ ] **Pha 2 - Cập nhật chi tiết bảng thống kê & highlight màu đỏ (Tối đa 30 giây):**
-      - [ ] Trình duyệt chạy ngầm hàm AJAX `fetchCurrentBatchStats()` gọi lên API `/Overview/GetCurrentBatchStats` với tần suất **30 giây/lần** (`30000ms`).
-      - [ ] Xác nhận: Sau **tối đa 30 giây**, bảng **Thống kê mẻ hiện tại** tự động tải lại và cập nhật:
-        - [ ] Số liệu min hoặc max tương ứng trong cột **Nhiệt độ bồn trên** chuyển sang hiển thị **Màu đỏ in đậm** (`<span style='color: #ef4444; font-weight: bold;'>`).
-        - [ ] Cột **Cảnh báo** sinh ra icon tam giác màu đỏ nhấp nháy, hiển thị tổng số cảnh báo của công đoạn đó, cho phép nhấp chuột để mở rộng hiển thị chi tiết (Thời gian, tiêu đề, giá trị đo được kèm ngưỡng so sánh).
+- [x] **Đồng bộ lệch chu kỳ khi xảy ra sự cố vượt ngưỡng (Ví dụ: Cảm biến vượt ngưỡng 40°C):**
+  - [x] **Mô tả hành vi dữ liệu:** Khi nhiệt độ bồn trên đo được vượt quá ngưỡng cảnh báo (Ví dụ: `NhietDoBonTronTren >= 40°C` được ghi nhận vào database ở bảng `realtime_alarms`):
+    - [x] **Pha 1 - Cảnh báo nhanh xuất hiện lập tức (Tối đa 2 giây):**
+      - [x] Trình duyệt chạy ngầm hàm AJAX `fetchRecentAlarms()` gọi lên API `/Overview/GetRecentAlarms` với tần suất **2 giây/lần** (`2000ms`).
+      - [x] Xác nhận: Dòng cảnh báo sự cố mới phải xuất hiện trong widget **Cảnh báo nhanh** ở góc dưới bên phải Header **trong vòng tối đa 2 giây** kể từ khi dữ liệu vượt ngưỡng được ghi nhận.
+    - [x] **Pha 2 - Cập nhật chi tiết bảng thống kê & highlight màu đỏ (Tối đa 30 giây):**
+      - [x] Trình duyệt chạy ngầm hàm AJAX `fetchCurrentBatchStats()` gọi lên API `/Overview/GetCurrentBatchStats` với tần suất **30 giây/lần** (`30000ms`).
+      - [x] Xác nhận: Sau **tối đa 30 giây**, bảng **Thống kê mẻ hiện tại** tự động tải lại và cập nhật:
+        - [x] Số liệu min hoặc max tương ứng trong cột **Nhiệt độ bồn trên** chuyển sang hiển thị **Màu đỏ in đậm** (`<span style='color: #ef4444; font-weight: bold;'>`).
+        - [x] Cột **Cảnh báo** sinh ra icon tam giác màu đỏ nhấp nháy, hiển thị tổng số cảnh báo của công đoạn đó, cho phép nhấp chuột để mở rộng hiển thị chi tiết (Thời gian, tiêu đề, giá trị đo được kèm ngưỡng so sánh).
 - [ ] **Mối liên hệ giữa Trạng thái Công đoạn (Step Status) & Phong cách Giao diện (UI Styling):**
   - [ ] **Trạng thái Pending (Chưa thực hiện):**
     - [ ] Các thông số nhiệt độ bồn (Bồn trên, Bồn giữa, Bồn dưới) trong bảng "Thống kê mẻ hiện tại" của công đoạn chưa bắt đầu phải hiển thị **màu xanh lục lam sáng** (`class="td-temp text-cyan"`).
@@ -110,7 +110,7 @@ Trước khi thực hiện kiểm thử, cần chuẩn bị sẵn 2 tài khoản
 - [ ] **Lọc theo khoảng thời gian:** Chọn Từ ngày (From Date) và Đến ngày (To Date).
   - [ ] Bấm **"Truy vấn"** hệ thống trả về đúng dữ liệu nằm trong khoảng thời gian đã chọn.
   - [ ] *Trường hợp biên (Edge Case):* Chọn Từ ngày lớn hơn Đến ngày $\rightarrow$ Hệ thống phải hiển thị thông báo lỗi/Toast cảnh báo người dùng và từ chối truy vấn.
-- [ ] **Lọc theo phân loại:** Lọc theo Cấp độ (Alarm/Warning) hoặc Khu vực sự cố. Kết quả bảng tải lại tức thì và chính xác.
+- [ ] **Lọc theo phân loại:** Lọc theo Cấp độ (Alarm/Warning). Kết quả bảng tải lại tức thì và chính xác.
 
 ### 2.2. Kiểm thử Bảng dữ liệu (DataTables)
 - [ ] **Tìm kiếm nhanh (Search Box):**
@@ -141,14 +141,14 @@ Trước khi thực hiện kiểm thử, cần chuẩn bị sẵn 2 tài khoản
   - [ ] Chọn một mẻ bị lỗi (`status = 'Error'` hoặc `'Failed'`) từ dropdown/bảng danh sách.
   - [ ] Xác nhận nhãn trạng thái chu kỳ hiển thị là **`"Chu kỳ bị lỗi"`** (không hiển thị nhãn mặc định *"Chu kỳ hoàn tất thành công"*).
   - [ ] Ghi chú chất lượng của mẻ lỗi hiển thị đúng nội dung: **`"Chu kỳ bị lỗi. Chất lượng sản phẩm: KHÔNG ĐẠT (LỖI)"`** và có chữ màu đỏ nổi bật (`class="text-danger"`).
-- [ ] **Kiểm thử chu trình Dừng mẻ (Pause) và Chạy tiếp mẻ (Resume):**
-  - [ ] *Trường hợp Dừng mẻ:* Khi mẻ đang hoạt động bị tạm dừng chạy (tín hiệu PLC dừng hoặc chuyển trạng thái):
-    - [ ] Đồng hồ hiển thị thời gian chạy mẻ (`#headerRunningTime`) phải dừng tăng thời gian và giữ nguyên giá trị hiện tại.
-    - [ ] Hệ thống giữ nguyên trạng thái hiển thị của công đoạn hiện hành, không nhảy bước hoặc cập nhật sai chu trình.
-  - [ ] *Trường hợp Chạy tiếp mẻ:* Khi mẻ tiếp tục vận hành:
-    - [ ] Thời gian chạy mẻ tiếp tục tăng tích lũy bình thường.
-    - [ ] Các thông số PLC thực tế cập nhật liên tục trở lại.
-    - [ ] Các sự kiện cảnh báo phát sinh trong quá trình dừng/chạy tiếp được ghi nhận đầy đủ với mốc thời gian chính xác.
+- [x] **Kiểm thử chu trình Dừng mẻ (Pause) và Chạy tiếp mẻ (Resume):**
+  - [x] *Trường hợp Dừng mẻ:* Khi mẻ đang hoạt động bị tạm dừng chạy (tín hiệu PLC dừng hoặc chuyển trạng thái):
+    - [x] Đồng hồ hiển thị thời gian chạy mẻ (`#headerRunningTime`) phải dừng tăng thời gian và giữ nguyên giá trị hiện tại.
+    - [x] Hệ thống giữ nguyên trạng thái hiển thị của công đoạn hiện hành, không nhảy bước hoặc cập nhật sai chu trình.
+  - [x] *Trường hợp Chạy tiếp mẻ:* Khi mẻ tiếp tục vận hành:
+    - [x] Thời gian chạy mẻ tiếp tục tăng tích lũy bình thường.
+    - [x] Các thông số PLC thực tế cập nhật liên tục trở lại.
+    - [x] Các sự kiện cảnh báo phát sinh trong quá trình dừng/chạy tiếp được ghi nhận đầy đủ với mốc thời gian chính xác.
 - [ ] **Đồng bộ hóa dữ liệu (BatchResolver Integration):**
   - [ ] Khi chọn một Batch từ bộ lọc dropdown, mẻ con mặc định được tải lên phải khớp theo đúng độ ưu tiên phân giải của `BatchResolver`.
   - [ ] Dữ liệu kết xuất từ API xuất báo cáo Excel (`/Event/ExportEventExcel`) và CSV (`/Event/ExportEventCsv`) phải trùng khớp 100% với dữ liệu mẻ con đang hiển thị trên giao diện của trang Event.

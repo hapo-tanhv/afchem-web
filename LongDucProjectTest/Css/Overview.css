@@ -1,4 +1,4 @@
-/* RESET & NỀN TỔNG THỂ */
+﻿/* RESET & NỀN TỔNG THỂ */
 .content-wrapper {
     background-color: #0a0a0a !important;
     padding: 20px;
@@ -148,6 +148,19 @@
         transform: scale(0.8);
         opacity: 0.8;
     }
+}
+
+@keyframes alarm-blink {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.2;
+    }
+}
+
+.blink-alarm {
+    animation: alarm-blink 1s infinite;
 }
 
 .step-name {
