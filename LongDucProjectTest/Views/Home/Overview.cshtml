@@ -187,6 +187,9 @@
                 <span class="header-accent" style="background: #00e5ff;"></span>
                 <h3 style="margin-bottom: 0;">Lựa chọn Batch chạy linh hoạt</h3>
             </div>
+            <div id="selectionProductDisplay" style="font-size: 0.9375rem; font-weight: bold; color: #00e5ff;">
+                Sản phẩm: <span id="selectionProductName" style="color: #fff;">-</span>
+            </div>
             <span class="badge-active-status" id="activeStatusBadge" style="font-size: 0.6875rem; padding: 0.25rem 0.625rem; border-radius: 0.25rem; font-weight: bold; display: none;"></span>
         </div>
         <div class="batch-selection-content" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.25rem;">
@@ -611,53 +614,44 @@
 <script>
     const mockBatchData = [
         {
-            process: "Cấp liệu", standard: "720s", start: "08:04:15", end: "08:18:15", duration: "840s",
+            process: "Cấp liệu", standard: "60s", start: "08:04:15", end: "08:18:15", duration: "60s",
             tempTop: "30-32°C", tempMid: "30-32°C", tempBot: "30-32°C",
-            status: "completed", statusText: "Hoàn thành",
-            alerts: [
-                { time: "08:16:33", type: "WARNING", title: "Vượt quá thời gian cài đặt", message: "Giá trị: 840s (ngưỡng: 720s)" }
-            ]
+            status: "completed", statusText: "Hoàn thành", alerts: []
         },
         {
-            process: "Trộn 1", standard: "780s", start: "08:18:15", end: "08:31:15", duration: "780s",
+            process: "Trộn 1", standard: "50s", start: "08:18:15", end: "08:31:15", duration: "50s",
             tempTop: "30-32°C", tempMid: "32-35°C", tempBot: "32-35°C",
             status: "completed", statusText: "Hoàn thành", alerts: []
         },
         {
-            process: "Xả đáy", standard: "600s", start: "08:31:15", end: "08:41:15", duration: "600s",
+            process: "Xả đáy", standard: "60s", start: "08:31:15", end: "08:41:15", duration: "56s",
             tempTop: "30-32°C", tempMid: "32-35°C", tempBot: "32-36°C",
             status: "completed", statusText: "Hoàn thành", alerts: []
         },
         {
-            process: "Rung xả đáy", standard: "600s", start: "08:41:15", end: "08:51:15", duration: "600s",
+            process: "Rung xả đáy", standard: "20s", start: "08:41:15", end: "08:51:15", duration: "21s",
             tempTop: "30-32°C", tempMid: "32-35°C", tempBot: "32-36°C",
             status: "completed", statusText: "Hoàn thành",
-            alerts: [
-                { time: "08:45:11", type: "ALARM", title: "Nhiệt độ bồn trộn trên vượt ngưỡng cảnh báo", message: "Giá trị: 85.2 °C (ngưỡng: 84 °C)" },
-                { time: "08:47:28", type: "ALARM", title: "Nhiệt độ bồn trộn giữa vượt ngưỡng cảnh báo", message: "Giá trị: 86.2 °C (ngưỡng: 85 °C)" }
-            ]
+            alerts: []
         },
         {
-            process: "Hút xả đáy", standard: "720s", start: "08:51:15", end: "09:03:15", duration: "720s",
+            process: "Hút xả đáy", standard: "30s", start: "08:51:15", end: "09:03:15", duration: "93s",
             tempTop: "30-32°C", tempMid: "32-35°C", tempBot: "32-36°C",
             status: "completed", statusText: "Hoàn thành", alerts: []
         },
         {
-            process: "Trộn 2", standard: "1200s", start: "09:03:15", end: "09:23:15", duration: "1200s",
+            process: "Trộn 2", standard: "45s", start: "09:03:15", end: "09:23:15", duration: "40s",
             tempTop: "29-32°C", tempMid: "32-35°C", tempBot: "32-35°C",
             status: "completed", statusText: "Hoàn thành", alerts: []
         },
         {
-            process: "Xả hàng", standard: "1500s", start: "09:23:15", end: "09:48:15", duration: "1500s",
+            process: "Xả hàng", standard: "100s", start: "09:23:15", end: "09:48:15", duration: "108s",
             tempTop: "29-32°C", tempMid: "32-35°C", tempBot: "32-35°C",
             status: "completed", statusText: "Hoàn thành",
-            alerts: [
-                { time: "09:35:12", type: "WARNING", title: "Áp suất đường ống cao hơn ngưỡng cảnh báo", message: "Giá trị: 0.28 bar (ngưỡng: 0.25 bar)" },
-                { time: "09:42:45", type: "WARNING", title: "Áp suất đường ống cao hơn ngưỡng cảnh báo", message: "Giá trị: 0.29 bar (ngưỡng: 0.25 bar)" }
-            ]
+            alerts: []
         },
         {
-            process: "Rung xả hàng", standard: "180s", start: "09:48:15", end: "-", duration: "-",
+            process: "Rung xả hàng", standard: "30s", start: "09:48:15", end: "-", duration: "-",
             tempTop: "28-32°C", tempMid: "32-35°C", tempBot: "32-36°C",
             status: "in-progress", statusText: "Đang thực hiện", alerts: []
         }

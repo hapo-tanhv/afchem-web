@@ -382,14 +382,14 @@ namespace LongDucProjectTest.Service
                 // Step definitions for SCADA 8 stages
                 var stepDefs = new[]
                 {
-                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = "720s" },
-                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = "780s" },
-                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = "600s" },
-                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = "600s" },
-                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = "720s" },
-                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = "1200s" },
-                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = "1500s" },
-                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = "180s" }
+                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = "60s" },
+                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = "50s" },
+                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = "60s" },
+                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = "20s" },
+                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = "30s" },
+                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = "45s" },
+                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = "100s" },
+                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = "30s" }
                 };
 
                 int bomShift = currentShift;

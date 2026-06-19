@@ -154,13 +154,16 @@ namespace LongDucProject.Controllers
                 }
 
                 // 1. Query Batch Details
-                var dtBatch = connector.ExecuteQuery($"SELECT id, name, status, start_time, end_time, device_name FROM batches WHERE id = {selectedBatchId}");
+                var dtBatch = connector.ExecuteQuery($"SELECT id, name, status, start_time, end_time, device_name, product_name, formula, target_weight FROM batches WHERE id = {selectedBatchId}");
                 string batchName = "-";
                 string batchStatus = "";
                 string startStr = "-";
                 string endStr = "-";
                 string durationStr = "-";
                 string deviceName = "-";
+                string productName = "-";
+                string formula = "-";
+                string targetWeight = "-";
 
                 string batchDateStr = "";
                 if (dtBatch != null && dtBatch.Rows.Count > 0)
@@ -169,6 +172,9 @@ namespace LongDucProject.Controllers
                     batchName = rowBatch["name"].ToString();
                     batchStatus = rowBatch["status"].ToString();
                     deviceName = rowBatch["device_name"] != DBNull.Value ? rowBatch["device_name"].ToString() : "TX01 A";
+                    productName = rowBatch["product_name"] != DBNull.Value && !string.IsNullOrEmpty(rowBatch["product_name"].ToString()) ? rowBatch["product_name"].ToString() : "-";
+                    formula = rowBatch["formula"] != DBNull.Value && !string.IsNullOrEmpty(rowBatch["formula"].ToString()) ? rowBatch["formula"].ToString() : "-";
+                    targetWeight = rowBatch["target_weight"] != DBNull.Value ? rowBatch["target_weight"].ToString() + " kg" : "-";
 
                     if (rowBatch["start_time"] != DBNull.Value)
                     {
@@ -226,11 +232,11 @@ namespace LongDucProject.Controllers
                                   (batchStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ chưa bắt đầu" : 
                                   (batchStatus.Equals("Error", StringComparison.OrdinalIgnoreCase) || batchStatus.Equals("Failed", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ bị lỗi" : "Chu kỳ hoàn tất thành công")),
                     batchId = batchName,
-                    productName = deviceName,
+                    productName = productName,
                     endTime = endStr,
-                    formula = "TX01 - Formula A",
+                    formula = formula,
                     totalTime = durationStr,
-                    weight = "500 kg",
+                    weight = targetWeight,
                     startTime = startStr
                 };
 
@@ -256,14 +262,14 @@ namespace LongDucProject.Controllers
 
                 var stepDefs = new[]
                 {
-                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = "720s" },
-                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = "780s" },
-                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = "600s" },
-                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = "600s" },
-                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = "720s" },
-                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = "1200s" },
-                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = "1500s" },
-                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = "180s" }
+                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = "60s" },
+                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = "50s" },
+                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = "60s" },
+                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = "20s" },
+                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = "30s" },
+                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = "45s" },
+                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = "100s" },
+                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = "30s" }
                 };
 
                 var logRows = dtAlarmLog != null ? dtAlarmLog.AsEnumerable().ToList() : new List<DataRow>();

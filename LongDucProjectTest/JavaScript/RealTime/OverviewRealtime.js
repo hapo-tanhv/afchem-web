@@ -327,6 +327,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     var batchActualWeightEl = document.getElementById("batchActualWeight");
                     if (batchActualWeightEl) batchActualWeightEl.innerHTML = batchInfo.actualWeightStr || "-";
 
+                    // Update selectionProductName
+                    var selectionProductNameEl = document.getElementById("selectionProductName");
+                    if (selectionProductNameEl) selectionProductNameEl.innerHTML = batchInfo.productName || "-";
+
                     var batchStartTimeInfoEl = document.getElementById("batchStartTimeInfo");
                     if (batchStartTimeInfoEl) {
                         batchStartTimeInfoEl.innerHTML = formatDateTimeString(batchInfo.batchActualStart) || "-";

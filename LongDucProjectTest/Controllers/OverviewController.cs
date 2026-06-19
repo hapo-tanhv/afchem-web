@@ -1,4 +1,4 @@
-using CsvHelper;
+﻿using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -314,6 +314,7 @@ namespace LongDucProject.Controllers
                 }
 
                 string productName = "-";
+                string formula = "-";
                 double targetWeight = 0;
                 int totalRuns = 0;
                 int completedRuns = 0;
@@ -324,11 +325,12 @@ namespace LongDucProject.Controllers
 
                 if (resolvedBatchId != -1)
                 {
-                    var dtBatchDetail = connector.ExecuteQuery($"SELECT product_name, target_weight, total_runs, start_time FROM batches WHERE id = {resolvedBatchId} LIMIT 1");
+                    var dtBatchDetail = connector.ExecuteQuery($"SELECT product_name, formula, target_weight, total_runs, start_time FROM batches WHERE id = {resolvedBatchId} LIMIT 1");
                     if (dtBatchDetail != null && dtBatchDetail.Rows.Count > 0)
                     {
                         var row = dtBatchDetail.Rows[0];
                         productName = row["product_name"] != DBNull.Value ? row["product_name"].ToString() : "-";
+                        formula = row["formula"] != DBNull.Value ? row["formula"].ToString() : "-";
                         targetWeight = row["target_weight"] != DBNull.Value ? Convert.ToDouble(row["target_weight"]) : 0;
                         totalRuns = row["total_runs"] != DBNull.Value ? Convert.ToInt32(row["total_runs"]) : 0;
                         batchActualStart = row["start_time"] != DBNull.Value ? Convert.ToDateTime(row["start_time"]).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) : "-";
@@ -470,14 +472,14 @@ namespace LongDucProject.Controllers
                 // 5. Set up standard steps with their alarmlog TagNo mapping & keywords
                 var stepDefs = new[]
                 {
-                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = "720s" },
-                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = "780s" },
-                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = "600s" },
-                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = "600s" },
-                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = "720s" },
-                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = "1200s" },
-                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = "1500s" },
-                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = "180s" }
+                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = "60s" },
+                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = "50s" },
+                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = "60s" },
+                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = "20s" },
+                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = "30s" },
+                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = "45s" },
+                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = "100s" },
+                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = "30s" }
                 };
 
                 var stepsList = new List<object>();
@@ -1103,6 +1105,7 @@ namespace LongDucProject.Controllers
                     
                     // Batch overview parameters
                     productName = productName,
+                    formula = formula,
                     targetWeightStr = targetWeightStr,
                     actualWeightStr = actualWeightStr,
                     batchActualStart = batchActualStart,
