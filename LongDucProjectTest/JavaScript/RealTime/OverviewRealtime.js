@@ -45,6 +45,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (currentSteps && currentSteps.length > 0) {
             currentSteps.forEach(function(step, index) {
                 var stepCode = index + 1;
+                if (stepCode === 3) return; // Exclude bottom discharge (Xả đáy)
+                
                 if (step.status === 'completed') {
                     total += parseInt(step.duration) || 0;
                 } else if (step.status === 'in-progress') {
@@ -55,6 +57,8 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         } else {
             for (var code in stepElementIds) {
+                if (parseInt(code) === 3) continue; // Exclude bottom discharge (Xả đáy)
+                
                 var el = document.getElementById(stepElementIds[code]);
                 total += el ? (parseInt(el.innerHTML) || 0) : 0;
             }

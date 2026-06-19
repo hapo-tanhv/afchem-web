@@ -614,46 +614,44 @@
 <script>
     const mockBatchData = [
         {
-            process: "Cấp liệu", standard: "60s", start: "08:04:15", end: "08:18:15", duration: "60s",
-            tempTop: "30-32°C", tempMid: "30-32°C", tempBot: "30-32°C",
-            status: "completed", statusText: "Hoàn thành", alerts: []
+            process: "Cấp liệu", standard: "0s", start: "-", end: "-", duration: "-",
+            tempTop: "-", tempMid: "-", tempBot: "-",
+            status: "pending", statusText: "Chờ chạy", alerts: []
         },
         {
-            process: "Trộn 1", standard: "50s", start: "08:18:15", end: "08:31:15", duration: "50s",
-            tempTop: "30-32°C", tempMid: "32-35°C", tempBot: "32-35°C",
-            status: "completed", statusText: "Hoàn thành", alerts: []
+            process: "Trộn 1", standard: "0s", start: "-", end: "-", duration: "-",
+            tempTop: "-", tempMid: "-", tempBot: "-",
+            status: "pending", statusText: "Chờ chạy", alerts: []
         },
         {
-            process: "Xả đáy", standard: "60s", start: "08:31:15", end: "08:41:15", duration: "56s",
-            tempTop: "30-32°C", tempMid: "32-35°C", tempBot: "32-36°C",
-            status: "completed", statusText: "Hoàn thành", alerts: []
+            process: "Xả đáy", standard: "0s", start: "-", end: "-", duration: "-",
+            tempTop: "-", tempMid: "-", tempBot: "-",
+            status: "pending", statusText: "Chờ chạy", alerts: []
         },
         {
-            process: "Rung xả đáy", standard: "20s", start: "08:41:15", end: "08:51:15", duration: "21s",
-            tempTop: "30-32°C", tempMid: "32-35°C", tempBot: "32-36°C",
-            status: "completed", statusText: "Hoàn thành",
-            alerts: []
+            process: "Rung xả đáy", standard: "0s", start: "-", end: "-", duration: "-",
+            tempTop: "-", tempMid: "-", tempBot: "-",
+            status: "pending", statusText: "Chờ chạy", alerts: []
         },
         {
-            process: "Hút xả đáy", standard: "30s", start: "08:51:15", end: "09:03:15", duration: "93s",
-            tempTop: "30-32°C", tempMid: "32-35°C", tempBot: "32-36°C",
-            status: "completed", statusText: "Hoàn thành", alerts: []
+            process: "Hút xả đáy", standard: "0s", start: "-", end: "-", duration: "-",
+            tempTop: "-", tempMid: "-", tempBot: "-",
+            status: "pending", statusText: "Chờ chạy", alerts: []
         },
         {
-            process: "Trộn 2", standard: "45s", start: "09:03:15", end: "09:23:15", duration: "40s",
-            tempTop: "29-32°C", tempMid: "32-35°C", tempBot: "32-35°C",
-            status: "completed", statusText: "Hoàn thành", alerts: []
+            process: "Trộn 2", standard: "0s", start: "-", end: "-", duration: "-",
+            tempTop: "-", tempMid: "-", tempBot: "-",
+            status: "pending", statusText: "Chờ chạy", alerts: []
         },
         {
-            process: "Xả hàng", standard: "100s", start: "09:23:15", end: "09:48:15", duration: "108s",
-            tempTop: "29-32°C", tempMid: "32-35°C", tempBot: "32-35°C",
-            status: "completed", statusText: "Hoàn thành",
-            alerts: []
+            process: "Xả hàng", standard: "0s", start: "-", end: "-", duration: "-",
+            tempTop: "-", tempMid: "-", tempBot: "-",
+            status: "pending", statusText: "Chờ chạy", alerts: []
         },
         {
-            process: "Rung xả hàng", standard: "30s", start: "09:48:15", end: "-", duration: "-",
-            tempTop: "28-32°C", tempMid: "32-35°C", tempBot: "32-36°C",
-            status: "in-progress", statusText: "Đang thực hiện", alerts: []
+            process: "Rung xả hàng", standard: "0s", start: "-", end: "-", duration: "-",
+            tempTop: "-", tempMid: "-", tempBot: "-",
+            status: "pending", statusText: "Chờ chạy", alerts: []
         }
     ];
     function renderBatchTable(data) {
@@ -663,11 +661,8 @@
         data.forEach((step, index) => {
             const rowActive = step.status === 'in-progress' ? 'row-active' : '';
             
-            // Get standard time: use PLC realtime value if not historic view
+            // Get standard time directly from database
             let standardVal = step.standard;
-            if (!window.isHistoricView && window.plcStandardTimes && window.plcStandardTimes[index + 1] !== undefined) {
-                standardVal = window.plcStandardTimes[index + 1] + 's';
-            }
             
             const durationColor = (step.duration && step.duration !== '-' && parseInt(step.duration) > parseInt(standardVal)) ? 'text-warning' : '';
             const tempColor = step.status === 'pending' ? 'text-cyan' : '';

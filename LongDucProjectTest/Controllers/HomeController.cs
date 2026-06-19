@@ -337,7 +337,8 @@ namespace LongDucProject.Controllers
                         double tgXaHang = TryGetDouble(row["ThoiGianXaHang"]);
                         double tgRungXaHang = TryGetDouble(row["ThoiGianRungXaHang"]);
 
-                        double tongTgTron = tgCapLieu + tgTron1 + tgXaDay + tgRungXaDay + tgHutXaDay + tgTron2 + tgXaHang + tgRungXaHang;
+                        // Exclude bottom discharge (Xả đáy) from total time as requested
+                        double tongTgTron = tgCapLieu + tgTron1 + tgRungXaDay + tgHutXaDay + tgTron2 + tgXaHang + tgRungXaHang;
 
                         data.Add(new
                         {
@@ -469,7 +470,8 @@ namespace LongDucProject.Controllers
                     double tgXaHang = TryGetDouble(row["ThoiGianXaHang"]);
                     double tgRungXaHang = TryGetDouble(row["ThoiGianRungXaHang"]);
 
-                    double tongTgTron = tgCapLieu + tgTron1 + tgXaDay + tgRungXaDay + tgHutXaDay + tgTron2 + tgXaHang + tgRungXaHang;
+                    // Exclude bottom discharge (Xả đáy) from total time as requested
+                    double tongTgTron = tgCapLieu + tgTron1 + tgRungXaDay + tgHutXaDay + tgTron2 + tgXaHang + tgRungXaHang;
 
                     list.Add(new ReportExportDto
                     {
@@ -580,7 +582,8 @@ namespace LongDucProject.Controllers
                     double tgXaHang = TryGetDouble(row["ThoiGianXaHang"]);
                     double tgRungXaHang = TryGetDouble(row["ThoiGianRungXaHang"]);
 
-                    double tongTgTron = tgCapLieu + tgTron1 + tgXaDay + tgRungXaDay + tgHutXaDay + tgTron2 + tgXaHang + tgRungXaHang;
+                    // Exclude bottom discharge (Xả đáy) from total time as requested
+                    double tongTgTron = tgCapLieu + tgTron1 + tgRungXaDay + tgHutXaDay + tgTron2 + tgXaHang + tgRungXaHang;
 
                     list.Add(new ReportExportDto
                     {
