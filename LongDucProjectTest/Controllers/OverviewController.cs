@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -400,6 +400,24 @@ namespace LongDucProject.Controllers
                         if (run.Item2.Equals("Completed", StringComparison.OrdinalIgnoreCase))
                         {
                             totalProducedWeight += runWeight;
+                        }
+                        else if (run.Item2.Equals("Active", StringComparison.OrdinalIgnoreCase))
+                        {
+                            double activeProduced = 0;
+                            var dtActiveWeights = connector.ExecuteQuery($"SELECT value, unit FROM run_info WHERE run_id = {run.Item1}");
+                            if (dtActiveWeights != null)
+                            {
+                                foreach (DataRow rRow in dtActiveWeights.Rows)
+                                {
+                                    string valStr = rRow["value"] != DBNull.Value ? rRow["value"].ToString().Trim() : "";
+                                    string uStr = rRow["unit"] != DBNull.Value ? rRow["unit"].ToString().Trim().ToLower() : "";
+                                    if (uStr == "kg" && double.TryParse(valStr, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out double val))
+                                    {
+                                        activeProduced += val;
+                                    }
+                                }
+                            }
+                            totalProducedWeight += activeProduced;
                         }
                     }
 
