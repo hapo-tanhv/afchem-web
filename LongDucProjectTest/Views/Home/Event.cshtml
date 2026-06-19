@@ -16,27 +16,27 @@
         /* Autocomplete Premium Dark Theme */
         .ui-autocomplete {
             background: rgba(15, 23, 42, 0.95) !important;
-            border: 1px solid rgba(59, 130, 246, 0.4) !important;
-            border-radius: 6px !important;
+            border: 0.0625rem solid rgba(59, 130, 246, 0.4) !important;
+            border-radius: 0.375rem !important;
             color: #e2e8f0 !important;
-            max-height: 250px !important;
+            max-height: 15.625rem !important;
             overflow-y: auto !important;
             z-index: 2000 !important;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
-            backdrop-filter: blur(12px) !important;
-            padding: 5px 0 !important;
+            box-shadow: 0 0.625rem 1.5625rem -0.3125rem rgba(0, 0, 0, 0.5), 0 0.5rem 0.625rem -0.375rem rgba(0, 0, 0, 0.5) !important;
+            backdrop-filter: blur(0.75rem) !important;
+            padding: 0.3125rem 0 !important;
         }
         .ui-menu-item {
             padding: 0 !important;
             list-style: none !important;
         }
         .ui-menu-item .ui-menu-item-wrapper {
-            padding: 8px 15px !important;
+            padding: 0.5rem 0.9375rem !important;
             color: #cbd5e1 !important;
             transition: all 0.2s ease !important;
             border: none !important;
             background: transparent !important;
-            font-size: 13px !important;
+            font-size: 0.8125rem !important;
             display: block !important;
         }
         .ui-menu-item .ui-menu-item-wrapper:hover,
@@ -49,19 +49,19 @@
         /* Two-Row Filter Bar Override */
         .filter-bar {
             background: #1e293b !important;
-            border-radius: 8px !important;
-            padding: 15px 20px !important;
-            margin-bottom: 20px !important;
+            border-radius: 0.5rem !important;
+            padding: 0.9375rem 1.25rem !important;
+            margin-bottom: 1.25rem !important;
             display: flex !important;
             flex-direction: column !important;
-            gap: 15px !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            gap: 0.9375rem !important;
+            box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1), 0 0.125rem 0.25rem -0.0625rem rgba(0, 0, 0, 0.06) !important;
+            border: 0.0625rem solid rgba(255, 255, 255, 0.05) !important;
         }
         .filter-inputs {
             display: flex !important;
             align-items: center !important;
-            gap: 15px !important;
+            gap: 0.9375rem !important;
             flex-wrap: wrap !important;
             width: 100% !important;
         }
@@ -69,16 +69,16 @@
             display: flex;
             flex-direction: column;
             align-items: unset !important;
-            gap: 10px;
+            gap: 0.625rem;
         }
         .filter-actions {
             display: flex !important;
             align-items: center !important;
             justify-content: flex-end !important;
-            gap: 10px !important;
+            gap: 0.625rem !important;
             width: 100% !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
-            padding-top: 12px !important;
+            border-top: 0.0625rem solid rgba(255, 255, 255, 0.05) !important;
+            padding-top: 0.75rem !important;
         }
     </style>
 }
@@ -91,21 +91,21 @@
                 <span class="filter-label">Chọn ngày</span>
                 <input type="text" id="starttime" name="starttime" class="filter-input datepicker" value="@DateTime.Now.ToString("yyyy/MM/dd")">
             </div>
-            <div class="filter-group" style="margin-left: 10px;">
+            <div class="filter-group" style="margin-left: 0.625rem;">
                 <span class="filter-label">Chọn batch</span>
-                <select id="batchId" class="filter-input" style="min-width: 180px;">
+                <select id="batchId" class="filter-input" style="min-width: 11.25rem;">
                     <option value="">Đang tải...</option>
                 </select>
             </div>
-            <div class="filter-group" style="margin-left: 10px;">
+            <div class="filter-group" style="margin-left: 0.625rem;">
                 <span class="filter-label">Chọn mẻ</span>
-                <select id="runId" class="filter-input" style="min-width: 140px;" disabled>
+                <select id="runId" class="filter-input" style="min-width: 8.75rem;" disabled>
                     <option value="0">Không có mẻ</option>
                 </select>
             </div>
-            <div class="filter-group" style="margin-left: 10px; position: relative;">
+            <div class="filter-group" style="margin-left: 0.625rem; position: relative;">
                 <span class="filter-label">Tìm nhanh mẻ</span>
-                <input type="text" id="runSearch" class="filter-input" placeholder="Nhập tên mẻ..." style="min-width: 150px; font-size: 13px;">
+                <input type="text" id="runSearch" class="filter-input" placeholder="Nhập tên mẻ..." style="min-width: 9.375rem; font-size: 0.8125rem;">
             </div>
         </div>
         
@@ -123,7 +123,7 @@
     <div class="event-top-grid">
         <!-- LEFT: TỔNG KẾT CHU KỲ -->
         <div class="history-panel evt-summary-panel">
-            <div class="panel-header" style="margin-bottom: 15px;">
+            <div class="panel-header" style="margin-bottom: 0.9375rem;">
                 <h3>Tổng kết chu kỳ</h3>
             </div>
             <div class="evt-summary-content" id="cycleSummaryContainer"></div>
@@ -131,7 +131,7 @@
 
         <!-- RIGHT: TỔNG HỢP BẤT THƯỜNG -->
         <div class="history-panel evt-anomaly-panel">
-            <div class="panel-header" style="margin-bottom: 10px;">
+            <div class="panel-header" style="margin-bottom: 0.625rem;">
                 <h3>Tổng hợp bất thường</h3>
             </div>
             <div class="evt-anomaly-content" id="anomalySummaryContainer"></div>
@@ -142,14 +142,14 @@
     <div class="event-bottom-grid">
         <!-- LEFT: NHẬT KÝ THEO GIAI ĐOẠN -->
         <div class="history-panel evt-phase-panel">
-            <div class="panel-header" style="margin-bottom: 15px;">
+            <div class="panel-header" style="margin-bottom: 0.9375rem;">
                 <h3>Nhật ký theo giai đoạn</h3>
             </div>
             <div class="table-responsive">
                 <table class="batch-table evt-phase-table">
                     <thead>
                         <tr>
-                            <th style="width: 30px;"></th>
+                            <th style="width: 1.875rem;"></th>
                             <th class="th-process">Công đoạn</th>
                             <th>T.g bắt đầu</th>
                             <th>T.g kết thúc</th>
@@ -165,11 +165,11 @@
 
         <!-- RIGHT: CHI TIẾT SỰ KIỆN -->
         <div class="history-panel evt-detail-panel">
-            <div class="panel-header" style="margin-bottom: 15px;">
+            <div class="panel-header" style="margin-bottom: 0.9375rem;">
                 <h3>Chi tiết sự kiện</h3>
             </div>
             <div class="evt-filter-tabs" id="eventFilterTabs"></div>
-            <div class="table-responsive" style="margin-top: 15px;">
+            <div class="table-responsive" style="margin-top: 0.9375rem;">
                 <table class="batch-table evt-detail-table">
                     <thead>
                         <tr>

@@ -44,9 +44,9 @@
             justify-content: space-between !important;
             align-items: center !important;
             background-color: #0f172a !important;
-            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
-            height: 65px;
-            padding: 0 20px !important;
+            border-bottom: 0.0625rem solid rgba(255,255,255,0.1) !important;
+            height: 4.0625rem;
+            padding: 0 1.25rem !important;
             margin-left: 0 !important;
             position: sticky;
             top: 0;
@@ -56,13 +56,13 @@
         /* ==================================================================
            2. BRANDING (BÊN TRÁI)
            ================================================================== */
-        .header-left-group { display: flex; align-items: center; gap: 15px; }
-        .brand-wrapper { display: flex !important; align-items: center !important; gap: 12px; }
+        .header-left-group { display: flex; align-items: center; gap: 0.9375rem; }
+        .brand-wrapper { display: flex !important; align-items: center !important; gap: 0.75rem; }
         .brand-text-content { display: flex !important; flex-direction: column !important; line-height: 1.1 !important; }
-        .brand-text-content .main-title { color: #ffffff !important; font-weight: 700; font-size: 16px; letter-spacing: 0.5px; margin: 0 !important; }
+        .brand-text-content .main-title { color: #ffffff !important; font-weight: 700; font-size: 1rem; letter-spacing: 0.0312rem; margin: 0 !important; }
         .brand-text-content .sub-title {
             color: #e7ecf3 !important;
-            font-size: 10px;
+            font-size: 0.625rem;
             text-transform: uppercase;
             margin: 0 !important;
         }
@@ -70,72 +70,72 @@
         /* ==================================================================
            3. KHỐI TIỆN ÍCH (BÊN PHẢI)
            ================================================================== */
-        .header-right-group { display: flex; align-items: center; gap: 30px; }
+        .header-right-group { display: flex; align-items: center; gap: 1.875rem; }
 
         /* PLC Status - Dạng Card như ảnh 2 */
         .plc-status-card {
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 0.0625rem solid rgba(255,255,255,0.1);
             background: rgba(15, 23, 42, 0.5);
-            border-radius: 8px;
-            padding: 5px 15px;
+            border-radius: 0.5rem;
+            padding: 0.3125rem 0.9375rem;
             display: flex;
             align-items: center;
-            gap: 12px;
-            min-width: 140px;
+            gap: 0.75rem;
+            min-width: 8.75rem;
         }
         .status-indicator { display: flex; flex-direction: column; }
-        .status-label { color: #94a3b8; font-size: 10px; text-transform: uppercase; font-weight: 600; margin-bottom: -2px; }
-        .status-text { color: #22c55e; font-size: 13px; font-weight: 700; }
-        .dot-online { width: 12px; height: 12px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 10px #22c55e; animation: pulse 2s infinite; }
+        .status-label { color: #94a3b8; font-size: 0.625rem; text-transform: uppercase; font-weight: 600; margin-bottom: -0.125rem; }
+        .status-text { color: #22c55e; font-size: 0.8125rem; font-weight: 700; }
+        .dot-online { width: 0.75rem; height: 0.75rem; background: #22c55e; border-radius: 50%; box-shadow: 0 0 0.625rem #22c55e; animation: pulse 2s infinite; }
 
         /* Realtime Clock - Chia 2 dòng */
-        .clock-wrapper { display: flex; align-items: center; gap: 12px; color: #e2e8f0; }
-        .clock-icon { font-size: 20px; color: #94a3b8; }
+        .clock-wrapper { display: flex; align-items: center; gap: 0.75rem; color: #e2e8f0; }
+        .clock-icon { font-size: 1.25rem; color: #94a3b8; }
         .clock-data { display: flex; flex-direction: column; line-height: 1.1; }
-        .clock-time { font-size: 14px; color: #ffffff; }
+        .clock-time { font-size: 0.875rem; color: #ffffff; }
         .clock-date {
-            font-size: 11px;
+            font-size: 0.6875rem;
             color: #a9b7cb;
         }
 
         /* Notification */
-        .notification-btn { position: relative; color: #94a3b8; font-size: 20px; transition: 0.3s; }
+        .notification-btn { position: relative; color: #94a3b8; font-size: 1.25rem; transition: 0.3s; }
         .notification-btn:hover { color: #ffffff; }
         .badge-count {
-            position: absolute; top: -5px; right: -5px; background: #ef4444;
-            color: white; font-size: 10px; padding: 1px 5px; border-radius: 50%;
-            border: 2px solid #0f172a;
+            position: absolute; top: -0.3125rem; right: -0.3125rem; background: #ef4444;
+            color: white; font-size: 0.625rem; padding: 0.0625rem 0.3125rem; border-radius: 50%;
+            border: 0.125rem solid #0f172a;
         }
 
         /* User Profile */
-        .user-profile-toggle { display: flex; align-items: center; gap: 12px; cursor: pointer; padding-left: 20px; border-left: 1px solid rgba(255,255,255,0.1); }
+        .user-profile-toggle { display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding-left: 1.25rem; border-left: 0.0625rem solid rgba(255,255,255,0.1); }
         .user-meta { display: flex; flex-direction: column; text-align: right; line-height: 1.1; }
-        .u-name { color: #ffffff; font-size: 13px; font-weight: 700; }
+        .u-name { color: #ffffff; font-size: 0.8125rem; font-weight: 700; }
         .u-role {
             color: #a9b7cb;
-            font-size: 11px;
+            font-size: 0.6875rem;
         }
-        .u-avatar { width: 38px; height: 38px; border-radius: 50%; border: 1px solid #334155; object-fit: cover; }
+        .u-avatar { width: 2.375rem; height: 2.375rem; border-radius: 50%; border: 0.0625rem solid #334155; object-fit: cover; }
 
         /* Dropdown Menu */
-        .user-dropdown-menu { background-color: #1e293b !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 8px !important; margin-top: 15px !important; box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important; }
-        .user-dropdown-menu .dropdown-item { color: #e2e8f0 !important; padding: 10px 20px !important; font-size: 14px; }
+        .user-dropdown-menu { background-color: #1e293b !important; border: 0.0625rem solid rgba(255,255,255,0.1) !important; border-radius: 0.5rem !important; margin-top: 0.9375rem !important; box-shadow: 0 0.625rem 1.5625rem rgba(0,0,0,0.5) !important; }
+        .user-dropdown-menu .dropdown-item { color: #e2e8f0 !important; padding: 0.625rem 1.25rem !important; font-size: 0.875rem; }
         .user-dropdown-menu .dropdown-item:hover { background-color: #334155 !important; color: #ffffff !important; }
 
         /* Notification Dropdown */
         .notification-dropdown {
-            width: 300px;
+            width: 18.75rem;
             background-color: #1e293b !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
-            border-radius: 8px !important;
-            margin-top: 15px !important;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+            border: 0.0625rem solid rgba(255,255,255,0.1) !important;
+            border-radius: 0.5rem !important;
+            margin-top: 0.9375rem !important;
+            box-shadow: 0 0.625rem 1.5625rem rgba(0,0,0,0.5) !important;
             padding: 0;
         }
         .notification-dropdown .dropdown-item {
             color: #e2e8f0 !important;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            padding: 12px 15px !important;
+            border-bottom: 0.0625rem solid rgba(255,255,255,0.05);
+            padding: 0.75rem 0.9375rem !important;
         }
         .notification-dropdown .dropdown-item:hover {
             background-color: #334155 !important;
@@ -144,51 +144,51 @@
             border-bottom: none;
         }
         .notification-header {
-            padding: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 0.9375rem;
+            border-bottom: 0.0625rem solid rgba(255,255,255,0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         .notification-header-title { color: #ffffff; font-weight: 600; }
-        .notification-header-link { color: #3b82f6; font-size: 12px; }
-        .notification-body { max-height: 300px; overflow-y: auto; }
+        .notification-header-link { color: #3b82f6; font-size: 0.75rem; }
+        .notification-body { max-height: 18.75rem; overflow-y: auto; }
         .notification-footer {
-            padding: 12px;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            padding: 0.75rem;
+            border-top: 0.0625rem solid rgba(255,255,255,0.1);
             text-align: center;
         }
-        .notification-footer a { color: #3b82f6; font-size: 13px; }
+        .notification-footer a { color: #3b82f6; font-size: 0.8125rem; }
 
         /* Machine Info Bar - Theo thiết kế ảnh header.png */
         .machine-info-bar {
             display: flex;
             align-items: center;
             gap: 0;
-            padding: 8px 16px;
+            padding: 0.5rem 1rem;
         }
 
         .machine-info-bar .divider {
-            width: 1px;
-            height: 36px;
+            width: 0.0625rem;
+            height: 2.25rem;
             background: rgba(255,255,255,0.1);
-            margin: 0 8px;
+            margin: 0 0.5rem;
         }
 
         /* Machine Select Custom */
         .machine-select-custom {
             position: relative;
-            min-width: 160px;
+            min-width: 10rem;
         }
 
         .selected-machine {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 12px;
+            gap: 0.5rem;
+            padding: 0.75rem;
             background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(59, 130, 246, 0.25);
-            border-radius: 6px;
+            border: 0.0625rem solid rgba(59, 130, 246, 0.25);
+            border-radius: 0.375rem;
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -200,12 +200,12 @@
 
         .selected-machine .machine-icon {
             color: #00e5ff;
-            font-size: 14px;
+            font-size: 0.875rem;
         }
 
         .selected-machine .machine-text {
             color: #00e5ff;
-            font-size: 14px;
+            font-size: 0.875rem;
             font-weight: 600;
         }
 
@@ -215,7 +215,7 @@
 
         .selected-machine .dropdown-arrow {
             color: #00e5ff;
-            font-size: 10px;
+            font-size: 0.625rem;
             margin-left: auto;
             transition: transform 0.2s ease;
         }
@@ -230,13 +230,13 @@
             top: 100%;
             left: 0;
             right: 0;
-            margin-top: 4px;
+            margin-top: 0.25rem;
             background: #0f172a;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 6px;
+            border: 0.0625rem solid rgba(59, 130, 246, 0.3);
+            border-radius: 0.375rem;
             overflow: hidden;
             z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.3);
         }
 
         .machine-options.show {
@@ -244,9 +244,9 @@
         }
 
         .machine-option {
-            padding: 10px 12px;
+            padding: 0.625rem 0.75rem;
             color: #ffffff;
-            font-size: 13px;
+            font-size: 0.8125rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -264,46 +264,46 @@
         .machine-info-bar .info-item {
             display: flex;
             flex-direction: column;
-            gap: 3px;
-            padding: 6px 12px;
+            gap: 0.1875rem;
+            padding: 0.375rem 0.75rem;
         }
 
         .info-item .shift-value {
             color: #fff;
             font-weight: 600;
-            font-size: 16px;
+            font-size: 1rem;
         }
 
         .machine-info-bar .info-label {
-            font-size: 13px;
+            font-size: 0.8125rem;
             color: #a9b7cb;
             font-weight: 600;
         }
 
         .machine-info-bar .info-value {
-            font-size: 16px;
+            font-size: 1rem;
             color: #00e5ff;
             font-weight: 700;
         }
 
         .machine-info-bar .machine-status {
-            font-size: 11px;
+            font-size: 0.6875rem;
             font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 4px;
+            padding: 0.1875rem 0.625rem;
+            border-radius: 0.25rem;
             display: inline-block;
         }
 
         .machine-info-bar .machine-status.running {
             color: #22c55e;
-            font-size: 16px;
+            font-size: 1rem;
         }
 
         .machine-info-bar .production-value {
             display: flex;
             align-items: center;
-            gap: 3px;
-            font-size: 16px;
+            gap: 0.1875rem;
+            font-size: 1rem;
             color: #ffffff;
             font-weight: 700;
         }
@@ -318,7 +318,7 @@
         }
 
         .machine-info-bar .runtime-value {
-            font-size: 16px;
+            font-size: 1rem;
             color: #00e5ff;
             font-weight: 700;
         }
@@ -330,18 +330,18 @@
 
         .machine-info-bar .alarm-item:hover {
             background: rgba(239, 68, 68, 0.1);
-            border-radius: 6px;
+            border-radius: 0.375rem;
         }
 
         .machine-info-bar .alarm-item .alarm-count {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 0.375rem;
         }
 
         .machine-info-bar .alarm-item .alarm-bell {
             color: #f59e0b;
-            font-size: 16px;
+            font-size: 1rem;
             animation: bell-shake 2s infinite;
         }
 
@@ -356,36 +356,36 @@
 
         .machine-info-bar .alarm-item .alarm-badge {
             color: #f59e0b;
-            font-size: 16px;
+            font-size: 1rem;
             font-weight: 600;
         }
 
         .machine-info-bar .sub-stage {
-            padding: 6px 6px;
-            margin-left: -10px;
+            padding: 0.375rem 0.375rem;
+            margin-left: -0.625rem;
         }
 
         .machine-info-bar .sub-stage .sub-stage-label {
-            font-size: 10px;
+            font-size: 0.625rem;
             color: #3b82f6;
             font-weight: 600;
             background: rgba(59, 130, 246, 0.1);
-            padding: 2px 8px;
-            border-radius: 4px;
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            border: 0.0625rem solid rgba(59, 130, 246, 0.2);
         }
 
         /* Machine Clock trong info bar */
         .machine-clock {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
+            gap: 0.5rem;
+            padding: 0.375rem 0.75rem;
         }
 
         .machine-clock i {
             color: #00e5ff;
-            font-size: 14px;
+            font-size: 0.875rem;
         }
 
         .machine-clock .clock-data {
@@ -393,21 +393,163 @@
             flex-direction: column;
             font-weight: 600;
         }
-
         .machine-clock .clock-time {
             color: #ffffff;
-            font-size: 14px;
+            font-size: 0.875rem;
         }
 
         .machine-clock .clock-date {
             color: #ffffff;
-            font-size: 14px;
+            font-size: 0.875rem;
         }
 
-        .notif-item { display: flex; gap: 12px; }
+        /* ==================================================================
+           4. RESPONSIVE HEADER MACHINE INFO BAR (FONT & PADDING SCALING)
+           ================================================================== */
+        @@media (max-width: 100rem) {
+            .main-header {
+                padding: 0 0.9375rem !important;
+            }
+            .header-right-group {
+                gap: 1.25rem;
+            }
+            .machine-info-bar {
+                padding: 0.375rem 0.625rem;
+            }
+            .machine-info-bar .divider {
+                margin: 0 0.375rem;
+            }
+            .machine-info-bar .info-item {
+                padding: 0.25rem 0.5rem;
+            }
+            .machine-info-bar .info-label {
+                font-size: 0.75rem;
+            }
+            .machine-info-bar .info-value,
+            .info-item .shift-value,
+            .machine-info-bar .machine-status.running,
+            .machine-info-bar .production-value,
+            .machine-info-bar .runtime-value,
+            .machine-info-bar .alarm-item .alarm-badge {
+                font-size: 0.875rem;
+            }
+            .selected-machine {
+                padding: 0.5rem 0.625rem;
+            }
+            .selected-machine .machine-text {
+                font-size: 0.8125rem;
+            }
+            .machine-select-custom {
+                min-width: 8.75rem;
+            }
+            .machine-clock {
+                padding: 0.25rem 0.5rem;
+            }
+            .machine-clock .clock-time,
+            .machine-clock .clock-date {
+                font-size: 0.8125rem;
+            }
+            .user-profile-toggle {
+                padding-left: 0.9375rem;
+                gap: 0.5rem;
+            }
+            .u-avatar {
+                width: 2.125rem;
+                height: 2.125rem;
+            }
+        }
+
+        @@media (max-width: 87.5rem) {
+            .main-header {
+                padding: 0 0.625rem !important;
+            }
+            .header-right-group {
+                gap: 0.75rem;
+            }
+            .machine-info-bar {
+                padding: 0.25rem 0.375rem;
+            }
+            .machine-info-bar .divider {
+                margin: 0 0.25rem;
+            }
+            .machine-info-bar .info-item {
+                padding: 0.1875rem 0.375rem;
+            }
+            .machine-info-bar .info-label {
+                font-size: 0.6875rem;
+            }
+            .machine-info-bar .info-value,
+            .info-item .shift-value,
+            .machine-info-bar .machine-status.running,
+            .machine-info-bar .production-value,
+            .machine-info-bar .runtime-value,
+            .machine-info-bar .alarm-item .alarm-badge {
+                font-size: 0.8125rem;
+            }
+            .selected-machine {
+                padding: 0.375rem 0.5rem;
+            }
+            .selected-machine .machine-text {
+                font-size: 0.75rem;
+            }
+            .machine-select-custom {
+                min-width: 7.5rem;
+            }
+            .user-profile-toggle {
+                padding-left: 0.625rem;
+                gap: 0.375rem;
+            }
+            .u-avatar {
+                width: 1.875rem;
+                height: 1.875rem;
+            }
+            .u-name {
+                font-size: 0.75rem;
+            }
+            .u-role {
+                font-size: 0.625rem;
+            }
+            
+            /* Ẩn bớt Clock để tránh chật chội */
+            .header-clock, .divider-alarm {
+                display: none !important;
+            }
+        }
+
+        @@media (max-width: 78.125rem) {
+            /* Ẩn Ca làm việc và Sản lượng */
+            .header-shift, .divider-shift,
+            .header-output, .divider-output {
+                display: none !important;
+            }
+        }
+
+        @@media (max-width: 70rem) {
+            /* Ẩn thời gian chạy và số mẻ */
+            .header-runtime, .divider-runtime,
+            .header-batch, .divider-batch {
+                display: none !important;
+            }
+        }
+
+        @@media (max-width: 62rem) {
+            /* Ẩn trạng thái máy và Chọn máy, chỉ giữ lại Công đoạn và Cảnh báo */
+            .header-status, .divider-status,
+            .header-machine-select, .divider-machine-select {
+                display: none !important;
+            }
+        }
+
+        @@media (max-width: 48rem) {
+            .machine-info-bar {
+                display: none !important;
+            }
+        }
+
+        .notif-item { display: flex; gap: 0.75rem; }
         .notif-icon {
-            width: 40px;
-            height: 40px;
+            width: 2.5rem;
+            height: 2.5rem;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -422,34 +564,59 @@
         .notif-icon.warning i { color: #f59e0b; }
         .notif-icon.info { background: rgba(59, 130, 246, 0.2); }
         .notif-icon.info i { color: #3b82f6; }
-        .notif-title { color: #ffffff; font-size: 13px; font-weight: 500; }
+        .notif-title { color: #ffffff; font-size: 0.8125rem; font-weight: 500; }
         .notif-desc {
             color: #a9b7cb;
-            font-size: 11px;
+            font-size: 0.6875rem;
         }
-        .notif-time { color: #475569; font-size: 10px; margin-top: 4px; }
+        .notif-time { color: #475569; font-size: 0.625rem; margin-top: 0.25rem; }
 
         /* Sidebar & Content */
         .main-sidebar {
-            padding-top: 75px !important;
+            padding-top: 4.6875rem !important;
             z-index: 1030 !important;
             background-color: #131c2f !important;
+            overflow-y: auto !important;
+            -ms-overflow-style: none !important;  /* IE and Edge */
+            scrollbar-width: none !important;  /* Firefox */
+        }
+        .main-sidebar::-webkit-scrollbar,
+        .sidebar::-webkit-scrollbar {
+            display: none !important;
+        }
+        .sidebar {
+            -ms-overflow-style: none !important;  /* IE and Edge */
+            scrollbar-width: none !important;  /* Firefox */
+        }
+
+        /* Hide sidebar footer when collapsed */
+        body.sidebar-collapse .sidebar-brand-footer {
+            display: none !important;
+        }
+
+        @@media (max-width: 36rem) {
+            .brand-text-content .sub-title {
+                display: none !important;
+            }
+            .brand-text-content .main-title {
+                font-size: 0.875rem !important;
+            }
         }
 
         /* Căn chỉnh lại List Menu */
         .nav-sidebar {
-            padding: 0 10px !important;
+            padding: 0 0.625rem !important;
         }
 
         .nav-sidebar .nav-item {
-            margin-bottom: 8px !important;
+            margin-bottom: 0.5rem !important;
         }
 
         /* Style cơ bản cho các Link menu */
         .nav-sidebar .nav-link {
             color: #94a3b8 !important;
-            border-radius: 10px !important; /* Bo góc item */
-            padding: 12px 15px !important;
+            border-radius: 0.625rem !important; /* Bo góc item */
+            padding: 0.75rem 0.9375rem !important;
             transition: all 0.3s ease;
             border: none !important;
         }
@@ -475,22 +642,22 @@
             left: 0;
             top: 15%;
             height: 70%;
-            width: 4px;
+            width: 0.25rem;
             background-color: #00e5ff; /* Màu Cyan đặc trưng */
-            border-radius: 0 4px 4px 0;
-            box-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+            border-radius: 0 0.25rem 0.25rem 0;
+            box-shadow: 0 0 0.625rem rgba(0, 229, 255, 0.6);
         }
 
         /* Icon Active */
         .nav-sidebar .nav-link.active i {
             color: #00e5ff !important;
-            filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.4));
+            filter: drop-shadow(0 0 0.3125rem rgba(0, 229, 255, 0.4));
         }
 
         /* Sidebar Footer Text */
         .sidebar-brand-footer {
             position: absolute;
-            bottom: 30px;
+            bottom: 1.875rem;
             width: 100%;
             text-align: center;
             left: 0;
@@ -498,8 +665,8 @@
 
         .sidebar-brand-footer span {
             color: #475569;
-            font-size: 12px;
-            letter-spacing: 1px;
+            font-size: 0.75rem;
+            letter-spacing: 0.0625rem;
             font-weight: 500;
         }
 
@@ -509,12 +676,12 @@
         }
 
         .nav-sidebar .nav-link p {
-            margin-left: 10px;
+            margin-left: 0.625rem;
         }
 
         @@keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-            70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+            70% { box-shadow: 0 0 0 0.5rem rgba(34, 197, 94, 0); }
             100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
         }
     </style>
@@ -526,8 +693,11 @@
 
         <nav class="main-header navbar navbar-expand navbar-dark">
             <div class="header-left-group">
+                <a class="nav-link" data-widget="pushmenu" href="#" role="button" style="color: #94a3b8; font-size: 1.125rem; padding: 0 0.625rem; margin-right: 0.3125rem; display: inline-block;">
+                    <i class="fas fa-bars"></i>
+                </a>
                 <div class="brand-wrapper">
-                    <img src="~/Image/afchem_logo.png" style="height: 35px;" alt="Logo">
+                    <img src="~/Image/afchem_logo.png" style="height: 2.1875rem;" alt="Logo">
                     <div class="brand-text-content">
                         <span class="main-title">AFCHEM SYSTEM</span>
                         <span class="sub-title">SCADA MONITORING</span>
@@ -537,9 +707,9 @@
 
             <div class="header-right-group">
                 <!-- Machine Info - Theo thiết kế ảnh header.png -->
-                <div class="machine-info-bar d-none d-xl-flex">
+                <div class="machine-info-bar d-none d-md-flex">
                     <!-- Machine Select Custom -->
-                    <div class="machine-select-custom" id="machineSelectContainer">
+                    <div class="machine-select-custom header-machine-select" id="machineSelectContainer">
                         <div class="selected-machine" onclick="toggleMachineDropdown()">
                             <i class="fas fa-industry machine-icon"></i>
                             <span class="machine-text">Chọn máy: <span id="selectedMachineName">TX01</span></span>
@@ -549,26 +719,26 @@
                             <div class="machine-option" onclick="selectMachine('TX01')">TX01</div>
                         </div>
                     </div>
-                    <div class="divider"></div>
+                    <div class="divider divider-machine-select"></div>
                     <!-- Status -->
                     <!-- Batch -->
-                    <div class="info-item">
+                    <div class="info-item header-batch">
                         <span class="info-label">Batch</span>
                         <span class="info-value" id="headerBatchNumber">2</span>
                     </div>
-                    <div class="divider"></div>
-                    <div class="info-item">
+                    <div class="divider divider-batch"></div>
+                    <div class="info-item header-step">
                         <span class="info-label">Công đoạn</span>
                         <span class="info-value" id="step">Rung xả hàng</span>
                     </div>
-                    <div class="divider"></div>
-                    <div class="info-item">
+                    <div class="divider divider-step"></div>
+                    <div class="info-item header-status">
                         <span class="info-label">Trạng thái máy</span>
                         <span class="machine-status running" id="headerMachineStatus">RUNNING</span>
                     </div>
-                    <div class="divider"></div>
+                    <div class="divider divider-status"></div>
                     <!-- Output -->
-                    <div class="info-item">
+                    <div class="info-item header-output">
                         <span class="info-label">Sản lượng hiện tại / Mục tiêu</span>
                         <div class="production-value">
                             <span class="current-value" id="headerCurrentOutput">1000</span>
@@ -576,30 +746,30 @@
                             <span id="headerTargetOutput">2000</span>
                         </div>
                     </div>
-                    <div class="divider"></div>
+                    <div class="divider divider-output"></div>
                     <!-- Runtime -->
-                    <div class="info-item">
+                    <div class="info-item header-runtime">
                         <span class="info-label">Thời gian chạy</span>
                         <span class="runtime-value" id="headerRunningTime">0s</span>
                     </div>
-                    <div class="divider"></div>
+                    <div class="divider divider-runtime"></div>
                     <!-- Shift -->
-                    <div class="info-item">
+                    <div class="info-item header-shift">
                         <span class="info-label">Ca hiện tại</span>
                         <span class="shift-value" id="headerCurrentShift">8:00 - 12:00</span>
                     </div>
-                    <div class="divider"></div>
+                    <div class="divider divider-shift"></div>
                     <!-- Alarm -->
-                    <div class="info-item alarm-item" onclick="openAlarmPage()">
+                    <div class="info-item alarm-item header-alarm" onclick="openAlarmPage()">
                         <span class="info-label">Cảnh báo</span>
                         <div class="alarm-count">
                             <i class="fas fa-bell alarm-bell"></i>
                             <span class="alarm-badge" id="alarmCount">5</span>
                         </div>
                     </div>
-                    <div class="divider"></div>
+                    <div class="divider divider-alarm"></div>
                     <!-- Clock -->
-                    <div class="machine-clock">
+                    <div class="machine-clock header-clock">
                         <i class="far fa-clock"></i>
                         <div class="clock-data">
                             <span id="txtDate" class="clock-date">28/10/2023</span>
@@ -614,11 +784,11 @@
                             <span class="u-name">@(Session["UserName"] != null ? Session["UserName"].ToString() : "Admin")</span>
                         </div>
                         <img src="~/AdminLTE-master/dist/img/user2-160x160.jpg" class="u-avatar" alt="User">
-                        <i class="fas fa-angle-down" style="color: #a9b7cb; font-size: 11px;"></i>
+                        <i class="fas fa-angle-down" style="color: #a9b7cb; font-size: 0.6875rem;"></i>
                     </div>
                     <div class="dropdown-menu dropdown-menu-right user-dropdown-menu">
                         <a class="dropdown-item" href="#"><i class="fas fa-user-circle mr-2"></i> Thông tin cá nhân</a>
-                        <div class="dropdown-divider" style="border-top: 1px solid rgba(255,255,255,0.05);"></div>
+                        <div class="dropdown-divider" style="border-top: 0.0625rem solid rgba(255,255,255,0.05);"></div>
                         <a class="dropdown-item" href="@Url.Action("Logout", "Home")" style="color: #ef4444 !important;">
                             <i class="fas fa-sign-out-alt mr-2"></i> Đăng xuất
                         </a>
@@ -644,7 +814,7 @@
                                 <i class="nav-icon fas fa-exclamation-triangle"></i>
                                 <p>
                                     Cảnh báo
-                                    <span class="right badge" id="sidebarAlarmCount" style="font-size: 16px; color: #f59e0b;">0</span>
+                                    <span class="right badge" id="sidebarAlarmCount" style="font-size: 1rem; color: #f59e0b;">0</span>
                                 </p>
                             </a>
                         </li>

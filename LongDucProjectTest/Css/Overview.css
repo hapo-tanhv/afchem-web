@@ -1,14 +1,14 @@
 ﻿/* RESET & NỀN TỔNG THỂ */
 .content-wrapper {
     background-color: #0a0a0a !important;
-    padding: 20px;
+    padding: 1.25rem;
 }
 
 .overview-dashboard {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    padding: 20px;
+    gap: 1.25rem;
+    padding: 1.25rem;
     background: #0a0a0a;
     min-height: 100vh;
     font-family: 'Inter', 'Segoe UI', sans-serif;
@@ -23,21 +23,21 @@
 .batch-overview-panel,
 .bom-panel {
     background: #131c2f;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    border: 0.0625rem solid rgba(255, 255, 255, 0.05);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.3);
 }
 
 .panel-header h3 {
     color: #ffffff;
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 700;
     margin: 0;
     text-transform: uppercase;
-    border-left: 4px solid #00e5ff;
-    padding-left: 10px;
-    margin-bottom: 20px;
+    border-left: 0.25rem solid #00e5ff;
+    padding-left: 0.625rem;
+    margin-bottom: 1.25rem;
 }
 
 /* TIMELINE QUY TRÌNH */
@@ -45,7 +45,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 30px;
+    gap: 1.875rem;
 }
 
 .process-steps {
@@ -61,13 +61,13 @@
 .process-steps::before {
     content: '';
     position: absolute;
-    top: 20px;
-    left: 40px;
-    right: 40px;
-    height: 4px;
+    top: 1.25rem;
+    left: 2.5rem;
+    right: 2.5rem;
+    height: 0.25rem;
     background: #1e293b;
     z-index: 1;
-    border-radius: 2px;
+    border-radius: 0.125rem;
 }
 
 .step {
@@ -76,21 +76,21 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 0.5rem;
     width: 11%;
 }
 
 .step-icon {
-    width: 44px;
-    height: 44px;
+    width: 2.75rem;
+    height: 2.75rem;
     border-radius: 50%;
     background: #1e293b;
-    border: 3px solid #334155;
+    border: 0.1875rem solid #334155;
     display: flex;
     align-items: center;
     justify-content: center;
     color: transparent;
-    font-size: 16px;
+    font-size: 1rem;
     transition: all 0.3s ease;
 }
 
@@ -103,14 +103,14 @@
 .step.active .step-icon {
     background: rgba(14, 165, 233, 0.2);
     border-color: #00e5ff;
-    box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+    box-shadow: 0 0 0.9375rem rgba(0, 229, 255, 0.4);
     color: #00e5ff;
 }
 
 .step-label {
     position: absolute;
-    top: 12px;
-    font-size: 14px;
+    top: 0.75rem;
+    font-size: 0.875rem;
     font-weight: bold;
     color: #94a3b8;
 }
@@ -126,8 +126,8 @@
 /* Biểu tượng loading/nháy cho bước active */
 .step.active .step-icon::after {
     content: '';
-    width: 20px;
-    height: 20px;
+    width: 1.25rem;
+    height: 1.25rem;
     border-radius: 50%;
     background: #00e5ff;
     animation: pulse 1.5s infinite;
@@ -164,7 +164,7 @@
 }
 
 .step-name {
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: #64748b;
     text-align: center;
     font-weight: 600;
@@ -183,19 +183,19 @@
     display: flex;
     justify-content: space-between;
     background: #182137;
-    padding: 15px 20px;
-    border-radius: 8px;
-    border: 1px solid rgba(59, 130, 246, 0.15);
-    gap: 20px;
+    padding: 0.9375rem 1.25rem;
+    border-radius: 0.5rem;
+    border: 0.0625rem solid rgba(59, 130, 246, 0.15);
+    gap: 1.25rem;
 }
 
 .stat-box {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    min-width: 90px;
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
-    padding-right: 20px;
+    gap: 0.3125rem;
+    min-width: 5.625rem;
+    border-right: 0.0625rem solid rgba(255, 255, 255, 0.05);
+    padding-right: 1.25rem;
 }
 
 .stat-box:last-child {
@@ -204,21 +204,21 @@
 }
 
 .stat-title {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: #94a3b8;
     text-transform: uppercase;
     white-space: nowrap;
 }
 
 .stat-val {
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 700;
     color: #ffffff;
     text-align: center;
 }
 
 .stat-val small {
-    font-size: 16px;
+    font-size: 1rem;
 }
 
 .text-cyan {
@@ -227,71 +227,71 @@
 
 .progress-bar-small {
     width: 100%;
-    height: 6px;
+    height: 0.375rem;
     background: #1e293b;
-    border-radius: 3px;
+    border-radius: 0.1875rem;
     overflow: hidden;
-    margin-top: 5px;
+    margin-top: 0.3125rem;
 }
 
 .progress-fill {
     height: 100%;
     background: #00e5ff;
-    border-radius: 3px;
-    box-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+    border-radius: 0.1875rem;
+    box-shadow: 0 0 0.5rem rgba(0, 229, 255, 0.5);
     transition: width 0.5s ease;
 }
 
 /* GRID MAIN CONTENT */
 .overview-main-content {
     display: grid;
-    grid-template-columns: 1fr 350px;
-    gap: 20px;
+    grid-template-columns: 1fr 21.875rem;
+    gap: 1.25rem;
 }
 
 /* BOTTOM GRID */
 .overview-bottom {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 1.25rem;
 }
 
 /* RESPONSIVE */
-@media (max-width: 1500px) {
+@media (max-width: 93.75rem) {
     .process-timeline-container {
-        gap: 15px;
+        gap: 0.9375rem;
     }
 
     .step-stats {
-        padding: 10px 15px;
-        gap: 10px;
+        padding: 0.625rem 0.9375rem;
+        gap: 0.625rem;
     }
 
     .stat-box {
         min-width: auto;
-        padding-right: 15px;
+        padding-right: 0.9375rem;
     }
 
     .stat-title {
-        font-size: 10px;
+        font-size: 0.625rem;
     }
 
     .stat-val {
-        font-size: 16px;
+        font-size: 1rem;
     }
 
     .step-name {
-        font-size: 11px;
+        font-size: 0.6875rem;
     }
 }
 
-@media (max-width: 1400px) {
+@media (max-width: 87.5rem) {
     .overview-main-content {
-        grid-template-columns: 1fr 300px;
+        grid-template-columns: 1fr 18.75rem;
     }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 75rem) {
     .overview-main-content {
         grid-template-columns: 1fr;
     }
@@ -315,7 +315,7 @@
         border-right: none;
         padding-right: 0;
         min-width: 30%;
-        margin-bottom: 10px;
+        margin-bottom: 0.625rem;
     }
 }
 
@@ -323,15 +323,15 @@
 .current-step-info {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 0.9375rem;
 }
 
 .step-info-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    padding-bottom: 10px;
+    border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 0.625rem;
 }
 
 .step-info-row:last-of-type {
@@ -340,50 +340,50 @@
 
 .info-label {
     color: #a9b7cb;
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 500;
 }
 
 .info-value {
     color: #ffffff;
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 600;
 }
 
 .progress-bar-large {
     width: 100%;
-    height: 12px;
+    height: 0.75rem;
     background: #1e293b;
-    border-radius: 6px;
+    border-radius: 0.375rem;
     overflow: hidden;
 }
 
 .status-badge {
     display: inline-block;
-    width: 120px;
+    width: 7.5rem;
     text-align: center;
-    padding: 4px 12px;
-    border-radius: 4px;
-    font-size: 12px;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
     font-weight: 600;
 }
 
 .status-badge.in-progress {
     background: rgba(14, 165, 233, 0.2);
     color: #00e5ff;
-    border: 1px solid #00e5ff;
+    border: 0.0625rem solid #00e5ff;
 }
 
 .status-badge.completed {
     background: rgba(16, 185, 129, 0.2);
     color: #10b981;
-    border: 1px solid #10b981;
+    border: 0.0625rem solid #10b981;
 }
 
 .status-badge.pending {
     background: rgba(105, 104, 104, 0.2);
     color: #a8a7a7;
-    border: 1px solid #a8a7a7;
+    border: 0.0625rem solid #a8a7a7;
 }
 
 /* TANK DIAGRAM LAYOUT */
@@ -392,19 +392,19 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    min-height: 650px;
+    min-height: 40.625rem;
     background: transparent;
-    border-radius: 8px;
-    padding: 10px 0;
+    border-radius: 0.5rem;
+    padding: 0.625rem 0;
 }
 
 .tank-side-col {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    width: 200px;
+    gap: 0.9375rem;
+    width: 12.5rem;
     z-index: 5;
-    margin-top: -60px;
+    margin-top: -3.75rem;
 }
 
 .tank-center-wrapper {
@@ -414,11 +414,11 @@
     align-items: center;
     height: 100%;
     margin-right: auto;
-    margin-left: -30px;
+    margin-left: -1.875rem;
 }
 
 .tank-img {
-    max-height: 650px;
+    max-height: 40.625rem;
     max-width: 100%;
     object-fit: contain;
     z-index: 1;
@@ -427,21 +427,21 @@
 /* PARAMETER CARDS (LEFT & RIGHT) */
 .param-card-side {
     background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 8px 10px;
+    border: 0.0625rem solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.625rem;
     display: flex;
     align-items: center;
-    gap: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    gap: 0.625rem;
+    box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.3);
 }
 
 .param-card-icon {
-    font-size: 28px;
+    font-size: 1.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
+    width: 2.5rem;
 }
 
 .icon-blue {
@@ -473,15 +473,15 @@
 }
 
 .param-card-title {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: #94a3b8;
     text-transform: uppercase;
     font-weight: 600;
-    margin-bottom: 4px;
+    margin-bottom: 0.25rem;
 }
 
 .param-card-value {
-    font-size: 22px;
+    font-size: 1.375rem;
     color: #00e5ff;
     font-weight: 700;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -489,16 +489,16 @@
 }
 
 .param-card-value small {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: normal;
 }
 
 .param-card-std {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: #94a3b8;
-    margin-top: 6px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    padding-top: 4px;
+    margin-top: 0.375rem;
+    border-top: 0.0625rem solid rgba(255, 255, 255, 0.05);
+    padding-top: 0.25rem;
 }
 
 .param-card-std span {
@@ -509,36 +509,36 @@
 .tank-temp-card {
     position: absolute;
     background: rgba(15, 23, 42, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
-    padding: 8px 10px;
+    border: 0.0625rem solid rgba(255, 255, 255, 0.15);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.625rem;
     display: flex;
     align-items: center;
-    gap: 6px;
-    width: 180px;
+    gap: 0.375rem;
+    width: 11.25rem;
     z-index: 10;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
+    box-shadow: 0 0.25rem 0.625rem rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(0.25rem);
 }
 
 /* Line pointing left from card to tank */
 .tank-temp-card::before {
     content: '';
     position: absolute;
-    left: -40px;
+    left: -2.5rem;
     top: 50%;
-    width: 40px;
-    height: 1px;
+    width: 2.5rem;
+    height: 0.0625rem;
     background: rgba(59, 130, 246, 0.8);
-    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0.3125rem rgba(59, 130, 246, 0.5);
 }
 
 .tank-temp-card .param-card-title {
-    font-size: 11px;
+    font-size: 0.6875rem;
 }
 
 .tank-temp-card .param-card-value {
-    font-size: 18px;
+    font-size: 1.125rem;
 }
 
 /* Positions for tank temp cards based on sodobontron.jpeg */
@@ -557,15 +557,15 @@
     right: -16%;
 }
 
-@media (max-width: 1500px) {
+@media (max-width: 93.75rem) {
     .tank-diagram-container {
         flex-direction: column;
-        gap: 30px;
+        gap: 1.875rem;
     }
 
     .tank-center-wrapper {
         margin-left: 0 !important;
-        margin-right: 180px !important;
+        margin-right: 11.25rem !important;
         /* Dành khoảng trống cho các thẻ nhiệt độ bên phải */
     }
 
@@ -578,13 +578,13 @@
     }
 
     .param-card-side {
-        width: calc(33% - 15px);
+        width: calc(33% - 0.9375rem);
     }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 75rem) {
     .tank-center-wrapper {
-        margin-right: 100px !important;
+        margin-right: 6.25rem !important;
     }
 
     .tank-temp-card {
@@ -593,13 +593,13 @@
     }
 
     .param-card-side {
-        width: calc(50% - 15px);
+        width: calc(50% - 0.9375rem);
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 48rem) {
     .tank-center-wrapper {
-        margin-right: 50px !important;
+        margin-right: 3.125rem !important;
     }
 
     .tank-temp-card {
@@ -615,8 +615,8 @@
 /* OLD PROCESS PARAMS LIST (To be refactored or removed if unused) */
 
 .param-icon {
-    font-size: 20px;
-    width: 30px;
+    font-size: 1.25rem;
+    width: 1.875rem;
     text-align: center;
 }
 
@@ -626,13 +626,13 @@
 
 .param-name {
     color: #e2e8f0;
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 600;
 }
 
 .param-meta {
     color: #64748b;
-    font-size: 12px;
+    font-size: 0.75rem;
 }
 
 .param-meta span {
@@ -641,41 +641,41 @@
 
 .param-value {
     color: #ffffff;
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 700;
 }
 
 .param-value small {
-    font-size: 14px;
+    font-size: 0.875rem;
     color: #94a3b8;
-    margin-left: 2px;
+    margin-left: 0.125rem;
 }
 
 .env-params-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    gap: 0.9375rem;
 }
 
 .env-card {
     background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    padding: 15px;
+    border: 0.0625rem solid rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    padding: 0.9375rem;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
+    gap: 0.625rem;
     transition: transform 0.2s;
 }
 
 .env-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-0.125rem);
     border-color: rgba(59, 130, 246, 0.3);
 }
 
 .env-icon {
-    font-size: 20px;
+    font-size: 1.25rem;
     color: #e2e8f0;
 }
 
@@ -686,19 +686,19 @@
 
 .env-val {
     color: #ffffff;
-    font-size: 22px;
+    font-size: 1.375rem;
     font-weight: 700;
 }
 
 .env-val small {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #94a3b8;
-    margin-left: 4px;
+    margin-left: 0.25rem;
 }
 
 .env-name {
     color: #a9b7cb;
-    font-size: 12px;
+    font-size: 0.75rem;
     text-transform: uppercase;
 }
 
@@ -706,22 +706,22 @@
 .batch-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: #e2e8f0;
 }
 
 .batch-table thead {
     background: rgba(0, 0, 0, 0.3);
-    border-bottom: 2px solid rgba(59, 130, 246, 0.2);
+    border-bottom: 0.125rem solid rgba(59, 130, 246, 0.2);
 }
 
 .batch-table th {
     color: #a9b7cb;
     font-weight: 600;
-    padding: 12px 10px;
+    padding: 0.75rem 0.625rem;
     text-align: center;
-    font-size: 13px;
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.8125rem;
+    border-right: 0.0625rem solid rgba(255, 255, 255, 0.05);
 }
 
 .batch-table th:last-child {
@@ -733,7 +733,7 @@
 }
 
 .batch-table tbody tr {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.05);
     transition: all 0.2s ease;
 }
 
@@ -742,7 +742,7 @@
 }
 
 .batch-table td {
-    padding: 12px 10px;
+    padding: 0.75rem 0.625rem;
     text-align: center;
     font-weight: 500;
 }
@@ -759,7 +759,7 @@
 
 .batch-table .row-active {
     background: rgba(59, 130, 246, 0.15);
-    border-left: 3px solid #00e5ff;
+    border-left: 0.1875rem solid #00e5ff;
 }
 
 .text-success {
@@ -773,7 +773,7 @@
 .alarm-warning {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 0.625rem;
 }
 
 /* BATCH OVERVIEW PANEL */
@@ -785,11 +785,11 @@
 .info-row {
     display: flex;
     justify-content: space-between;
-    padding: 12px 0;
+    padding: 0.75rem 0;
 }
 
 .border-bottom-subtle {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.05);
 }
 
 .info-row:last-child {
@@ -798,11 +798,11 @@
 
 .info-label {
     color: #a9b7cb;
-    font-size: 13px;
+    font-size: 0.8125rem;
 }
 
 .info-value {
-    font-size: 14px;
+    font-size: 0.875rem;
     text-align: right;
 }
 
@@ -811,16 +811,16 @@
     background: #ef4444;
     color: #ffffff;
     border: none;
-    border-radius: 6px;
-    padding: 12px;
-    font-size: 16px;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
     transition: background 0.3s ease;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: 0.5rem;
 }
 
 /* GAUGE & CHART */
@@ -832,7 +832,7 @@
 
 .gauge-item {
     width: 33%;
-    height: 250px;
+    height: 15.625rem;
     /* Tăng chiều cao để đủ chỗ cho label bên dưới */
     background: transparent;
     box-shadow: none !important;
@@ -857,72 +857,72 @@
 .list-item {
     display: flex;
     align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    gap: 15px;
+    padding: 0.75rem 0;
+    border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.05);
+    gap: 0.9375rem;
 }
 
 .item-time {
     color: #94a3b8;
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-family: monospace;
 }
 
 .item-text {
     color: #e2e8f0;
-    font-size: 13px;
+    font-size: 0.8125rem;
     flex-grow: 1;
 }
 
 /* BADGES */
 .badge-warning-outline {
-    border: 1px solid #f59e0b;
+    border: 0.0625rem solid #f59e0b;
     color: #f59e0b;
     background: transparent;
-    padding: 4px 8px;
-    font-size: 10px;
-    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.625rem;
+    border-radius: 0.25rem;
 }
 
 .badge-success-outline {
-    border: 1px solid #22c55e;
+    border: 0.0625rem solid #22c55e;
     color: #22c55e;
     background: transparent;
-    padding: 4px 8px;
-    font-size: 10px;
-    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.625rem;
+    border-radius: 0.25rem;
 }
 
 .status-dot-green {
-    width: 10px;
-    height: 10px;
+    width: 0.625rem;
+    height: 0.625rem;
     background: #22c55e;
     border-radius: 50%;
-    box-shadow: 0 0 8px #22c55e;
+    box-shadow: 0 0 0.5rem #22c55e;
 }
 
 .view-all {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: #3b82f6;
 }
 
 /* INPUT & BUTTON */
 .dark-input {
     background: #0a0a0a;
-    border: 1px solid #334155;
+    border: 0.0625rem solid #334155;
     color: white;
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 12px;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
 }
 
 .btn-scada {
     border: none;
-    border-radius: 4px;
-    padding: 6px 15px;
-    font-size: 12px;
+    border-radius: 0.25rem;
+    padding: 0.375rem 0.9375rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    margin-left: 10px;
+    margin-left: 0.625rem;
     cursor: pointer;
 }
 
@@ -939,17 +939,17 @@
 .chart-footer {
     display: flex;
     justify-content: flex-end;
-    margin-top: 15px;
+    margin-top: 0.9375rem;
 }
 
 /* BOTTOM LOWER GRID cho Charts & BOM */
 .bottom-lower-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 20px;
+    gap: 1.25rem;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 75rem) {
     .bottom-lower-grid {
         grid-template-columns: 1fr;
     }
@@ -959,29 +959,29 @@
 .bom-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: #e2e8f0;
 }
 
 .bom-table thead {
     background: rgba(0, 0, 0, 0.3);
-    border-bottom: 2px solid rgba(59, 130, 246, 0.2);
+    border-bottom: 0.125rem solid rgba(59, 130, 246, 0.2);
 }
 
 .bom-table th {
     color: #a9b7cb;
     font-weight: 600;
-    padding: 12px 10px;
+    padding: 0.75rem 0.625rem;
     text-align: center;
-    font-size: 13px;
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.8125rem;
+    border-right: 0.0625rem solid rgba(255, 255, 255, 0.05);
 }
 
 .bom-table td {
-    padding: 12px 10px;
+    padding: 0.75rem 0.625rem;
     text-align: center;
     font-weight: 500;
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    border-right: 0.0625rem solid rgba(255, 255, 255, 0.05);
 }
 
 .bom-table th:last-child,
@@ -990,7 +990,7 @@
 }
 
 .bom-table tbody tr {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.05);
     transition: all 0.2s ease;
 }
 
@@ -1013,7 +1013,7 @@
 .eq-label {
     position: absolute;
     color: #fff;
-    font-size: 13px;
+    font-size: 0.8125rem;
     text-transform: uppercase;
     z-index: 10;
     pointer-events: none;
@@ -1034,4 +1034,76 @@
     bottom: 9%;
     left: 83%;
     transform: translateX(-50%);
+}
+
+/* ==================================================================
+   5. SYSTEM-WIDE RESPONSIVE STYLES (FILTERS, TABLES, CHARTS & SETTINGS)
+   ================================================================== */
+@media (max-width: 75rem) {
+    body .batch-table th, body .batch-table td {
+        padding: 0.5rem 0.625rem !important;
+        font-size: 0.6875rem !important;
+    }
+}
+
+@media (max-width: 62rem) {
+    body .filter-inputs {
+        gap: 0.625rem !important;
+    }
+    body .filter-group {
+        flex-grow: 1;
+    }
+}
+
+@media (max-width: 48rem) {
+    /* Responsive bộ lọc tìm kiếm */
+    body .filter-inputs {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.75rem !important;
+    }
+    body .filter-group {
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+    body .filter-bar input[type="date"], 
+    body .filter-bar select, 
+    body .filter-input,
+    body .datepicker {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    body .filter-actions {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.625rem !important;
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    body .filter-actions .btn-custom {
+        width: 100% !important;
+        justify-content: center !important;
+        display: flex !important;
+    }
+    
+    /* Biểu đồ co giãn */
+    body .chart-container, 
+    body .highcharts-container, 
+    body .highcharts-container svg {
+        width: 100% !important;
+    }
+
+    /* Thiết lập hệ thống (User Setting Page) */
+    body .setting-panel {
+        padding: 0.75rem !important;
+    }
+    body .panel-header-custom {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.75rem !important;
+    }
+    body .panel-header-custom h3 {
+        font-size: 1rem !important;
+    }
 }
