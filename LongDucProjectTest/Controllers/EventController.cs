@@ -160,7 +160,6 @@ namespace LongDucProject.Controllers
                 string startStr = "-";
                 string endStr = "-";
                 string durationStr = "-";
-                string deviceName = "-";
                 string productName = "-";
                 string formula = "-";
                 string targetWeight = "-";
@@ -171,10 +170,25 @@ namespace LongDucProject.Controllers
                     var rowBatch = dtBatch.Rows[0];
                     batchName = rowBatch["name"].ToString();
                     batchStatus = rowBatch["status"].ToString();
-                    deviceName = rowBatch["device_name"] != DBNull.Value ? rowBatch["device_name"].ToString() : "TX01 A";
                     productName = rowBatch["product_name"] != DBNull.Value && !string.IsNullOrEmpty(rowBatch["product_name"].ToString()) ? rowBatch["product_name"].ToString() : "-";
                     formula = rowBatch["formula"] != DBNull.Value && !string.IsNullOrEmpty(rowBatch["formula"].ToString()) ? rowBatch["formula"].ToString() : "-";
-                    targetWeight = rowBatch["target_weight"] != DBNull.Value ? rowBatch["target_weight"].ToString() + " kg" : "-";
+                    if (selectedRunId > 0)
+                    {
+                        var dtRunWeight = connector.ExecuteQuery($"SELECT SUM(quantity) FROM run_info WHERE run_id = {selectedRunId} AND LOWER(unit) = 'kg'");
+                        if (dtRunWeight != null && dtRunWeight.Rows.Count > 0 && dtRunWeight.Rows[0][0] != DBNull.Value)
+                        {
+                            double runWeight = Convert.ToDouble(dtRunWeight.Rows[0][0]);
+                            targetWeight = runWeight.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " kg";
+                        }
+                        else
+                        {
+                            targetWeight = "0 kg";
+                        }
+                    }
+                    else
+                    {
+                        targetWeight = rowBatch["target_weight"] != DBNull.Value ? rowBatch["target_weight"].ToString() + " kg" : "-";
+                    }
 
                     if (rowBatch["start_time"] != DBNull.Value)
                     {
