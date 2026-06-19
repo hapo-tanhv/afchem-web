@@ -130,6 +130,15 @@ namespace LongDucProject.Controllers
                 int selectedBatchId = resolution.BatchId;
                 int selectedRunId = resolution.RunId;
 
+                int spCapLieu = 0;
+                int spTron1 = 0;
+                int spXaDay = 0;
+                int spRungXaDay = 0;
+                int spHutXaDay = 0;
+                int spTron2 = 0;
+                int spXaHang = 0;
+                int spRungXaHang = 0;
+
                 if (selectedBatchId <= 0)
                 {
                     return Json(new {
@@ -213,12 +222,22 @@ namespace LongDucProject.Controllers
                 // Override durations with selected run if resolved
                 if (selectedRunId > 0)
                 {
-                    var dtRunInfo = connector.ExecuteQuery($"SELECT name, status, start_time, end_time FROM runs WHERE id = {selectedRunId} LIMIT 1");
+                    var dtRunInfo = connector.ExecuteQuery($"SELECT name, status, start_time, end_time, sp_thoi_gian_cap_lieu, sp_thoi_gian_tron1, sp_thoi_gian_xa_day, sp_thoi_gian_rung_xa_day, sp_thoi_gian_hut_xa_day_them, sp_thoi_gian_tron2, sp_thoi_gian_xa_hang, sp_thoi_gian_rung_xa_hang FROM runs WHERE id = {selectedRunId} LIMIT 1");
                     if (dtRunInfo != null && dtRunInfo.Rows.Count > 0)
                     {
                         var rowRun = dtRunInfo.Rows[0];
                         batchName = rowRun["name"].ToString(); // Display run name instead of batch name in Event Log!
                         batchStatus = rowRun["status"].ToString();
+
+                        spCapLieu = rowRun["sp_thoi_gian_cap_lieu"] != DBNull.Value ? Convert.ToInt32(rowRun["sp_thoi_gian_cap_lieu"]) : 0;
+                        spTron1 = rowRun["sp_thoi_gian_tron1"] != DBNull.Value ? Convert.ToInt32(rowRun["sp_thoi_gian_tron1"]) : 0;
+                        spXaDay = rowRun["sp_thoi_gian_xa_day"] != DBNull.Value ? Convert.ToInt32(rowRun["sp_thoi_gian_xa_day"]) : 0;
+                        spRungXaDay = rowRun["sp_thoi_gian_rung_xa_day"] != DBNull.Value ? Convert.ToInt32(rowRun["sp_thoi_gian_rung_xa_day"]) : 0;
+                        spHutXaDay = rowRun["sp_thoi_gian_hut_xa_day_them"] != DBNull.Value ? Convert.ToInt32(rowRun["sp_thoi_gian_hut_xa_day_them"]) : 0;
+                        spTron2 = rowRun["sp_thoi_gian_tron2"] != DBNull.Value ? Convert.ToInt32(rowRun["sp_thoi_gian_tron2"]) : 0;
+                        spXaHang = rowRun["sp_thoi_gian_xa_hang"] != DBNull.Value ? Convert.ToInt32(rowRun["sp_thoi_gian_xa_hang"]) : 0;
+                        spRungXaHang = rowRun["sp_thoi_gian_rung_xa_hang"] != DBNull.Value ? Convert.ToInt32(rowRun["sp_thoi_gian_rung_xa_hang"]) : 0;
+
                         if (rowRun["start_time"] != DBNull.Value)
                         {
                             DateTime runStart = Convert.ToDateTime(rowRun["start_time"]);
@@ -239,20 +258,6 @@ namespace LongDucProject.Controllers
                         }
                     }
                 }
-
-                var cycleSummary = new {
-                    status = batchStatus.ToUpper(),
-                    statusLabel = batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ đang chạy..." : 
-                                  (batchStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ chưa bắt đầu" : 
-                                  (batchStatus.Equals("Error", StringComparison.OrdinalIgnoreCase) || batchStatus.Equals("Failed", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ bị lỗi" : "Chu kỳ hoàn tất thành công")),
-                    batchId = batchName,
-                    productName = productName,
-                    endTime = endStr,
-                    formula = formula,
-                    totalTime = durationStr,
-                    weight = targetWeight,
-                    startTime = startStr
-                };
 
                 // 2. Query Phase Logs and Telemetry/Alarms
                 var stepsList = new List<object>();
@@ -276,20 +281,21 @@ namespace LongDucProject.Controllers
 
                 var stepDefs = new[]
                 {
-                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = "60s" },
-                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = "50s" },
-                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = "60s" },
-                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = "20s" },
-                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = "30s" },
-                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = "45s" },
-                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = "100s" },
-                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = "30s" }
+                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = spCapLieu > 0 ? $"{spCapLieu}s" : "60s" },
+                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = spTron1 > 0 ? $"{spTron1}s" : "50s" },
+                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = spXaDay > 0 ? $"{spXaDay}s" : "60s" },
+                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = spRungXaDay > 0 ? $"{spRungXaDay}s" : "20s" },
+                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = spHutXaDay > 0 ? $"{spHutXaDay}s" : "30s" },
+                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = spTron2 > 0 ? $"{spTron2}s" : "45s" },
+                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = spXaHang > 0 ? $"{spXaHang}s" : "100s" },
+                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = spRungXaHang > 0 ? $"{spRungXaHang}s" : "30s" }
                 };
 
                 var logRows = dtAlarmLog != null ? dtAlarmLog.AsEnumerable().ToList() : new List<DataRow>();
                 var telemetryRows = dtTelemetry != null ? dtTelemetry.AsEnumerable().ToList() : new List<DataRow>();
                 var alarmRows = dtAlarms != null ? dtAlarms.AsEnumerable().ToList() : new List<DataRow>();
 
+                int completedStepsCount = 0;
                 for (int i = 0; i < stepDefs.Length; i++)
                 {
                     var def = stepDefs[i];
@@ -340,6 +346,7 @@ namespace LongDucProject.Controllers
                         DateTime? endTime = null;
                         if (isCompleted)
                         {
+                            completedStepsCount++;
                             status = "completed";
                             statusText = "Hoàn thành";
                             if (stepLogRow["RestoreTime"] != DBNull.Value)
@@ -431,6 +438,50 @@ namespace LongDucProject.Controllers
                         });
                     }
                 }
+
+                // Calculate targetWeight for Active run in real-time
+                if (selectedRunId > 0 && batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase))
+                {
+                    double runTargetWeight = 0;
+                    var dtRunWeight = connector.ExecuteQuery($"SELECT SUM(quantity) FROM run_info WHERE run_id = {selectedRunId} AND LOWER(unit) = 'kg'");
+                    if (dtRunWeight != null && dtRunWeight.Rows.Count > 0 && dtRunWeight.Rows[0][0] != DBNull.Value)
+                    {
+                        runTargetWeight = Convert.ToDouble(dtRunWeight.Rows[0][0]);
+                    }
+                    else
+                    {
+                        double batchTargetWeight = 0;
+                        var dtBatchTarget = connector.ExecuteQuery($"SELECT target_weight FROM batches WHERE id = {selectedBatchId} LIMIT 1");
+                        if (dtBatchTarget != null && dtBatchTarget.Rows.Count > 0 && dtBatchTarget.Rows[0]["target_weight"] != DBNull.Value)
+                        {
+                            batchTargetWeight = Convert.ToDouble(dtBatchTarget.Rows[0]["target_weight"]);
+                        }
+                        int totalRunsCount = 0;
+                        var dtRunsCount = connector.ExecuteQuery($"SELECT COUNT(*) FROM runs WHERE batch_id = {selectedBatchId}");
+                        if (dtRunsCount != null && dtRunsCount.Rows.Count > 0)
+                        {
+                            totalRunsCount = Convert.ToInt32(dtRunsCount.Rows[0][0]);
+                        }
+                        runTargetWeight = batchTargetWeight / (totalRunsCount > 0 ? totalRunsCount : 1);
+                    }
+
+                    double activeProduced = (completedStepsCount / 8.0) * runTargetWeight;
+                    targetWeight = activeProduced.ToString("0.##", CultureInfo.InvariantCulture) + " kg";
+                }
+
+                var cycleSummary = new {
+                    status = batchStatus.ToUpper(),
+                    statusLabel = batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ đang chạy..." : 
+                                  (batchStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ chưa bắt đầu" : 
+                                  (batchStatus.Equals("Error", StringComparison.OrdinalIgnoreCase) || batchStatus.Equals("Failed", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ bị lỗi" : "Chu kỳ hoàn tất thành công")),
+                    batchId = batchName,
+                    productName = productName,
+                    endTime = endStr,
+                    formula = formula,
+                    totalTime = durationStr,
+                    weight = targetWeight,
+                    startTime = startStr
+                };
 
                 // 3. Query All Events
                 var eventsList = new List<object>();

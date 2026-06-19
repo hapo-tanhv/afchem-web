@@ -280,6 +280,15 @@ namespace LongDucProject.Controllers
                 int resolvedBatchId = resolution.BatchId;
                 int resolvedRunId = resolution.RunId;
 
+                int spCapLieu = 0;
+                int spTron1 = 0;
+                int spXaDay = 0;
+                int spRungXaDay = 0;
+                int spHutXaDay = 0;
+                int spTron2 = 0;
+                int spXaHang = 0;
+                int spRungXaHang = 0;
+
                 string runName = "";
                 string runStatus = "";
                 string runStart = "";
@@ -291,13 +300,22 @@ namespace LongDucProject.Controllers
 
                 if (resolvedRunId > 0)
                 {
-                    var dtRun = connector.ExecuteQuery($"SELECT id, batch_id, name, status, start_time, end_time FROM runs WHERE id = {resolvedRunId} LIMIT 1");
+                    var dtRun = connector.ExecuteQuery($"SELECT id, batch_id, name, status, start_time, end_time, sp_thoi_gian_cap_lieu, sp_thoi_gian_tron1, sp_thoi_gian_xa_day, sp_thoi_gian_rung_xa_day, sp_thoi_gian_hut_xa_day_them, sp_thoi_gian_tron2, sp_thoi_gian_xa_hang, sp_thoi_gian_rung_xa_hang FROM runs WHERE id = {resolvedRunId} LIMIT 1");
                     if (dtRun != null && dtRun.Rows.Count > 0)
                     {
                         runName = dtRun.Rows[0]["name"] != DBNull.Value ? dtRun.Rows[0]["name"].ToString() : "";
                         runStatus = dtRun.Rows[0]["status"] != DBNull.Value ? dtRun.Rows[0]["status"].ToString() : "";
                         runStart = dtRun.Rows[0]["start_time"] != DBNull.Value ? Convert.ToDateTime(dtRun.Rows[0]["start_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
                         runEnd = dtRun.Rows[0]["end_time"] != DBNull.Value ? Convert.ToDateTime(dtRun.Rows[0]["end_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
+
+                        spCapLieu = dtRun.Rows[0]["sp_thoi_gian_cap_lieu"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["sp_thoi_gian_cap_lieu"]) : 0;
+                        spTron1 = dtRun.Rows[0]["sp_thoi_gian_tron1"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["sp_thoi_gian_tron1"]) : 0;
+                        spXaDay = dtRun.Rows[0]["sp_thoi_gian_xa_day"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["sp_thoi_gian_xa_day"]) : 0;
+                        spRungXaDay = dtRun.Rows[0]["sp_thoi_gian_rung_xa_day"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["sp_thoi_gian_rung_xa_day"]) : 0;
+                        spHutXaDay = dtRun.Rows[0]["sp_thoi_gian_hut_xa_day_them"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["sp_thoi_gian_hut_xa_day_them"]) : 0;
+                        spTron2 = dtRun.Rows[0]["sp_thoi_gian_tron2"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["sp_thoi_gian_tron2"]) : 0;
+                        spXaHang = dtRun.Rows[0]["sp_thoi_gian_xa_hang"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["sp_thoi_gian_xa_hang"]) : 0;
+                        spRungXaHang = dtRun.Rows[0]["sp_thoi_gian_rung_xa_hang"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["sp_thoi_gian_rung_xa_hang"]) : 0;
                     }
                 }
 
@@ -335,106 +353,9 @@ namespace LongDucProject.Controllers
                         totalRuns = row["total_runs"] != DBNull.Value ? Convert.ToInt32(row["total_runs"]) : 0;
                         batchActualStart = row["start_time"] != DBNull.Value ? Convert.ToDateTime(row["start_time"]).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) : "-";
                     }
-
-                    // Count valid (non-error) runs and completed runs
-                    int validRunsCount = 0;
-                    int completedRunsCount = 0;
-                    var runsListForWeight = new List<Tuple<int, string>>();
-
-                    var dtRunsAll = connector.ExecuteQuery($"SELECT id, status FROM runs WHERE batch_id = {resolvedBatchId}");
-                    if (dtRunsAll != null)
-                    {
-                        foreach (DataRow row in dtRunsAll.Rows)
-                        {
-                            int rId = Convert.ToInt32(row["id"]);
-                            string statusVal = row["status"] != DBNull.Value ? row["status"].ToString().Trim() : "";
-                            runsListForWeight.Add(Tuple.Create(rId, statusVal));
-
-                            if (!statusVal.Equals("Error", StringComparison.OrdinalIgnoreCase) && 
-                                !statusVal.Equals("Failed", StringComparison.OrdinalIgnoreCase))
-                            {
-                                validRunsCount++;
-                            }
-                            if (statusVal.Equals("Completed", StringComparison.OrdinalIgnoreCase))
-                            {
-                                completedRunsCount++;
-                            }
-                        }
-                    }
-
-                    // Query the sum of quantities in run_info for all runs in the batch
-                    var runWeightsDict = new Dictionary<int, double>();
-                    var dtRunWeights = connector.ExecuteQuery($@"
-                        SELECT ri.run_id, SUM(ri.quantity) as run_weight 
-                        FROM run_info ri 
-                        JOIN runs r ON ri.run_id = r.id 
-                        WHERE r.batch_id = {resolvedBatchId}
-                          AND LOWER(ri.unit) = 'kg'
-                        GROUP BY ri.run_id");
-                    if (dtRunWeights != null)
-                    {
-                        foreach (DataRow row in dtRunWeights.Rows)
-                        {
-                            int rId = Convert.ToInt32(row["run_id"]);
-                            double w = row["run_weight"] != DBNull.Value ? Convert.ToDouble(row["run_weight"]) : 0;
-                            runWeightsDict[rId] = w;
-                        }
-                    }
-
-                    double averageRunWeight = targetWeight / (totalRuns > 0 ? totalRuns : 1);
-
-                    foreach (var run in runsListForWeight)
-                    {
-                        // Exclude error runs completely
-                        if (run.Item2.Equals("Error", StringComparison.OrdinalIgnoreCase) || 
-                            run.Item2.Equals("Failed", StringComparison.OrdinalIgnoreCase))
-                        {
-                            continue;
-                        }
-
-                        double runWeight = averageRunWeight;
-                        if (runWeightsDict.ContainsKey(run.Item1) && runWeightsDict[run.Item1] > 0)
-                        {
-                            runWeight = runWeightsDict[run.Item1];
-                        }
-
-                        totalTargetWeight += runWeight;
-                        if (run.Item2.Equals("Completed", StringComparison.OrdinalIgnoreCase))
-                        {
-                            totalProducedWeight += runWeight;
-                        }
-                        else if (run.Item2.Equals("Active", StringComparison.OrdinalIgnoreCase))
-                        {
-                            double activeProduced = 0;
-                            var dtActiveWeights = connector.ExecuteQuery($"SELECT value, unit FROM run_info WHERE run_id = {run.Item1}");
-                            if (dtActiveWeights != null)
-                            {
-                                foreach (DataRow rRow in dtActiveWeights.Rows)
-                                {
-                                    string valStr = rRow["value"] != DBNull.Value ? rRow["value"].ToString().Trim() : "";
-                                    string uStr = rRow["unit"] != DBNull.Value ? rRow["unit"].ToString().Trim().ToLower() : "";
-                                    if (uStr == "kg" && double.TryParse(valStr, System.Globalization.NumberStyles.Any, CultureInfo.InvariantCulture, out double val))
-                                    {
-                                        activeProduced += val;
-                                    }
-                                }
-                            }
-                            totalProducedWeight += activeProduced;
-                        }
-                    }
-
-                    totalRuns = validRunsCount;
-                    completedRuns = completedRunsCount;
                 }
 
-                if (totalTargetWeight <= 0)
-                {
-                    totalTargetWeight = targetWeight;
-                }
-
-                string targetWeightStr = totalTargetWeight > 0 ? $"{totalTargetWeight.ToString("0.##", CultureInfo.InvariantCulture)} KG" : "-";
-                percent = totalTargetWeight > 0 ? ((double)totalProducedWeight / totalTargetWeight * 100) : 0;
-                string actualWeightStr = totalTargetWeight > 0 ? $"{totalProducedWeight.ToString("0.##", CultureInfo.InvariantCulture)} KG ({Math.Round(percent)}%)" : "-";
+                // Weight calculation block moved below activeStepCode resolution
 
                 // 2. Fetch alarmlog for active run (fallback to batchId if no runId resolved)
                 DataTable dtAlarmLog = null;
@@ -472,14 +393,14 @@ namespace LongDucProject.Controllers
                 // 5. Set up standard steps with their alarmlog TagNo mapping & keywords
                 var stepDefs = new[]
                 {
-                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = "60s" },
-                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = "50s" },
-                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = "60s" },
-                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = "20s" },
-                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = "30s" },
-                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = "45s" },
-                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = "100s" },
-                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = "30s" }
+                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = spCapLieu > 0 ? $"{spCapLieu}s" : "60s" },
+                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = spTron1 > 0 ? $"{spTron1}s" : "50s" },
+                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = spXaDay > 0 ? $"{spXaDay}s" : "60s" },
+                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = spRungXaDay > 0 ? $"{spRungXaDay}s" : "20s" },
+                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = spHutXaDay > 0 ? $"{spHutXaDay}s" : "30s" },
+                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = spTron2 > 0 ? $"{spTron2}s" : "45s" },
+                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = spXaHang > 0 ? $"{spXaHang}s" : "100s" },
+                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = spRungXaHang > 0 ? $"{spRungXaHang}s" : "30s" }
                 };
 
                 var stepsList = new List<object>();
@@ -692,6 +613,100 @@ namespace LongDucProject.Controllers
 
                 // Thresholds building removed as Time-Lag Compensation handles leakage without alarm thresholds
 
+                // Calculate weight metrics based on activeStepCode
+                if (resolvedBatchId != -1)
+                {
+                    // Count valid (non-error) runs and completed runs
+                    int validRunsCount = 0;
+                    int completedRunsCount = 0;
+                    var runsListForWeight = new List<Tuple<int, string>>();
+
+                    var dtRunsAll = connector.ExecuteQuery($"SELECT id, status FROM runs WHERE batch_id = {resolvedBatchId}");
+                    if (dtRunsAll != null)
+                    {
+                        foreach (DataRow row in dtRunsAll.Rows)
+                        {
+                            int rId = Convert.ToInt32(row["id"]);
+                            string statusVal = row["status"] != DBNull.Value ? row["status"].ToString().Trim() : "";
+                            runsListForWeight.Add(Tuple.Create(rId, statusVal));
+
+                            if (!statusVal.Equals("Error", StringComparison.OrdinalIgnoreCase) && 
+                                !statusVal.Equals("Failed", StringComparison.OrdinalIgnoreCase))
+                            {
+                                validRunsCount++;
+                            }
+                            if (statusVal.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+                            {
+                                completedRunsCount++;
+                            }
+                        }
+                    }
+
+                    // Query the sum of quantities in run_info for all runs in the batch
+                    var runWeightsDict = new Dictionary<int, double>();
+                    var dtRunWeights = connector.ExecuteQuery($@"
+                        SELECT ri.run_id, SUM(ri.quantity) as run_weight 
+                        FROM run_info ri 
+                        JOIN runs r ON ri.run_id = r.id 
+                        WHERE r.batch_id = {resolvedBatchId}
+                          AND LOWER(ri.unit) = 'kg'
+                        GROUP BY ri.run_id");
+                    if (dtRunWeights != null)
+                    {
+                        foreach (DataRow row in dtRunWeights.Rows)
+                        {
+                            int rId = Convert.ToInt32(row["run_id"]);
+                            double w = row["run_weight"] != DBNull.Value ? Convert.ToDouble(row["run_weight"]) : 0;
+                            runWeightsDict[rId] = w;
+                        }
+                    }
+
+                    double averageRunWeight = targetWeight / (totalRuns > 0 ? totalRuns : 1);
+
+                    foreach (var run in runsListForWeight)
+                    {
+                        // Exclude error runs completely
+                        if (run.Item2.Equals("Error", StringComparison.OrdinalIgnoreCase) || 
+                            run.Item2.Equals("Failed", StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+
+                        double runWeight = averageRunWeight;
+                        if (runWeightsDict.ContainsKey(run.Item1) && runWeightsDict[run.Item1] > 0)
+                        {
+                            runWeight = runWeightsDict[run.Item1];
+                        }
+
+                        totalTargetWeight += runWeight;
+                        if (run.Item2.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+                        {
+                            totalProducedWeight += runWeight;
+                        }
+                        else if (run.Item2.Equals("Active", StringComparison.OrdinalIgnoreCase))
+                        {
+                            double activeTargetWeight = runWeightsDict.ContainsKey(run.Item1) && runWeightsDict[run.Item1] > 0
+                                ? runWeightsDict[run.Item1]
+                                : averageRunWeight;
+
+                            int completedSteps = activeStepCode > 0 ? activeStepCode - 1 : 0;
+                            double activeProduced = (completedSteps / 8.0) * activeTargetWeight;
+                            totalProducedWeight += activeProduced;
+                        }
+                    }
+
+                    totalRuns = validRunsCount;
+                    completedRuns = completedRunsCount;
+                }
+
+                if (totalTargetWeight <= 0)
+                {
+                    totalTargetWeight = targetWeight;
+                }
+
+                string targetWeightStr = totalTargetWeight > 0 ? $"{totalTargetWeight.ToString("0.##", CultureInfo.InvariantCulture)} KG" : "-";
+                percent = totalTargetWeight > 0 ? ((double)totalProducedWeight / totalTargetWeight * 100) : 0;
+                string actualWeightStr = totalTargetWeight > 0 ? $"{totalProducedWeight.ToString("0.##", CultureInfo.InvariantCulture)} KG ({Math.Round(percent)}%)" : "-";
 
                 foreach (var def in stepDefs)
                 {

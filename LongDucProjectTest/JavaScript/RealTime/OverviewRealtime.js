@@ -97,6 +97,52 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function updateCalculatedTimeAndStandards() {
+        updateCalculatedTime();
+        var stdTimeEl = document.getElementById("statStandardTime");
+        var total = 0;
+        for (var code in window.plcStandardTimes) {
+            if (parseInt(code) !== 3) { // Exclude Code 3 (Xả đáy)
+                total += window.plcStandardTimes[code];
+            }
+        }
+        if (stdTimeEl) {
+            stdTimeEl.innerHTML = total;
+        }
+
+        // Cập nhật các tag Standard (TC cài đặt) trên Sơ đồ bồn trộn từ database
+        var mapping = {
+            1: '#feedingTimeStandard',
+            2: '#mix1TimeStandard',
+            3: '#bottomDischargeTimeStandard',
+            4: '#bottomDischargeVibrationTimeStandard',
+            5: '#bottomSuctionDischargeTimeStandard',
+            6: '#mix2TimeStandard',
+            7: '#clearanceSaleTimeStandard',
+            8: '#vibrationDischargeTimeStandard'
+        };
+        for (var code in mapping) {
+            var el = document.querySelector(mapping[code]);
+            if (el) {
+                var val = window.plcStandardTimes[code] || 0;
+                el.innerHTML = val + ' <small>s</small>';
+            }
+        }
+        
+        // Recalculate remaining time immediately to avoid UI mismatch
+        var elapsedEl = document.getElementById("statElapsedTime");
+        var remainingEl = document.getElementById("statRemainingTime");
+        if (elapsedEl && remainingEl) {
+            var elapsed = parseInt(elapsedEl.innerHTML) || 0;
+            var remaining = Math.max(0, total - elapsed);
+            remainingEl.innerHTML = remaining;
+        }
+
+        if (typeof renderBatchTable === 'function' && window.currentSteps) {
+            renderBatchTable(window.currentSteps);
+        }
+    }
+
     // FAKE DATA - Generate random values for testing
 
     function generateFakeData() {
@@ -277,8 +323,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (data && data.steps) {
                     currentSteps = data.steps;
                     window.currentSteps = data.steps;
+                    
+                    // Cập nhật lại cache plcStandardTimes từ database
+                    data.steps.forEach(function (step, index) {
+                        var code = index + 1;
+                        var stdVal = parseInt(step.standard) || 0;
+                        window.plcStandardTimes[code] = stdVal;
+                    });
+
                     if (typeof renderBatchTable === 'function') {
                         renderBatchTable(data.steps);
+                    }
+
+                    if (typeof updateCalculatedTimeAndStandards === 'function') {
+                        updateCalculatedTimeAndStandards();
                     }
                 }
 
@@ -382,15 +440,20 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (window.isHistoricView) {
                             var total = 0;
                             if (window.currentSteps && window.currentSteps.length > 0) {
-                                window.currentSteps.forEach(function(step) {
-                                    total += parseInt(step.standard) || 0;
+                                window.currentSteps.forEach(function(step, index) {
+                                    var code = index + 1;
+                                    if (code !== 3) { // Exclude Code 3 (Xả đáy)
+                                        total += parseInt(step.standard) || 0;
+                                    }
                                 });
                             }
                             return total || 6300;
                         } else {
                             var total = 0;
                             for (var code in window.plcStandardTimes) {
-                                total += window.plcStandardTimes[code];
+                                if (parseInt(code) !== 3) { // Exclude Code 3 (Xả đáy)
+                                    total += window.plcStandardTimes[code];
+                                }
                             }
                             return total;
                         }
@@ -813,71 +876,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 latestApSuat = val;
             }, true);
             updateTag(dataCollection.get(`AFChemTX01.CaiDatApSuat`), document.querySelector('#TankDiagramPressureStandard'), null, true);
-            function updateCalculatedTimeAndStandards() {
-                updateCalculatedTime();
-                var stdTimeEl = document.getElementById("statStandardTime");
-                var total = 0;
-                for (var code in window.plcStandardTimes) {
-                    total += window.plcStandardTimes[code];
-                }
-                if (stdTimeEl) {
-                    stdTimeEl.innerHTML = total;
-                }
-                
-                // Recalculate remaining time immediately to avoid UI mismatch
-                var elapsedEl = document.getElementById("statElapsedTime");
-                var remainingEl = document.getElementById("statRemainingTime");
-                if (elapsedEl && remainingEl) {
-                    var elapsed = parseInt(elapsedEl.innerHTML) || 0;
-                    var remaining = Math.max(0, total - elapsed);
-                    remainingEl.innerHTML = remaining;
-                }
-
-                if (typeof renderBatchTable === 'function' && window.currentSteps) {
-                    renderBatchTable(window.currentSteps);
-                }
-            }
 
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianCapLieu`), document.querySelector('#feedingTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatCapLieu`), document.querySelector('#feedingTimeStandard'), function(val) {
-                window.plcStandardTimes[1] = parseInt(val) || 0;
-                updateCalculatedTimeAndStandards();
-            });
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianTron1`), document.querySelector('#mix1Time'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatTron1`), document.querySelector('#mix1TimeStandard'), function(val) {
-                window.plcStandardTimes[2] = parseInt(val) || 0;
-                updateCalculatedTimeAndStandards();
-            });
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianXaDay`), document.querySelector('#bottomDischargeTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatXaDay`), document.querySelector('#bottomDischargeTimeStandard'), function(val) {
-                window.plcStandardTimes[3] = parseInt(val) || 0;
-                updateCalculatedTimeAndStandards();
-            });
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaDay`), document.querySelector('#bottomDischargeVibrationTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatRungXaDay`), document.querySelector('#bottomDischargeVibrationTimeStandard'), function(val) {
-                window.plcStandardTimes[4] = parseInt(val) || 0;
-                updateCalculatedTimeAndStandards();
-            });
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianHutXaDay`), document.querySelector('#bottomSuctionDischargeTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatHutXaDayThem`), document.querySelector('#bottomSuctionDischargeTimeStandard'), function(val) {
-                window.plcStandardTimes[5] = parseInt(val) || 0;
-                updateCalculatedTimeAndStandards();
-            });
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianTron2`), document.querySelector('#mix2Time'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatTron2`), document.querySelector('#mix2TimeStandard'), function(val) {
-                window.plcStandardTimes[6] = parseInt(val) || 0;
-                updateCalculatedTimeAndStandards();
-            });
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianXaHang`), document.querySelector('#clearanceSaleTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatXaHang`), document.querySelector('#clearanceSaleTimeStandard'), function(val) {
-                window.plcStandardTimes[7] = parseInt(val) || 0;
-                updateCalculatedTimeAndStandards();
-            });
             updateTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaHang`), document.querySelector('#vibrationDischargeTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCaiDatRungXaHang`), document.querySelector('#vibrationDischargeTimeStandard'), function(val) {
-                window.plcStandardTimes[8] = parseInt(val) || 0;
-                updateCalculatedTimeAndStandards();
-            });
 
             // Periodically update charts every 5 seconds (with debounce / performance throttling)
 
