@@ -1,4 +1,4 @@
-﻿using Hino.Getdata.Common;
+using Hino.Getdata.Common;
 using LongDucProjectTest.Controllers;
 using System;
 using System.Collections.Generic;
@@ -688,9 +688,15 @@ namespace LongDucProject.Controllers
         private static double TryGetTemp(object value)
         {
             double val = TryGetDouble(value);
-            if (val > 150.0)
+            if (val == 0) return 0;
+            double absVal = Math.Abs(val);
+            if (absVal >= 100.0)
             {
                 return val / 10.0;
+            }
+            if (absVal > 0 && absVal < 10.0)
+            {
+                return val * 10.0;
             }
             return val;
         }

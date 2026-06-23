@@ -940,12 +940,28 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
+function normalizeTemperature(val) {
+    var num = Number(val);
+    if (isNaN(num) || num === 0) return val;
+    var absNum = Math.abs(num);
+    if (absNum >= 100.0) {
+        return (num / 10).toFixed(1);
+    }
+    if (absNum > 0 && absNum < 10.0) {
+        return (num * 10).toFixed(1);
+    }
+    return num.toFixed(1);
+}
+
 function updateTag(dataTag, element, onValueChangeCallback, divideBy10 = false) {
     if (dataTag && element) {
         dataTag.dispatcher.on('valueChanged', (data) => {
             if (data.e.newValue !== undefined) {
                 var val = data.e.newValue;
-                if (divideBy10 && !isNaN(val) && val !== null && val !== '') {
+                var isTemp = element.id && element.id.toLowerCase().indexOf('temp') >= 0;
+                if (isTemp && !isNaN(val) && val !== null && val !== '') {
+                    val = normalizeTemperature(val);
+                } else if (divideBy10 && !isNaN(val) && val !== null && val !== '') {
                     var numVal = Number(val) / 10;
                     val = numVal.toFixed(1);
                 }
@@ -958,7 +974,10 @@ function updateTag(dataTag, element, onValueChangeCallback, divideBy10 = false) 
 
         if (dataTag.Value !== undefined) {
             var val = dataTag.Value;
-            if (divideBy10 && !isNaN(val) && val !== null && val !== '') {
+            var isTemp = element.id && element.id.toLowerCase().indexOf('temp') >= 0;
+            if (isTemp && !isNaN(val) && val !== null && val !== '') {
+                val = normalizeTemperature(val);
+            } else if (divideBy10 && !isNaN(val) && val !== null && val !== '') {
                 var numVal = Number(val) / 10;
                 if (element.id === 'TankDiagramPressure' || element.id === 'TankDiagramPressureStandard') {
                     val = numVal.toFixed(2);

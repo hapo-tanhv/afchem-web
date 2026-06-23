@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -1690,18 +1690,36 @@ namespace LongDucProject.Controllers
             }
         }
 
+        private static double NormalizeTemperature(double val)
+        {
+            if (val == 0) return 0;
+            double absVal = Math.Abs(val);
+            if (absVal >= 100.0)
+            {
+                return val / 10.0;
+            }
+            if (absVal > 0 && absVal < 10.0)
+            {
+                return val * 10.0;
+            }
+            return val;
+        }
+
         private string FormatTempRange(List<double> temps, double? threshold = null)
         {
             if (temps == null || temps.Count == 0) return "-";
 
-            double min = temps.Min();
-            double max = temps.Max();
+            var normalizedTemps = temps.Select(t => NormalizeTemperature(t)).ToList();
+            double min = normalizedTemps.Min();
+            double max = normalizedTemps.Max();
 
             string minStr = Math.Round(min, 1).ToString("0.#", CultureInfo.InvariantCulture);
             string maxStr = Math.Round(max, 1).ToString("0.#", CultureInfo.InvariantCulture);
 
-            bool isMinExceeded = threshold.HasValue && min >= threshold.Value;
-            bool isMaxExceeded = threshold.HasValue && max >= threshold.Value;
+            double? normThreshold = threshold.HasValue ? NormalizeTemperature(threshold.Value) : (double?)null;
+
+            bool isMinExceeded = normThreshold.HasValue && min >= normThreshold.Value;
+            bool isMaxExceeded = normThreshold.HasValue && max >= normThreshold.Value;
 
             string formattedMin = isMinExceeded 
                 ? $"<span style='color: #ef4444; font-weight: bold;'>{minStr}</span>" 
