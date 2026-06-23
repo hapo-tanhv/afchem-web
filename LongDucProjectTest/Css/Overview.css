@@ -257,7 +257,7 @@
 }
 
 /* RESPONSIVE */
-@media (max-width: 93.75rem) {
+@media (max-width: 100rem) {
     .process-timeline-container {
         gap: 0.9375rem;
     }
@@ -415,6 +415,7 @@
     height: 100%;
     margin-right: auto;
     margin-left: -1.875rem;
+    width: 100%;
 }
 
 .tank-img {
@@ -525,9 +526,9 @@
 .tank-temp-card::before {
     content: '';
     position: absolute;
-    left: -2.5rem;
+    left: -1.5rem;
     top: 50%;
-    width: 2.5rem;
+    width: 1.5rem;
     height: 0.0625rem;
     background: rgba(59, 130, 246, 0.8);
     box-shadow: 0 0 0.3125rem rgba(59, 130, 246, 0.5);
@@ -544,20 +545,20 @@
 /* Positions for tank temp cards based on sodobontron.jpeg */
 .top-temp {
     top: 26.5%;
-    right: -16%;
+    right: 3%;
 }
 
 .mid-temp {
     top: 45.5%;
-    right: -16%;
+    right: 3%;
 }
 
 .bot-temp {
     top: 64%;
-    right: -16%;
+    right: 3%;
 }
 
-@media (max-width: 93.75rem) {
+@media (max-width: 100rem) {
     .tank-diagram-container {
         flex-direction: column;
         gap: 1.875rem;
@@ -565,8 +566,6 @@
 
     .tank-center-wrapper {
         margin-left: 0 !important;
-        margin-right: 11.25rem !important;
-        /* Dành khoảng trống cho các thẻ nhiệt độ bên phải */
     }
 
     .tank-side-col {
@@ -1032,7 +1031,7 @@
 
 .eq-valve {
     bottom: 9%;
-    left: 83%;
+    left: 88%;
     transform: translateX(-50%);
 }
 
@@ -1105,5 +1104,48 @@
     }
     body .panel-header-custom h3 {
         font-size: 1rem !important;
+    }
+}
+
+/* Responsive layout for width 1601px - 1876px to prevent overlapping of temperature cards on the right column */
+@media (min-width: 1601px) and (max-width: 1876px) {
+    .tank-diagram-container {
+        display: grid !important;
+        grid-template-columns: 12.5rem 1fr;
+        grid-template-rows: auto auto;
+        justify-content: stretch;
+        align-items: center;
+        gap: 1.875rem;
+    }
+
+    .tank-side-col.left-col {
+        grid-column: 1;
+        grid-row: 1;
+        margin-top: -3.75rem;
+    }
+
+    .tank-center-wrapper {
+        grid-column: 2;
+        grid-row: 1;
+        margin-left: 0 !important;
+        margin-right: 11.25rem !important; /* Dành khoảng trống cho các thẻ nhiệt độ bên phải */
+    }
+
+    .tank-side-col.right-col {
+        grid-column: 1 / span 2;
+        grid-row: 2;
+        width: 100%;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        margin-top: 0 !important;
+        margin-left: 0 !important;
+        gap: 0.9375rem !important;
+    }
+
+    .tank-side-col.right-col .param-card-side {
+        width: calc(25% - 0.9375rem) !important;
+        min-width: 13.75rem !important;
     }
 }
