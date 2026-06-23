@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -493,7 +493,7 @@ namespace LongDucProjectTest.Service
                             {
                                 if (tr["NhietDoMoiTruong"] != DBNull.Value && double.TryParse(tr["NhietDoMoiTruong"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double et))
                                 {
-                                    envTemps.Add(et);
+                                    envTemps.Add(et > 150.0 ? et / 10.0 : et);
                                 }
                                 if (tr["DoAmMoiTruong"] != DBNull.Value && double.TryParse(tr["DoAmMoiTruong"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double eh))
                                 {
@@ -505,15 +505,15 @@ namespace LongDucProjectTest.Service
                                 }
                                 if (tr["NhietDoBonTronTren"] != DBNull.Value && double.TryParse(tr["NhietDoBonTronTren"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double t1))
                                 {
-                                    topTemps.Add(t1);
+                                    topTemps.Add(t1 > 150.0 ? t1 / 10.0 : t1);
                                 }
                                 if (tr["NhietDoBonTronGiua"] != DBNull.Value && double.TryParse(tr["NhietDoBonTronGiua"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double t2))
                                 {
-                                    midTemps.Add(t2);
+                                    midTemps.Add(t2 > 150.0 ? t2 / 10.0 : t2);
                                 }
                                 if (tr["NhietDoBonTronDuoi"] != DBNull.Value && double.TryParse(tr["NhietDoBonTronDuoi"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double t3))
                                 {
-                                    botTemps.Add(t3);
+                                    botTemps.Add(t3 > 150.0 ? t3 / 10.0 : t3);
                                 }
                             }
 

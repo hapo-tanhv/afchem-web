@@ -356,11 +356,11 @@ namespace LongDucProject.Controllers
                             TgRungXaHang = tgRungXaHang,
                             TongTgTron = tongTgTron,
                             ApSuat = TryGetDouble(row["ApSuat"]),
-                            NhietDoMT = TryGetDouble(row["NhietDoMoiTruong"]),
+                            NhietDoMT = TryGetTemp(row["NhietDoMoiTruong"]),
                             DoAmMT = TryGetDouble(row["DoAmMoiTruong"]),
-                            NhietNapBon = TryGetDouble(row["NhietDoBonTronTren"]),
-                            NhietGiuaBon = TryGetDouble(row["NhietDoBonTronGiua"]),
-                            NhietDayBon = TryGetDouble(row["NhietDoBonTronDuoi"])
+                            NhietNapBon = TryGetTemp(row["NhietDoBonTronTren"]),
+                            NhietGiuaBon = TryGetTemp(row["NhietDoBonTronGiua"]),
+                            NhietDayBon = TryGetTemp(row["NhietDoBonTronDuoi"])
                         });
                     }
                 }
@@ -489,11 +489,11 @@ namespace LongDucProject.Controllers
                         TgRungXaHang = tgRungXaHang,
                         TongTgTron = tongTgTron,
                         ApSuat = TryGetDouble(row["ApSuat"]),
-                        NhietDoMT = TryGetDouble(row["NhietDoMoiTruong"]),
+                        NhietDoMT = TryGetTemp(row["NhietDoMoiTruong"]),
                         DoAmMT = TryGetDouble(row["DoAmMoiTruong"]),
-                        NhietNapBon = TryGetDouble(row["NhietDoBonTronTren"]),
-                        NhietGiuaBon = TryGetDouble(row["NhietDoBonTronGiua"]),
-                        NhietDayBon = TryGetDouble(row["NhietDoBonTronDuoi"])
+                        NhietNapBon = TryGetTemp(row["NhietDoBonTronTren"]),
+                        NhietGiuaBon = TryGetTemp(row["NhietDoBonTronGiua"]),
+                        NhietDayBon = TryGetTemp(row["NhietDoBonTronDuoi"])
                     });
                 }
             }
@@ -601,11 +601,11 @@ namespace LongDucProject.Controllers
                         TgRungXaHang = tgRungXaHang,
                         TongTgTron = tongTgTron,
                         ApSuat = TryGetDouble(row["ApSuat"]),
-                        NhietDoMT = TryGetDouble(row["NhietDoMoiTruong"]),
+                        NhietDoMT = TryGetTemp(row["NhietDoMoiTruong"]),
                         DoAmMT = TryGetDouble(row["DoAmMoiTruong"]),
-                        NhietNapBon = TryGetDouble(row["NhietDoBonTronTren"]),
-                        NhietGiuaBon = TryGetDouble(row["NhietDoBonTronGiua"]),
-                        NhietDayBon = TryGetDouble(row["NhietDoBonTronDuoi"])
+                        NhietNapBon = TryGetTemp(row["NhietDoBonTronTren"]),
+                        NhietGiuaBon = TryGetTemp(row["NhietDoBonTronGiua"]),
+                        NhietDayBon = TryGetTemp(row["NhietDoBonTronDuoi"])
                     });
                 }
             }
@@ -683,6 +683,16 @@ namespace LongDucProject.Controllers
             double res;
             if (double.TryParse(value.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out res)) return res;
             return 0;
+        }
+
+        private static double TryGetTemp(object value)
+        {
+            double val = TryGetDouble(value);
+            if (val > 150.0)
+            {
+                return val / 10.0;
+            }
+            return val;
         }
         [HttpGet]
         public JsonResult GetAccounts()

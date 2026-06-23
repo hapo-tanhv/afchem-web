@@ -903,6 +903,20 @@ namespace LongDucProject.Controllers
                             }
                         }
 
+                        // Auto-scale telemetry values if they are stored as raw integers (e.g. 320 instead of 32.0)
+                        if (topTemps.Any(t => t > 150.0))
+                        {
+                            for (int i = 0; i < topTemps.Count; i++) topTemps[i] /= 10.0;
+                        }
+                        if (midTemps.Any(t => t > 150.0))
+                        {
+                            for (int i = 0; i < midTemps.Count; i++) midTemps[i] /= 10.0;
+                        }
+                        if (botTemps.Any(t => t > 150.0))
+                        {
+                            for (int i = 0; i < botTemps.Count; i++) botTemps[i] /= 10.0;
+                        }
+
                         // Inject real-time alarm peak values into temperature calculation (Chiều xuôi)
                         foreach (var row in stepAlarms)
                         {
