@@ -528,7 +528,6 @@
     position: absolute;
     left: -1.5rem;
     top: 50%;
-    width: 1.5rem;
     height: 0.0625rem;
     background: rgba(59, 130, 246, 0.8);
     box-shadow: 0 0 0.3125rem rgba(59, 130, 246, 0.5);
@@ -1115,7 +1114,6 @@
         grid-template-rows: auto auto;
         justify-content: stretch;
         align-items: center;
-        gap: 1.875rem;
     }
 
     .tank-side-col.left-col {
