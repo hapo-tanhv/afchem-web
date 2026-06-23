@@ -1,4 +1,4 @@
-﻿/* RESET & NỀN TỔNG THỂ */
+/* RESET & NỀN TỔNG THỂ */
 .content-wrapper {
     background-color: #0a0a0a !important;
     padding: 1.25rem;
@@ -558,7 +558,7 @@
     right: 3%;
 }
 
-@media (max-width: 100rem) {
+@media (max-width: 93.75rem) {
     .tank-diagram-container {
         flex-direction: column;
         gap: 1.875rem;
@@ -1107,8 +1107,8 @@
     }
 }
 
-/* Responsive layout for width 1601px - 1876px to prevent overlapping of temperature cards on the right column */
-@media (min-width: 1601px) and (max-width: 1876px) {
+/* Responsive layout for width 1578px - 1876px to prevent overlapping of temperature cards on the right column */
+@media (min-width: 1578px) and (max-width: 1876px) {
     .tank-diagram-container {
         display: grid !important;
         grid-template-columns: 12.5rem 1fr;
@@ -1147,5 +1147,48 @@
     .tank-side-col.right-col .param-card-side {
         width: calc(25% - 0.9375rem) !important;
         min-width: 13.75rem !important;
+    }
+}
+
+/* Decrease font sizes and paddings for all cards in bồn trộn diagram for screens < 1600px */
+@media (max-width: 100rem) {
+    .param-card-side {
+        padding: 0.375rem 0.5rem !important;
+        gap: 0.5rem !important;
+    }
+    .param-card-icon {
+        font-size: 1.375rem !important;
+        width: 2rem !important;
+    }
+    .param-card-title {
+        font-size: 0.625rem !important;
+    }
+    .param-card-value {
+        font-size: 1.125rem !important;
+    }
+    .param-card-value small {
+        font-size: 0.65rem !important;
+    }
+    .param-card-std {
+        font-size: 0.625rem !important;
+        margin-top: 0.25rem !important;
+    }
+    .tank-temp-card {
+        width: 10rem !important;
+        padding: 0.375rem 0.5rem !important;
+        gap: 0.25rem !important;
+    }
+    .tank-temp-card .param-card-icon {
+        font-size: 1.125rem !important;
+        width: 1.5rem !important;
+    }
+    .tank-temp-card .param-card-title {
+        font-size: 0.625rem !important;
+    }
+    .tank-temp-card .param-card-value {
+        font-size: 1.0rem !important;
+    }
+    .tank-temp-card .param-card-std {
+        font-size: 0.625rem !important;
     }
 }

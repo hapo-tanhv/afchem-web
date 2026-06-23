@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -217,7 +217,7 @@ namespace LongDucProjectTest.Service
             if (string.IsNullOrEmpty(supervisorTime)) supervisorTime = prodDate;
             if (string.IsNullOrEmpty(managerTime)) managerTime = prodDate;
             double targetWeight = 0;
-            if (webhookFields.ContainsKey("custom_khoi_luong_muc_tieu") && double.TryParse(webhookFields["custom_khoi_luong_muc_tieu"], out double wVal))
+            if (webhookFields.ContainsKey("custom_khoi_luong_muc_tieu") && double.TryParse(webhookFields["custom_khoi_luong_muc_tieu"], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double wVal))
             {
                 targetWeight = wVal;
             }
@@ -1077,8 +1077,8 @@ namespace LongDucProjectTest.Service
                             STT = stt++,
                             Code = item[0],
                             MaterialCode = item[1],
-                            Quantity = double.TryParse(item[2], out double q) ? q : 0,
-                            ActualQuantity = item.Count >= 4 && double.TryParse(item[3], out double aq) ? aq : 0,
+                            Quantity = double.TryParse(item[2], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double q) ? q : 0,
+                            ActualQuantity = item.Count >= 4 && double.TryParse(item[3], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double aq) ? aq : 0,
                             Unit = item[4],
                             BatchNo = item.Count >= 6 ? item[5] : "",
                             Note = $"Mẻ {runNumber}"
