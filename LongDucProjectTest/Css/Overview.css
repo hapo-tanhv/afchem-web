@@ -1190,3 +1190,14 @@
         font-size: 0.625rem !important;
     }
 }
+
+/* SVG Flow animations styling */
+.svg-flow-group {
+    display: none;
+}
+.svg-flow-group.active {
+    display: block;
+}
+.tank-image-wrapper {
+    margin: 0 auto;
+}

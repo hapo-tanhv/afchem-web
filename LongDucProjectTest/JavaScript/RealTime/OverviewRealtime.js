@@ -1360,4 +1360,62 @@ function updateTimelineUI(activeStepCode, machineStatus) {
             }
         }
     });
+
+    // Update SVG flow animations based on active step
+    updateSvgFlows(activeStepCode, machineStatus);
+}
+
+// Function to update SVG flow animations
+function updateSvgFlows(activeStepCode, machineStatus) {
+    var feedingFlow = document.getElementById("svgFlowFeeding");
+    var mixingFlow = document.getElementById("svgFlowMixing");
+    var dischargeFlow = document.getElementById("svgFlowDischarge");
+
+    if (!feedingFlow || !mixingFlow || !dischargeFlow) return;
+
+    // Reset active states
+    feedingFlow.classList.remove("active");
+    mixingFlow.classList.remove("active");
+    dischargeFlow.classList.remove("active");
+
+    // Nếu không có dữ liệu từ realtime (machineStatus !== "RUNNING"), hoặc đang ở chế độ xem lịch sử
+    if (window.isHistoricView || machineStatus !== "RUNNING") {
+        return;
+    }
+
+    var showFeeding = (activeStepCode === 1);
+    var showMixing = (activeStepCode === 2 || activeStepCode === 6);
+    var showDischarge = (activeStepCode === 3 || activeStepCode === 4 || activeStepCode === 5 || activeStepCode === 7 || activeStepCode === 8);
+
+    // Kích hoạt đồng thời nếu trong danh sách steps có bất kỳ công đoạn nào đang "in-progress"
+    if (window.currentSteps && window.currentSteps.length > 0) {
+        // Step index 0: Feeding (Code 1)
+        if (window.currentSteps[0] && window.currentSteps[0].status === 'in-progress') {
+            showFeeding = true;
+        }
+        // Step index 1: Mix 1 (Code 2), index 5: Mix 2 (Code 6)
+        if ((window.currentSteps[1] && window.currentSteps[1].status === 'in-progress') || 
+            (window.currentSteps[5] && window.currentSteps[5].status === 'in-progress')) {
+            showMixing = true;
+        }
+        // Step index 2, 3, 4: Bottom discharge steps (Code 3, 4, 5)
+        // Step index 6, 7: Discharge steps (Code 7, 8)
+        if ((window.currentSteps[2] && window.currentSteps[2].status === 'in-progress') ||
+            (window.currentSteps[3] && window.currentSteps[3].status === 'in-progress') ||
+            (window.currentSteps[4] && window.currentSteps[4].status === 'in-progress') ||
+            (window.currentSteps[6] && window.currentSteps[6].status === 'in-progress') ||
+            (window.currentSteps[7] && window.currentSteps[7].status === 'in-progress')) {
+            showDischarge = true;
+        }
+    }
+
+    if (showFeeding) {
+        feedingFlow.classList.add("active");
+    }
+    if (showMixing) {
+        mixingFlow.classList.add("active");
+    }
+    if (showDischarge) {
+        dischargeFlow.classList.add("active");
+    }
 }
