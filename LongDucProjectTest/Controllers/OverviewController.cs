@@ -891,15 +891,15 @@ namespace LongDucProject.Controllers
                         {
                             if (row["NhietDoBonTronTren"] != DBNull.Value)
                             {
-                                topTemps.Add(Convert.ToDouble(row["NhietDoBonTronTren"]) / 10.0);
+                                topTemps.Add(Convert.ToDouble(row["NhietDoBonTronTren"]));
                             }
                             if (row["NhietDoBonTronGiua"] != DBNull.Value)
                             {
-                                midTemps.Add(Convert.ToDouble(row["NhietDoBonTronGiua"]) / 10.0);
+                                midTemps.Add(Convert.ToDouble(row["NhietDoBonTronGiua"]));
                             }
                             if (row["NhietDoBonTronDuoi"] != DBNull.Value)
                             {
-                                botTemps.Add(Convert.ToDouble(row["NhietDoBonTronDuoi"]) / 10.0);
+                                botTemps.Add(Convert.ToDouble(row["NhietDoBonTronDuoi"]));
                             }
                         }
 
