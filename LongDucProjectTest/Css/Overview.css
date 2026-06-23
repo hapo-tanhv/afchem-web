@@ -1,4 +1,4 @@
-/* RESET & NỀN TỔNG THỂ */
+﻿/* RESET & NỀN TỔNG THỂ */
 .content-wrapper {
     background-color: #0a0a0a !important;
     padding: 1.25rem;
@@ -1107,8 +1107,8 @@
     }
 }
 
-/* Responsive layout for width 1578px - 1876px to prevent overlapping of temperature cards on the right column */
-@media (min-width: 1578px) and (max-width: 1876px) {
+/* Responsive layout for width 1500px - 1876px to prevent overlapping of temperature cards on the right column */
+@media (min-width: 1500px) and (max-width: 1876px) {
     .tank-diagram-container {
         display: grid !important;
         grid-template-columns: 12.5rem 1fr;
