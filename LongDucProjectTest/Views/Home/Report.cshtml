@@ -527,6 +527,7 @@
             reportDt = $(selector).DataTable({
                 "processing": true,
                 "serverSide": true,
+                "searching": false,
                 "ajax": {
                     "url": "/Home/GetReportData",
                     "type": "POST",
