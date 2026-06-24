@@ -1,0 +1,39 @@
+{
+  "feature_name": "report-temp-chart",
+  "created_at": "2026-06-24T13:43:00Z",
+  "updated_at": "2026-06-24T13:43:00Z",
+  "language": "vi",
+  "phase": "implemented",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "scope_lock": {
+    "source": "tôi cần bổ sung 1 line chart trong trang Báo cáo, nó nằm trên bảng thông tin. Line chart này gồm 5 đường: Đường 1: Tiêu chuẩn nhiệt độ (40), Đường 2: Biểu đạt dải nhiệt độ môi trường, Đường 3: Biểu đạt dải nhiệt độ bồn trộn trên, Đường 4: Biểu đạt dải nhiệt độ bồn trộn giữa, Đường 5: Biểu đạt dải nhiệt độ bồn trộn dưới. Mục đích là để có cái nhìn tổng quan giúp người dùng dễ so sánh. bạn lấy số liệu từ bảng alarmreport nhé",
+    "in_scope": [],
+    "out_of_scope": [],
+    "expansion_policy": "requires-user-approval"
+  },
+  "design_context": {
+    "discovery_mode": null,
+    "discovery_reason": null,
+    "validation_recommended": false
+  },
+  "validation": {
+    "status": "validated",
+    "session_count": 1,
+    "questions_asked": 3,
+    "last_validated_at": "2026-06-24T13:42:34Z"
+  },
+  "ready_for_implementation": true
+}

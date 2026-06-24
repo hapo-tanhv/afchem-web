@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             activepower = Math.floor(Math.random() * 90) + 10; // 10-100 kW
             temperature = Math.floor(Math.random() * 50) + 25;    // 25-75 °C
-            pressure = Math.floor(Math.random() * 90) + 10;    // 10-20 Pa
+            var pressureBar = 1.0 + Math.random() * 7.0;    // 1.0-8.0 Bar (realistic)
 
             // Separate values for line chart (realistic temperature ranges)
 
@@ -185,10 +185,10 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             if (window.pressureChartInstance && window.pressureChartInstance.series && window.pressureChartInstance.series[0]) {
-                window.pressureChartInstance.series[0].update({ data: [pressure] });
+                window.pressureChartInstance.series[0].update({ data: [pressureBar] });
                 // Update plotBands dynamically based on current value
 
-                updateChartWithDynamicBands(window.pressureChartInstance, pressure, 5000, {
+                updateChartWithDynamicBands(window.pressureChartInstance, pressureBar, 10, {
                     color1: '#a2f7f7',
                     color2: 'rgba(239, 68, 68, 0.1)'
                 });
@@ -197,7 +197,7 @@ document.addEventListener("DOMContentLoaded", function () {
             // Update line chart with temperature and pressure data
 
             if (window.lineChartInstance) {
-                updateLineChart(ambientTemp, machineTemp, pressure);
+                updateLineChart(ambientTemp, machineTemp, pressureBar);
             }
 
             // Update Tank UI Elements
@@ -212,7 +212,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var tankTopTemp = (machineTemp * 1.1 + Math.random() * 2).toFixed(1);
             var tankMidTemp = (machineTemp * 1.0 + Math.random() * 2).toFixed(1);
             var tankBotTemp = (machineTemp * 0.9 + Math.random() * 2).toFixed(1);
-            var tankPressure = (pressure / 1000).toFixed(2); // converting Pa to bar for display
+            var tankPressure = pressureBar.toFixed(2); // Bar display
             var envHumidity = (50 + Math.random() * 20).toFixed(1); // 50-70%
             var envPM25 = Math.floor(10 + Math.random() * 20); // 10-30
             var envDust = (0.2 + Math.random() * 0.5).toFixed(2); // 0.2 - 0.7
@@ -402,10 +402,16 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (stepEl) stepEl.innerHTML = batchInfo.headerStepName || "";
                     var statusEl = document.getElementById("headerMachineStatus");
                     if (statusEl) {
-                        statusEl.innerHTML = batchInfo.runStatus || batchInfo.batchStatus;
                         if (batchInfo.runStatus === "Active") {
-                            statusEl.style.color = "#22c55e";
+                            if (batchInfo.isPaused === 1) {
+                                statusEl.innerHTML = "PAUSED";
+                                statusEl.style.color = "#eab308";
+                            } else {
+                                statusEl.innerHTML = batchInfo.runStatus;
+                                statusEl.style.color = "#22c55e";
+                            }
                         } else {
+                            statusEl.innerHTML = batchInfo.runStatus || batchInfo.batchStatus;
                             statusEl.style.color = "#3b82f6";
                         }
                     }
@@ -423,7 +429,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (alarmCountEl) alarmCountEl.innerHTML = batchInfo.alarmCount !== undefined ? batchInfo.alarmCount : "0";
                     // Update timeline steps classes
 
-                    updateTimelineUI(batchInfo.activeStepCode, batchInfo.machineStatus);
+                    updateTimelineUI(batchInfo.activeStepCode, batchInfo.machineStatus, batchInfo.isPaused);
                     // Set up values for step statistics panel
 
                     if (activeStepTimer) {
@@ -915,7 +921,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (window.pressureChartInstance && window.pressureChartInstance.series && window.pressureChartInstance.series[0]) {
                     var val = Number(latestApSuat) || 0;
                     window.pressureChartInstance.series[0].update({ data: [val] });
-                    updateChartWithDynamicBands(window.pressureChartInstance, val, 100, {
+                    updateChartWithDynamicBands(window.pressureChartInstance, val, 10, {
                         color1: '#a2f7f7',
                         color2: 'rgba(239, 68, 68, 0.1)'
                     });
@@ -962,8 +968,9 @@ function updateTag(dataTag, element, onValueChangeCallback, divideBy10 = false) 
                 if (isTemp && !isNaN(val) && val !== null && val !== '') {
                     val = normalizeTemperature(val);
                 } else if (divideBy10 && !isNaN(val) && val !== null && val !== '') {
-                    var numVal = Number(val) / 10;
-                    val = numVal.toFixed(1);
+                    var isPressure = element.id === 'TankDiagramPressure' || element.id === 'TankDiagramPressureStandard';
+                    var numVal = Number(val) / (isPressure ? 100 : 10);
+                    val = numVal.toFixed(isPressure ? 2 : 1);
                 }
                 element.innerHTML = val;
                 if (typeof onValueChangeCallback === 'function') {
@@ -978,12 +985,9 @@ function updateTag(dataTag, element, onValueChangeCallback, divideBy10 = false) 
             if (isTemp && !isNaN(val) && val !== null && val !== '') {
                 val = normalizeTemperature(val);
             } else if (divideBy10 && !isNaN(val) && val !== null && val !== '') {
-                var numVal = Number(val) / 10;
-                if (element.id === 'TankDiagramPressure' || element.id === 'TankDiagramPressureStandard') {
-                    val = numVal.toFixed(2);
-                } else {
-                    val = numVal.toFixed(1);
-                }
+                var isPressure = element.id === 'TankDiagramPressure' || element.id === 'TankDiagramPressureStandard';
+                var numVal = Number(val) / (isPressure ? 100 : 10);
+                val = numVal.toFixed(isPressure ? 2 : 1);
             }
             element.innerHTML = val;
             if (typeof onValueChangeCallback === 'function') {
@@ -1273,14 +1277,14 @@ function PressureChart() {
     return Highcharts.chart('container-pressure', Highcharts.merge(gaugeOptions, {
         yAxis: {
             min: 0,
-            max: 100,
-            tickPositions: [0, 100],
+            max: 10,
+            tickPositions: [0, 5, 10],
             plotBands: [{
                 id: 'green-band',
                 from: 0, to: 0, color: '#a2f7f7', thickness: 15
             }, {
                 id: 'red-band',
-                from: 0, to: 100, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
+                from: 0, to: 10, color: 'rgba(239, 68, 68, 0.1)', thickness: 15
             }],
             labels: {
                 style: { color: '#94a3b8' }
@@ -1335,7 +1339,7 @@ function updateChartWithDynamicBands(chartInstance, value, max, config) {
 }
 
 // Function to update timeline step items styling
-function updateTimelineUI(activeStepCode, machineStatus) {
+function updateTimelineUI(activeStepCode, machineStatus, isPaused) {
     var timeline = document.getElementById("processTimeline");
     if (!timeline) return;
     var steps = timeline.querySelectorAll(".step");
@@ -1344,7 +1348,7 @@ function updateTimelineUI(activeStepCode, machineStatus) {
         var iconEl = stepEl.querySelector(".step-icon");
 
         // Remove all state classes
-        stepEl.classList.remove("completed", "active");
+        stepEl.classList.remove("completed", "active", "stopped");
         if (machineStatus === "COMPLETED") {
             stepEl.classList.add("completed");
             if (iconEl) iconEl.innerHTML = '<i class="fas fa-check"></i>';
@@ -1353,7 +1357,11 @@ function updateTimelineUI(activeStepCode, machineStatus) {
                 stepEl.classList.add("completed");
                 if (iconEl) iconEl.innerHTML = '<i class="fas fa-check"></i>';
             } else if (stepNum === activeStepCode) {
-                stepEl.classList.add("active");
+                if (isPaused === 1) {
+                    stepEl.classList.add("active", "stopped");
+                } else {
+                    stepEl.classList.add("active");
+                }
                 if (iconEl) iconEl.innerHTML = '';
             } else {
                 if (iconEl) iconEl.innerHTML = '';
@@ -1362,11 +1370,11 @@ function updateTimelineUI(activeStepCode, machineStatus) {
     });
 
     // Update SVG flow animations based on active step
-    updateSvgFlows(activeStepCode, machineStatus);
+    updateSvgFlows(activeStepCode, machineStatus, isPaused);
 }
 
 // Function to update SVG flow animations
-function updateSvgFlows(activeStepCode, machineStatus) {
+function updateSvgFlows(activeStepCode, machineStatus, isPaused) {
     var feedingFlow = document.getElementById("svgFlowFeeding");
     var mixingFlow = document.getElementById("svgFlowMixing");
     var dischargeFlow = document.getElementById("svgFlowDischarge");
@@ -1378,8 +1386,8 @@ function updateSvgFlows(activeStepCode, machineStatus) {
     mixingFlow.classList.remove("active");
     dischargeFlow.classList.remove("active");
 
-    // Nếu không có dữ liệu từ realtime (machineStatus !== "RUNNING"), hoặc đang ở chế độ xem lịch sử
-    if (window.isHistoricView || machineStatus !== "RUNNING") {
+    // Nếu không có dữ liệu từ realtime (machineStatus !== "RUNNING"), đang ở chế độ xem lịch sử, hoặc máy đang tạm dừng (isPaused === 1)
+    if (window.isHistoricView || machineStatus !== "RUNNING" || isPaused === 1) {
         return;
     }
 

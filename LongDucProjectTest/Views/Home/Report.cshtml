@@ -10,7 +10,7 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/AdminLTE-master/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
-    <link rel="stylesheet" href="~/Css/Overview.css?v=2" />
+    <link rel="stylesheet" href="~/Css/Overview.css?v=5" />
     <style>
         .filter-bar {
             background: #1e293b;
@@ -198,7 +198,21 @@
                 }
             </div>
         </div>
-        
+        <!-- CHART CARD -->
+        <div class="card card-outline card-primary" id="reportChartCard" style="background: #1e293b; border-color: #3b82f6; margin-bottom: 1.25rem; box-shadow: 0 0.25rem 0.375rem -0.0625rem rgba(0, 0, 0, 0.1);">
+            <div class="card-header" style="position: relative; border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.25rem;">
+                <h3 class="card-title" style="color: #e2e8f0; font-size: 1rem; font-weight: 600; margin: 0; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-chart-line" style="color: #00e5ff;"></i> Biểu đồ nhiệt độ hoạt động
+                </h3>
+                <div class="card-tools" style="position: absolute; right: 1.25rem; top: 50%; transform: translateY(-50%); margin: 0; display: flex; align-items: center;">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse" style="color: #94a3b8; background: transparent; border: none; padding: 0.25rem 0.5rem; outline: none; display: inline-flex; align-items: center; justify-content: center;"><i class="fas fa-minus"></i></button>
+                </div>
+            </div>
+            <div class="card-body" style="padding: 1rem;">
+                <div id="reportChartContainer" style="width: 100%; height: 350px; background: transparent;"></div>
+            </div>
+        </div>
+
         <div class="table-responsive" style="margin-top: 0.9375rem;">
             <table id="reportTable" class="batch-table" style="width:100%">
                 <thead>
@@ -232,6 +246,16 @@
 </div>
 
 @section Scripts {
+    <!-- Highcharts CDN -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/series-label.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/solid-gauge.js"></script>
+    <script src="https://code.highcharts.com/modules/no-data-to-display.js"></script>
+
     <script src="~/AdminLTE-master/plugins/datatables/jquery.dataTables.min.js"></script>
     <script src="~/AdminLTE-master/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
     <script>
@@ -576,11 +600,176 @@
                             if (json.resolvedRunId > 0) {
                                 $('#runId').val(json.resolvedRunId);
                             }
+                            loadChartData();
                         });
                     });
                     isInitialLoad = false;
+                } else {
+                    if (!isInitialLoad) {
+                        loadChartData();
+                    }
                 }
             });
+        }
+
+        var reportChart;
+
+        function loadChartData() {
+            var starttime = $('#starttime').val() || "";
+            var endtime = $('#endtime').val() || "";
+            var batchId = $('#batchId').val() || "0";
+            var runId = $('#runId').val() || "0";
+            var searchValue = '';
+            if (reportDt) {
+                searchValue = reportDt.search() || '';
+            }
+
+            $.ajax({
+                url: '/Home/GetReportChartData',
+                type: 'POST',
+                data: {
+                    starttime: starttime,
+                    endtime: endtime,
+                    batchId: batchId,
+                    runId: runId,
+                    isInitialLoad: false,
+                    searchValue: searchValue
+                },
+                dataType: 'json',
+                success: function (data) {
+                    renderChart(data);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Lỗi khi tải dữ liệu biểu đồ:", error);
+                }
+            });
+        }
+
+        function renderChart(data) {
+            var categories = [];
+            var standardSeries = [];
+            var tempMT = [];
+            var tempNap = [];
+            var tempGiua = [];
+            var tempDay = [];
+
+            if (data && data.length > 0) {
+                data.forEach(function (item) {
+                    categories.push(item.Time);
+                    standardSeries.push(40.0);
+                    tempMT.push(item.NhietDoMT);
+                    tempNap.push(item.NhietNapBon);
+                    tempGiua.push(item.NhietGiuaBon);
+                    tempDay.push(item.NhietDayBon);
+                });
+            }
+
+            if (!reportChart) {
+                reportChart = Highcharts.chart('reportChartContainer', {
+                    chart: {
+                        type: 'spline',
+                        backgroundColor: 'transparent',
+                        zoomType: 'x'
+                    },
+                    title: {
+                        text: 'Xu hướng nhiệt độ',
+                        style: {
+                            color: '#ffffff',
+                            fontSize: '16px'
+                        }
+                    },
+                    xAxis: {
+                        categories: categories,
+                        labels: {
+                            style: { color: '#94a3b8' },
+                            formatter: function() {
+                                var val = this.value;
+                                if (val && val.length > 10) {
+                                    return val.substring(11);
+                                }
+                                return val;
+                            }
+                        },
+                        lineColor: '#475569',
+                        tickColor: '#475569'
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'Nhiệt độ (°C)',
+                            style: { color: '#e2e8f0' }
+                        },
+                        labels: {
+                            style: { color: '#94a3b8' },
+                            format: '{value}°C'
+                        },
+                        gridLineColor: 'rgba(255,255,255,0.05)'
+                    },
+                    tooltip: {
+                        shared: true,
+                        crosshairs: true,
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        borderColor: '#3b82f6',
+                        borderWidth: 1,
+                        style: { color: '#ffffff' },
+                        valueSuffix: ' °C'
+                    },
+                    legend: {
+                        itemStyle: { color: '#94a3b8' },
+                        itemHoverStyle: { color: '#ffffff' }
+                    },
+                    plotOptions: {
+                        spline: {
+                            marker: {
+                                enabled: false,
+                                radius: 3
+                            },
+                            lineWidth: 2
+                        }
+                    },
+                    series: [{
+                        name: 'Tiêu chuẩn nhiệt độ (40°C)',
+                        data: standardSeries,
+                        color: '#ef4444',
+                        dashStyle: 'ShortDash',
+                        marker: { enabled: false }
+                    }, {
+                        name: 'Nhiệt độ môi trường',
+                        data: tempMT,
+                        color: '#10b981'
+                    }, {
+                        name: 'Nhiệt độ nắp bồn',
+                        data: tempNap,
+                        color: '#3b82f6'
+                    }, {
+                        name: 'Nhiệt độ giữa bồn',
+                        data: tempGiua,
+                        color: '#8b5cf6'
+                    }, {
+                        name: 'Nhiệt độ đáy bồn',
+                        data: tempDay,
+                        color: '#ec4899'
+                    }],
+                    credits: { enabled: false },
+                    lang: {
+                        noData: "Không có dữ liệu hiển thị"
+                    },
+                    noData: {
+                        style: {
+                            fontWeight: 'bold',
+                            fontSize: '15px',
+                            color: '#94a3b8'
+                        }
+                    }
+                });
+            } else {
+                reportChart.xAxis[0].setCategories(categories, false);
+                reportChart.series[0].setData(standardSeries, false);
+                reportChart.series[1].setData(tempMT, false);
+                reportChart.series[2].setData(tempNap, false);
+                reportChart.series[3].setData(tempGiua, false);
+                reportChart.series[4].setData(tempDay, false);
+                reportChart.redraw();
+            }
         }
 
         function reloadTable() {

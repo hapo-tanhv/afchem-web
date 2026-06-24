@@ -68,7 +68,7 @@
     Layout = "~/Views/Shared/_LayoutMain.cshtml";
 }
 @section Styles {
-    <link rel="stylesheet" href="~/Css/Overview.css?v=2" />
+    <link rel="stylesheet" href="~/Css/Overview.css?v=5" />
     <style>
         /* Glassmorphism Run Selector Tabs */
         .run-selector-tabs {
@@ -361,9 +361,9 @@
                         <div class="param-card-info">
                             <div class="param-card-title">Áp suất đường ống</div>
                             <div class="param-card-value">
-                                <span id="TankDiagramPressure">30.0</span> <small>bar</small>
+                                <span id="TankDiagramPressure">3.0</span> <small>bar</small>
                             </div>
-                            <div class="param-card-std">Tiêu chuẩn: <span id="TankDiagramPressureStandard">30.0</span> bar</div>
+                            <div class="param-card-std">Tiêu chuẩn: <span id="TankDiagramPressureStandard">3.0</span> bar</div>
                         </div>
                     </div>
                 </div>
@@ -374,64 +374,35 @@
                         <!-- Dynamic SVG Flow Layer -->
                         <svg viewBox="0 0 1000 1000" class="svg-flow-layer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2;">
                             <!-- SVG Path Definitions -->
-                            <path id="feedingPath" d="M 175 880 L 175 490 L 310 490 L 310 460 L 370 460" fill="none" stroke="none" />
-                            <path id="dischargePath" d="M 500 780 L 615 845 L 865 845 L 865 910 L 925 910" fill="none" stroke="none" />
+                            <path id="feedingPath" d="M 109 880 L 109 172 L 293 172 L 293 236 L 310 236" fill="none" stroke="none" />
+                            <path id="dischargePath" d="M 500 780 L 615 832 L 931 832 L 931 920 L 945 920" fill="none" stroke="none" />
                             
-                            <!-- Convection & Vortex Mixing Paths -->
-                            <!-- Horizontal Flat Vortex Swirls (Xoáy tròn dẹt) -->
-                            <path id="vortexTopPath" d="M 500 480 A 140 25 0 1 0 499.9 480 Z" fill="none" stroke="none" />
-                            <path id="vortexMidPath" d="M 500 610 A 100 20 0 1 0 499.9 610 Z" fill="none" stroke="none" />
-                            <path id="vortexBotPath" d="M 500 740 A 60 15 0 1 0 499.9 740 Z" fill="none" stroke="none" />
-
-                            <!-- Vertical Flows (Down in center, Up at sides - Option A) -->
-                            <path id="leftUpwardPath" d="M 360 740 L 360 480" fill="none" stroke="none" />
-                            <path id="rightUpwardPath" d="M 640 740 L 640 480" fill="none" stroke="none" />
-                            <path id="centerDownwardPath" d="M 500 480 L 500 740" fill="none" stroke="none" />
-
                             <!-- Group 1: Feeding Flow (Cyan) -->
                             <g id="svgFlowFeeding" class="svg-flow-group">
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="4s" repeatCount="indefinite" rotate="auto"><mpath href="#feedingPath" /></animateMotion></path></g>
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="4s" begin="1s" repeatCount="indefinite" rotate="auto"><mpath href="#feedingPath" /></animateMotion></path></g>
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="4s" begin="2s" repeatCount="indefinite" rotate="auto"><mpath href="#feedingPath" /></animateMotion></path></g>
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="4s" begin="3s" repeatCount="indefinite" rotate="auto"><mpath href="#feedingPath" /></animateMotion></path></g>
+                                <g><path d="M -11 -8 L 7 0 L -11 8 Z" fill="#00e5ff"><animateMotion dur="6s" repeatCount="indefinite" rotate="auto"><mpath href="#feedingPath" /></animateMotion></path></g>
+                                <g><path d="M -11 -8 L 7 0 L -11 8 Z" fill="#00e5ff"><animateMotion dur="6s" begin="0.75s" repeatCount="indefinite" rotate="auto"><mpath href="#feedingPath" /></animateMotion></path></g>
+                                <g><path d="M -11 -8 L 7 0 L -11 8 Z" fill="#00e5ff"><animateMotion dur="6s" begin="1.5s" repeatCount="indefinite" rotate="auto"><mpath href="#feedingPath" /></animateMotion></path></g>
+                                <g><path d="M -11 -8 L 7 0 L -11 8 Z" fill="#00e5ff"><animateMotion dur="6s" begin="2.25s" repeatCount="indefinite" rotate="auto"><mpath href="#feedingPath" /></animateMotion></path></g>
+                                <g><path d="M -11 -8 L 7 0 L -11 8 Z" fill="#00e5ff"><animateMotion dur="6s" begin="3s" repeatCount="indefinite" rotate="auto"><mpath href="#feedingPath" /></animateMotion></path></g>
+                                <g><path d="M -11 -8 L 7 0 L -11 8 Z" fill="#00e5ff"><animateMotion dur="6s" begin="3.75s" repeatCount="indefinite" rotate="auto"><mpath href="#feedingPath" /></animateMotion></path></g>
+                                <g><path d="M -11 -8 L 7 0 L -11 8 Z" fill="#00e5ff"><animateMotion dur="6s" begin="4.5s" repeatCount="indefinite" rotate="auto"><mpath href="#feedingPath" /></animateMotion></path></g>
+                                <g><path d="M -11 -8 L 7 0 L -11 8 Z" fill="#00e5ff"><animateMotion dur="6s" begin="5.25s" repeatCount="indefinite" rotate="auto"><mpath href="#feedingPath" /></animateMotion></path></g>
                             </g>
 
-                            <!-- Group 2: Mixing Flow (Convection & Vortex) -->
+                            <!-- Group 2: Mixing Flow (Convection & Vortex Waves) -->
                             <g id="svgFlowMixing" class="svg-flow-group">
-                                <!-- Top Swirl -->
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="3s" repeatCount="indefinite" rotate="auto"><mpath href="#vortexTopPath" /></animateMotion></path></g>
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="3s" begin="1s" repeatCount="indefinite" rotate="auto"><mpath href="#vortexTopPath" /></animateMotion></path></g>
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="3s" begin="2s" repeatCount="indefinite" rotate="auto"><mpath href="#vortexTopPath" /></animateMotion></path></g>
-
-                                <!-- Mid Swirl -->
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="3s" repeatCount="indefinite" rotate="auto"><mpath href="#vortexMidPath" /></animateMotion></path></g>
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="3s" begin="1s" repeatCount="indefinite" rotate="auto"><mpath href="#vortexMidPath" /></animateMotion></path></g>
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="3s" begin="2s" repeatCount="indefinite" rotate="auto"><mpath href="#vortexMidPath" /></animateMotion></path></g>
-
-                                <!-- Bot Swirl -->
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="3s" repeatCount="indefinite" rotate="auto"><mpath href="#vortexBotPath" /></animateMotion></path></g>
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="3s" begin="1s" repeatCount="indefinite" rotate="auto"><mpath href="#vortexBotPath" /></animateMotion></path></g>
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="3s" begin="2s" repeatCount="indefinite" rotate="auto"><mpath href="#vortexBotPath" /></animateMotion></path></g>
-
-                                <!-- Left Upward Flow -->
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="2s" repeatCount="indefinite" rotate="auto"><mpath href="#leftUpwardPath" /></animateMotion></path></g>
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="2s" begin="1s" repeatCount="indefinite" rotate="auto"><mpath href="#leftUpwardPath" /></animateMotion></path></g>
-
-                                <!-- Right Upward Flow -->
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="2s" repeatCount="indefinite" rotate="auto"><mpath href="#rightUpwardPath" /></animateMotion></path></g>
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="2s" begin="1s" repeatCount="indefinite" rotate="auto"><mpath href="#rightUpwardPath" /></animateMotion></path></g>
-
-                                <!-- Center Downward Flow -->
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="2s" repeatCount="indefinite" rotate="auto"><mpath href="#centerDownwardPath" /></animateMotion></path></g>
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#00e5ff"><animateMotion dur="2s" begin="1s" repeatCount="indefinite" rotate="auto"><mpath href="#centerDownwardPath" /></animateMotion></path></g>
+                                <!-- Horizontal Flat Vortex Swirls (Xoáy tròn dẹt) -->
+                                <path class="vortex-wave top-wave" fill="none" d="M 500 480 A 140 25 0 1 0 499.9 480 Z" />
+                                <path class="vortex-wave mid-wave" fill="none" d="M 500 610 A 100 20 0 1 0 499.9 610 Z" />
+                                <path class="vortex-wave bot-wave" fill="none" d="M 500 740 A 60 15 0 1 0 499.9 740 Z" />
                             </g>
 
-                            <!-- Group 3: Discharge Flow (Orange/Gold) -->
+                            <!-- Group 3: Discharge Flow (Cyan) -->
                             <g id="svgFlowDischarge" class="svg-flow-group">
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#f59e0b"><animateMotion dur="3s" repeatCount="indefinite" rotate="auto"><mpath href="#dischargePath" /></animateMotion></path></g>
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#f59e0b"><animateMotion dur="3s" begin="0.75s" repeatCount="indefinite" rotate="auto"><mpath href="#dischargePath" /></animateMotion></path></g>
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#f59e0b"><animateMotion dur="3s" begin="1.5s" repeatCount="indefinite" rotate="auto"><mpath href="#dischargePath" /></animateMotion></path></g>
-                                <g><path d="M -6 -4 L 4 0 L -6 4 Z" fill="#f59e0b"><animateMotion dur="3s" begin="2.25s" repeatCount="indefinite" rotate="auto"><mpath href="#dischargePath" /></animateMotion></path></g>
+                                <g><path d="M -11 -8 L 7 0 L -11 8 Z" fill="#00e5ff"><animateMotion dur="4s" repeatCount="indefinite" rotate="auto"><mpath href="#dischargePath" /></animateMotion></path></g>
+                                <g><path d="M -11 -8 L 7 0 L -11 8 Z" fill="#00e5ff"><animateMotion dur="4s" begin="1s" repeatCount="indefinite" rotate="auto"><mpath href="#dischargePath" /></animateMotion></path></g>
+                                <g><path d="M -11 -8 L 7 0 L -11 8 Z" fill="#00e5ff"><animateMotion dur="4s" begin="2s" repeatCount="indefinite" rotate="auto"><mpath href="#dischargePath" /></animateMotion></path></g>
+                                <g><path d="M -11 -8 L 7 0 L -11 8 Z" fill="#00e5ff"><animateMotion dur="4s" begin="3s" repeatCount="indefinite" rotate="auto"><mpath href="#dischargePath" /></animateMotion></path></g>
                             </g>
                         </svg>
                         <!-- Equipment Labels -->

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -49,6 +49,11 @@ namespace LongDucProjectTest.Service
                         else
                         {
                             worksheet.Cells[row + 2, col + 1].Value = val;
+                            if (properties[col].Name.Equals("ApSuat", StringComparison.OrdinalIgnoreCase) ||
+                                properties[col].Name.Equals("CaiDatApSuat", StringComparison.OrdinalIgnoreCase))
+                            {
+                                worksheet.Cells[row + 2, col + 1].Style.Numberformat.Format = "0.00";
+                            }
                         }
                     }
                 }

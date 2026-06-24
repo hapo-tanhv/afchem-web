@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -537,7 +537,7 @@ namespace LongDucProjectTest.Service
                             ws.Cells[r, 9].Value = FormatTempForExcel(topTemps); // Top Temp
                             ws.Cells[r, 10].Value = FormatTempForExcel(midTemps); // Mid Temp
                             ws.Cells[r, 11].Value = FormatTempForExcel(botTemps); // Bot Temp
-                            ws.Cells[r, 12].Value = FormatRangeForExcel(pressures, ""); // Pressure
+                            ws.Cells[r, 12].Value = FormatRangeForExcel(pressures, "", 2); // Pressure (2 decimal places)
 
                             // Warnings/Alarms count as Note
                             var stepAlarmsCount = alarmRows.Count(ar => {
@@ -614,13 +614,13 @@ namespace LongDucProjectTest.Service
                 ws.Cells[qcTableStart + 5, 2].Value = "Đạt tiêu chuẩn"; // Đặc thù
                 ws.Cells[qcTableStart + 5, 3].Value = "Đạt";
 
-                // Section 6: SỰ CỐ PHÁT SINH VÀ XỬ LÝ (Populate from realtime_alarms with Severity = ALARM)
+                // Section 6: SỰ CỐ PHÁT SINH VÀ XỬ LÝ (Populate from realtime_alarms with Severity = ALARM or System pause INFO)
                 int incidentSectionStart = qcTableStart + 7;
                 var dtGlobalAlarms = _connector.ExecuteQuery($@"
-                    SELECT DateTime, Message, Value, Threshold 
+                    SELECT DateTime, Message, Value, Threshold, restore_time 
                     FROM realtime_alarms 
                     WHERE batchId = {batchId} 
-                      AND Severity = 'ALARM' 
+                      AND (Severity = 'ALARM' OR (Severity = 'INFO' AND TagName = 'System' AND Message = 'Tạm dừng máy')) 
                     ORDER BY DateTime ASC LIMIT 4");
                 
                 if (dtGlobalAlarms != null && dtGlobalAlarms.Rows.Count > 0)
@@ -630,7 +630,24 @@ namespace LongDucProjectTest.Service
                         int r = incidentSectionStart + 2 + idx;
                         var row = dtGlobalAlarms.Rows[idx];
                         ws.Cells[r, 1].Value = Convert.ToDateTime(row["DateTime"]).ToString("HH:mm:ss"); // Thời điểm
-                        ws.Cells[r, 2].Value = row["Message"].ToString(); // Mô tả sự cố
+                        
+                        string message = row["Message"].ToString();
+                        if (message == "Tạm dừng máy")
+                        {
+                            var startTime = Convert.ToDateTime(row["DateTime"]);
+                            if (row.Table.Columns.Contains("restore_time") && row["restore_time"] != DBNull.Value)
+                            {
+                                var restoreTime = Convert.ToDateTime(row["restore_time"]);
+                                var duration = (restoreTime - startTime).TotalSeconds;
+                                message = $"Tạm dừng máy ({duration:F0}s từ {startTime:HH:mm:ss} đến {restoreTime:HH:mm:ss})";
+                            }
+                            else
+                            {
+                                message = $"Tạm dừng máy (Bắt đầu từ {startTime:HH:mm:ss} - chưa chạy lại)";
+                            }
+                        }
+                        
+                        ws.Cells[r, 2].Value = message; // Mô tả sự cố
                         ws.Cells[r, 3].Value = "Tự động xử lý"; // Hành động xử lý
                         ws.Cells[r, 4].Value = "Hệ thống"; // Người xử lý
                         ws.Cells[r, 5].Value = "Đã khắc phục"; // Kết quả
@@ -999,13 +1016,14 @@ namespace LongDucProjectTest.Service
             return $"{minStr} - {maxStr}°C";
         }
 
-        private string FormatRangeForExcel(List<double> values, string suffix = "")
+        private string FormatRangeForExcel(List<double> values, string suffix = "", int decimalPlaces = 1)
         {
             if (values == null || values.Count == 0) return "-";
             double min = values.Min();
             double max = values.Max();
-            string minStr = Math.Round(min, 1).ToString("0.#", CultureInfo.InvariantCulture);
-            string maxStr = Math.Round(max, 1).ToString("0.#", CultureInfo.InvariantCulture);
+            string format = decimalPlaces == 2 ? "0.00" : "0.#";
+            string minStr = Math.Round(min, decimalPlaces).ToString(format, CultureInfo.InvariantCulture);
+            string maxStr = Math.Round(max, decimalPlaces).ToString(format, CultureInfo.InvariantCulture);
             
             if (minStr == maxStr) return $"{minStr}{suffix}";
             return $"{minStr} - {maxStr}{suffix}";

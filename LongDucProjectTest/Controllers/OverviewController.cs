@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -280,6 +280,7 @@ namespace LongDucProject.Controllers
                 int resolvedBatchId = resolution.BatchId;
                 int resolvedRunId = resolution.RunId;
 
+                int isPaused = 0;
                 int spCapLieu = 0;
                 int spTron1 = 0;
                 int spXaDay = 0;
@@ -300,11 +301,12 @@ namespace LongDucProject.Controllers
 
                 if (resolvedRunId > 0)
                 {
-                    var dtRun = connector.ExecuteQuery($"SELECT id, batch_id, name, status, start_time, end_time, sp_thoi_gian_cap_lieu, sp_thoi_gian_tron1, sp_thoi_gian_xa_day, sp_thoi_gian_rung_xa_day, sp_thoi_gian_hut_xa_day_them, sp_thoi_gian_tron2, sp_thoi_gian_xa_hang, sp_thoi_gian_rung_xa_hang FROM runs WHERE id = {resolvedRunId} LIMIT 1");
+                    var dtRun = connector.ExecuteQuery($"SELECT id, batch_id, name, status, is_paused, start_time, end_time, sp_thoi_gian_cap_lieu, sp_thoi_gian_tron1, sp_thoi_gian_xa_day, sp_thoi_gian_rung_xa_day, sp_thoi_gian_hut_xa_day_them, sp_thoi_gian_tron2, sp_thoi_gian_xa_hang, sp_thoi_gian_rung_xa_hang FROM runs WHERE id = {resolvedRunId} LIMIT 1");
                     if (dtRun != null && dtRun.Rows.Count > 0)
                     {
                         runName = dtRun.Rows[0]["name"] != DBNull.Value ? dtRun.Rows[0]["name"].ToString() : "";
                         runStatus = dtRun.Rows[0]["status"] != DBNull.Value ? dtRun.Rows[0]["status"].ToString() : "";
+                        isPaused = dtRun.Rows[0]["is_paused"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["is_paused"]) : 0;
                         runStart = dtRun.Rows[0]["start_time"] != DBNull.Value ? Convert.ToDateTime(dtRun.Rows[0]["start_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
                         runEnd = dtRun.Rows[0]["end_time"] != DBNull.Value ? Convert.ToDateTime(dtRun.Rows[0]["end_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
 
@@ -685,13 +687,8 @@ namespace LongDucProject.Controllers
                         }
                         else if (run.Item2.Equals("Active", StringComparison.OrdinalIgnoreCase))
                         {
-                            double activeTargetWeight = runWeightsDict.ContainsKey(run.Item1) && runWeightsDict[run.Item1] > 0
-                                ? runWeightsDict[run.Item1]
-                                : averageRunWeight;
-
-                            int completedSteps = activeStepCode > 0 ? activeStepCode - 1 : 0;
-                            double activeProduced = (completedSteps / 8.0) * activeTargetWeight;
-                            totalProducedWeight += activeProduced;
+                            // Do not add active produced weight for active runs as per new customer requirement
+                            // (Only add when the run status is "Completed")
                         }
                     }
 
@@ -986,7 +983,8 @@ namespace LongDucProject.Controllers
                                 threshold = threshold / 10.0;
                             }
 
-                            string detailMessage = $"Giá trị: {val.ToString("0.#", CultureInfo.InvariantCulture)} {unit} (ngưỡng: {threshold.ToString("0.#", CultureInfo.InvariantCulture)} {unit})";
+                            string formatStr = tagName.IndexOf("ApSuat", StringComparison.OrdinalIgnoreCase) >= 0 ? "0.00" : "0.#";
+                            string detailMessage = $"Giá trị: {val.ToString(formatStr, CultureInfo.InvariantCulture)} {unit} (ngưỡng: {threshold.ToString(formatStr, CultureInfo.InvariantCulture)} {unit})";
 
                             var alertObj = new
                             {
@@ -1099,7 +1097,7 @@ namespace LongDucProject.Controllers
                 var runsList = new List<object>();
                 if (resolvedBatchId != -1)
                 {
-                    var dtRuns = connector.ExecuteQuery($"SELECT id, run_number, name, status, start_time, end_time FROM runs WHERE batch_id = {resolvedBatchId} ORDER BY run_number ASC");
+                    var dtRuns = connector.ExecuteQuery($"SELECT id, run_number, name, status, is_paused, start_time, end_time FROM runs WHERE batch_id = {resolvedBatchId} ORDER BY run_number ASC");
                     if (dtRuns != null)
                     {
                         foreach (DataRow row in dtRuns.Rows)
@@ -1110,6 +1108,7 @@ namespace LongDucProject.Controllers
                                 run_number = Convert.ToInt32(row["run_number"]),
                                 name = row["name"].ToString(),
                                 status = row["status"].ToString(),
+                                is_paused = row["is_paused"] != DBNull.Value ? Convert.ToInt32(row["is_paused"]) : 0,
                                 start_time = row["start_time"] != DBNull.Value ? Convert.ToDateTime(row["start_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "",
                                 end_time = row["end_time"] != DBNull.Value ? Convert.ToDateTime(row["end_time"]).ToString("yyyy-MM-dd HH:mm:ss") : ""
                             });
@@ -1152,6 +1151,7 @@ namespace LongDucProject.Controllers
                     runId = resolvedRunId,
                     runName = runName,
                     runStatus = runStatus,
+                    isPaused = isPaused,
                     runs = runsList
                 };
 
@@ -1284,10 +1284,7 @@ namespace LongDucProject.Controllers
                                         else if (desc.Contains("Xả Hàng") || desc.Contains("Xa Hang")) rActiveStepCode = 7;
                                         else if (desc.Contains("Rung Xả H") || desc.Contains("Rung Xa H")) rActiveStepCode = 8;
                                     }
-                                    if (rActiveStepCode > 0)
-                                    {
-                                        bProducedWeight += (rActiveStepCode / 8.0) * runWeight;
-                                    }
+                                    // Do not add active produced weight for active runs as per new customer requirement
                                 }
                             }
                         }
@@ -1418,7 +1415,8 @@ namespace LongDucProject.Controllers
                             threshold = threshold / 10.0;
                         }
 
-                        string detailMessage = $"Giá trị: {val.ToString("0.#", CultureInfo.InvariantCulture)} {unit} (ngưỡng: {threshold.ToString("0.#", CultureInfo.InvariantCulture)} {unit})";
+                        string formatStr = tagName.IndexOf("ApSuat", StringComparison.OrdinalIgnoreCase) >= 0 ? "0.00" : "0.#";
+                        string detailMessage = $"Giá trị: {val.ToString(formatStr, CultureInfo.InvariantCulture)} {unit} (ngưỡng: {threshold.ToString(formatStr, CultureInfo.InvariantCulture)} {unit})";
 
                         globalAlarms.Add(new
                         {
@@ -1456,7 +1454,7 @@ namespace LongDucProject.Controllers
                 {
                     ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
                 };
-                var dt = connector.ExecuteQuery($"SELECT id, name, status, run_number FROM runs WHERE batch_id = {batch_id} ORDER BY id ASC");
+                var dt = connector.ExecuteQuery($"SELECT id, name, status, run_number, is_paused FROM runs WHERE batch_id = {batch_id} ORDER BY id ASC");
                 var list = new List<object>();
                 if (dt != null)
                 {
@@ -1467,7 +1465,8 @@ namespace LongDucProject.Controllers
                             id = Convert.ToInt32(row["id"]),
                             name = row["name"].ToString(),
                             status = row["status"].ToString(),
-                            run_number = Convert.ToInt32(row["run_number"])
+                            run_number = Convert.ToInt32(row["run_number"]),
+                            is_paused = row["is_paused"] != DBNull.Value ? Convert.ToInt32(row["is_paused"]) : 0
                         });
                     }
                 }

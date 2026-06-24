@@ -414,7 +414,8 @@ namespace LongDucProject.Controllers
                             string unit = tagName.IndexOf("NhietDo", StringComparison.OrdinalIgnoreCase) >= 0 ? "°C" :
                                          tagName.IndexOf("ApSuat", StringComparison.OrdinalIgnoreCase) >= 0 ? "bar" : "";
 
-                            string detailMessage = $"Giá trị: {val.ToString("0.#", CultureInfo.InvariantCulture)} {unit} (ngưỡng: {threshold.ToString("0.#", CultureInfo.InvariantCulture)} {unit})";
+                            string formatStr = tagName.IndexOf("ApSuat", StringComparison.OrdinalIgnoreCase) >= 0 ? "0.00" : "0.#";
+                            string detailMessage = $"Giá trị: {val.ToString(formatStr, CultureInfo.InvariantCulture)} {unit} (ngưỡng: {threshold.ToString(formatStr, CultureInfo.InvariantCulture)} {unit})";
 
                             stepAlertsList.Add(new
                             {
@@ -440,33 +441,10 @@ namespace LongDucProject.Controllers
                 }
 
                 // Calculate targetWeight for Active run in real-time
+                // Calculate targetWeight for Active run in real-time - set to 0 kg as per new customer requirement until completed
                 if (selectedRunId > 0 && batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase))
                 {
-                    double runTargetWeight = 0;
-                    var dtRunWeight = connector.ExecuteQuery($"SELECT SUM(quantity) FROM run_info WHERE run_id = {selectedRunId} AND LOWER(unit) = 'kg'");
-                    if (dtRunWeight != null && dtRunWeight.Rows.Count > 0 && dtRunWeight.Rows[0][0] != DBNull.Value)
-                    {
-                        runTargetWeight = Convert.ToDouble(dtRunWeight.Rows[0][0]);
-                    }
-                    else
-                    {
-                        double batchTargetWeight = 0;
-                        var dtBatchTarget = connector.ExecuteQuery($"SELECT target_weight FROM batches WHERE id = {selectedBatchId} LIMIT 1");
-                        if (dtBatchTarget != null && dtBatchTarget.Rows.Count > 0 && dtBatchTarget.Rows[0]["target_weight"] != DBNull.Value)
-                        {
-                            batchTargetWeight = Convert.ToDouble(dtBatchTarget.Rows[0]["target_weight"]);
-                        }
-                        int totalRunsCount = 0;
-                        var dtRunsCount = connector.ExecuteQuery($"SELECT COUNT(*) FROM runs WHERE batch_id = {selectedBatchId}");
-                        if (dtRunsCount != null && dtRunsCount.Rows.Count > 0)
-                        {
-                            totalRunsCount = Convert.ToInt32(dtRunsCount.Rows[0][0]);
-                        }
-                        runTargetWeight = batchTargetWeight / (totalRunsCount > 0 ? totalRunsCount : 1);
-                    }
-
-                    double activeProduced = (completedStepsCount / 8.0) * runTargetWeight;
-                    targetWeight = activeProduced.ToString("0.##", CultureInfo.InvariantCulture) + " kg";
+                    targetWeight = "0 kg";
                 }
 
                 var cycleSummary = new {

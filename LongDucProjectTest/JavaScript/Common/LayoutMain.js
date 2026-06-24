@@ -156,20 +156,20 @@ function updateHeaderStats(data) {
 
         if (statusEl) {
 
-            statusEl.innerHTML = batchInfo.machineStatus;
-
             if (batchInfo.machineStatus === "RUNNING") {
-
-                statusEl.style.color = "#22c55e";
-
+                if (batchInfo.isPaused === 1) {
+                    statusEl.innerHTML = "PAUSED";
+                    statusEl.style.color = "#eab308";
+                } else {
+                    statusEl.innerHTML = "RUNNING";
+                    statusEl.style.color = "#22c55e";
+                }
             } else if (batchInfo.machineStatus === "PENDING") {
-
+                statusEl.innerHTML = "PENDING";
                 statusEl.style.color = "#6b7280";
-
             } else {
-
+                statusEl.innerHTML = "COMPLETED";
                 statusEl.style.color = "#3b82f6";
-
             }
 
         }

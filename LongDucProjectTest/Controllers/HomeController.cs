@@ -390,6 +390,186 @@ namespace LongDucProject.Controllers
             }
         }
 
+        [HttpPost]
+        public JsonResult GetReportChartData(string starttime, string endtime, string batchId, string runId, bool? isInitialLoad, string searchValue)
+        {
+            try
+            {
+                var connector = new MySQLConnect()
+                {
+                    ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;CharSet=utf8;"
+                };
+
+                int parsedBatchId = 0;
+                bool hasBatchFilter = int.TryParse(batchId, out parsedBatchId) && parsedBatchId > 0;
+
+                int parsedRunId = 0;
+                bool hasRunFilter = int.TryParse(runId, out parsedRunId) && parsedRunId > 0;
+
+                DateTime startDate = DateTime.Today;
+                DateTime endDate = DateTime.Today.AddDays(1).AddSeconds(-1);
+
+                int resolvedBatchId = 0;
+                int resolvedRunId = 0;
+
+                if (isInitialLoad == true)
+                {
+                    var dtCompleted = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Completed' ORDER BY id DESC LIMIT 1");
+                    if (dtCompleted != null && dtCompleted.Rows.Count > 0)
+                    {
+                        resolvedBatchId = Convert.ToInt32(dtCompleted.Rows[0]["id"]);
+                    }
+                    else
+                    {
+                        var dtActive = connector.ExecuteQuery("SELECT id FROM batches WHERE status = 'Active' LIMIT 1");
+                        if (dtActive != null && dtActive.Rows.Count > 0)
+                        {
+                            resolvedBatchId = Convert.ToInt32(dtActive.Rows[0]["id"]);
+                        }
+                        else
+                        {
+                            var dtLatest = connector.ExecuteQuery("SELECT id FROM batches ORDER BY id DESC LIMIT 1");
+                            if (dtLatest != null && dtLatest.Rows.Count > 0)
+                            {
+                                resolvedBatchId = Convert.ToInt32(dtLatest.Rows[0]["id"]);
+                            }
+                        }
+                    }
+
+                    if (resolvedBatchId > 0)
+                    {
+                        var dtBatchInfo = connector.ExecuteQuery($"SELECT start_time, end_time FROM batches WHERE id = {resolvedBatchId}");
+                        if (dtBatchInfo != null && dtBatchInfo.Rows.Count > 0)
+                        {
+                            if (dtBatchInfo.Rows[0]["start_time"] != DBNull.Value)
+                            {
+                                startDate = Convert.ToDateTime(dtBatchInfo.Rows[0]["start_time"]);
+                            }
+                            if (dtBatchInfo.Rows[0]["end_time"] != DBNull.Value)
+                            {
+                                endDate = Convert.ToDateTime(dtBatchInfo.Rows[0]["end_time"]);
+                            }
+                            else
+                            {
+                                endDate = startDate;
+                            }
+                        }
+                        hasBatchFilter = true;
+                        parsedBatchId = resolvedBatchId;
+
+                        var dtActiveRun = connector.ExecuteQuery($"SELECT id FROM runs WHERE batch_id = {resolvedBatchId} AND status = 'Active' LIMIT 1");
+                        if (dtActiveRun != null && dtActiveRun.Rows.Count > 0)
+                        {
+                            resolvedRunId = Convert.ToInt32(dtActiveRun.Rows[0]["id"]);
+                            hasRunFilter = true;
+                            parsedRunId = resolvedRunId;
+                        }
+                        else
+                        {
+                            var dtLatestRun = connector.ExecuteQuery($"SELECT id FROM runs WHERE batch_id = {resolvedBatchId} ORDER BY id DESC LIMIT 1");
+                            if (dtLatestRun != null && dtLatestRun.Rows.Count > 0)
+                            {
+                                resolvedRunId = Convert.ToInt32(dtLatestRun.Rows[0]["id"]);
+                                hasRunFilter = true;
+                                parsedRunId = resolvedRunId;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(starttime))
+                    {
+                        if (!DateTime.TryParse(starttime, CultureInfo.InvariantCulture, DateTimeStyles.None, out startDate))
+                        {
+                            DateTime.TryParseExact(starttime, new[] { "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out startDate);
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(endtime))
+                    {
+                        if (!DateTime.TryParse(endtime, CultureInfo.InvariantCulture, DateTimeStyles.None, out endDate))
+                        {
+                            DateTime.TryParseExact(endtime, new[] { "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out endDate);
+                        }
+                        if (endDate.TimeOfDay == TimeSpan.Zero)
+                        {
+                            endDate = endDate.Date.AddDays(1).AddSeconds(-1);
+                        }
+                    }
+                }
+
+                string baseQuery = "FROM alarmreport a INNER JOIN batches b ON a.batchId = b.id WHERE 1=1";
+                string filterQuery = "";
+
+                if (isInitialLoad == true && resolvedBatchId > 0)
+                {
+                    if (hasRunFilter && resolvedRunId > 0)
+                    {
+                        filterQuery = $" AND a.runId = {resolvedRunId}";
+                    }
+                    else
+                    {
+                        filterQuery = $" AND a.batchId = {resolvedBatchId}";
+                    }
+                }
+                else
+                {
+                    filterQuery = $" AND a.DateTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.DateTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
+                    if (hasRunFilter)
+                    {
+                        filterQuery += $" AND a.runId = {parsedRunId}";
+                    }
+                    else if (hasBatchFilter)
+                    {
+                        filterQuery += $" AND a.batchId = {parsedBatchId}";
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    filterQuery += $" AND (b.name LIKE '%{searchValue.Replace("'", "''")}%' OR a.ApSuat LIKE '%{searchValue.Replace("'", "''")}%' OR a.NhietDoMoiTruong LIKE '%{searchValue.Replace("'", "''")}%' OR a.NhietDoBonTronTren LIKE '%{searchValue.Replace("'", "''")}%')";
+                }
+
+                string dataQuery = $"SELECT a.DateTime, a.NhietDoMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime ASC, a.ID ASC";
+
+                var data = new List<object>();
+                var dt = connector.ExecuteQuery(dataQuery);
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    int totalRows = dt.Rows.Count;
+                    int maxPoints = 50;
+                    int step = 1;
+                    if (totalRows > maxPoints)
+                    {
+                        step = (int)Math.Ceiling((double)totalRows / maxPoints);
+                    }
+
+                    for (int i = 0; i < totalRows; i += step)
+                    {
+                        var row = dt.Rows[i];
+                        var dateTimeVal = row["DateTime"] != DBNull.Value ? Convert.ToDateTime(row["DateTime"]) : DateTime.MinValue;
+                        string timeStr = dateTimeVal != DateTime.MinValue ? dateTimeVal.ToString("yyyy-MM-dd HH:mm:ss") : "-";
+
+                        data.Add(new
+                        {
+                            Time = timeStr,
+                            NhietDoMT = TryGetTemp(row["NhietDoMoiTruong"]),
+                            NhietNapBon = TryGetTemp(row["NhietDoBonTronTren"]),
+                            NhietGiuaBon = TryGetTemp(row["NhietDoBonTronGiua"]),
+                            NhietDayBon = TryGetTemp(row["NhietDoBonTronDuoi"])
+                        });
+                    }
+                }
+
+                return Json(data, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
         [HttpGet]
         public FileResult ExportReportExcel(string starttime, string endtime, string batchId, string runId, string searchValue)
         {
@@ -893,6 +1073,7 @@ namespace LongDucProject.Controllers
         public double TgXaHang { get; set; }
         public double TgRungXaHang { get; set; }
         public double TongTgTron { get; set; }
+        [CsvHelper.Configuration.Attributes.Format("0.00")]
         public double ApSuat { get; set; }
         public double NhietDoMT { get; set; }
         public double DoAmMT { get; set; }

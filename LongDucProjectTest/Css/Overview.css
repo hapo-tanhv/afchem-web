@@ -107,6 +107,13 @@
     color: #00e5ff;
 }
 
+.step.active.stopped .step-icon {
+    background: rgba(234, 179, 8, 0.2);
+    border-color: #eab308;
+    box-shadow: 0 0 0.9375rem rgba(234, 179, 8, 0.4);
+    color: #eab308;
+}
+
 .step-label {
     position: absolute;
     top: 0.75rem;
@@ -131,6 +138,15 @@
     border-radius: 50%;
     background: #00e5ff;
     animation: pulse 1.5s infinite;
+}
+
+.step.active.stopped .step-icon::after {
+    content: '';
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    background: #eab308;
+    animation: none;
 }
 
 @keyframes pulse {
@@ -176,6 +192,10 @@
 
 .step.active .step-name {
     color: #00e5ff;
+}
+
+.step.active.stopped .step-name {
+    color: #eab308;
 }
 
 /* THỐNG KÊ TIẾN ĐỘ BƯỚC (STEP STATS) */
@@ -1200,4 +1220,49 @@
 }
 .tank-image-wrapper {
     margin: 0 auto;
+}
+
+/* SVG Vortex Wave Animation (Flowing Neon Water Waves) */
+@keyframes vortex-flow-top {
+    to {
+        stroke-dashoffset: -300;
+    }
+}
+@keyframes vortex-flow-mid {
+    to {
+        stroke-dashoffset: -255;
+    }
+}
+@keyframes vortex-flow-bot {
+    to {
+        stroke-dashoffset: -210;
+    }
+}
+
+.vortex-wave {
+    fill: none;
+    stroke: rgba(0, 229, 255, 0.85); /* Màu xanh neon nước */
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.8));
+}
+
+.top-wave {
+    stroke: rgba(0, 229, 255, 0.95);
+    stroke-width: 12; /* Rất dày và rõ nét */
+    stroke-dasharray: 85, 15; /* Mật độ dày, khe hở nhỏ */
+    animation: vortex-flow-top 2.6s linear infinite; /* Điều chỉnh chậm lại để tránh mỏi mắt */
+}
+
+.mid-wave {
+    stroke: rgba(0, 229, 255, 0.9);
+    stroke-width: 9.5; /* Dày hơn */
+    stroke-dasharray: 70, 15; /* Mật độ dày, khe hở nhỏ */
+    animation: vortex-flow-mid 2.0s linear infinite; /* Điều chỉnh chậm lại để tránh mỏi mắt */
+}
+
+.bot-wave {
+    stroke: rgba(0, 229, 255, 0.85);
+    stroke-width: 7.5; /* Dày hơn */
+    stroke-dasharray: 55, 15; /* Mật độ dày, khe hở nhỏ */
+    animation: vortex-flow-bot 1.4s linear infinite; /* Điều chỉnh chậm lại để tránh mỏi mắt */
 }
