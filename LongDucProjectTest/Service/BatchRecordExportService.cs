@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -300,8 +300,16 @@ namespace LongDucProjectTest.Service
 
                 ws.Cells["B8"].Value = targetWeight;
                 
-                // Calculate actual produced weight (sum of completed run weights)
-                double totalActualProduced = 0;
+                // Calculate actual produced weight based on actual BOM weight minus allowable loss
+                double totalBomWeight = 0;
+                foreach (var item in bomItems)
+                {
+                    if (item.Unit != null && item.Unit.Trim().Equals("kg", StringComparison.OrdinalIgnoreCase))
+                    {
+                        totalBomWeight += item.ActualQuantity;
+                    }
+                }
+
                 var completedRunsDict = new Dictionary<int, double>();
                 var dtRunWeights = _connector.ExecuteQuery($@"
                     SELECT ri.run_id, SUM(ri.quantity) as run_weight 
@@ -320,20 +328,36 @@ namespace LongDucProjectTest.Service
                     }
                 }
 
+                int validRunsCount = 0;
+                double totalRunInfoWeight = 0;
                 foreach (var run in runsList)
                 {
-                    if (run.Status.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+                    if (!run.Status.Equals("Error", StringComparison.OrdinalIgnoreCase) && 
+                        !run.Status.Equals("Failed", StringComparison.OrdinalIgnoreCase))
                     {
+                        validRunsCount++;
+                        double w = 0;
                         if (completedRunsDict.ContainsKey(run.Id))
                         {
-                            totalActualProduced += completedRunsDict[run.Id];
+                            w = completedRunsDict[run.Id];
                         }
                         else
                         {
-                            totalActualProduced += (targetWeight / (runsList.Count > 0 ? runsList.Count : 1));
+                            w = targetWeight / (runsList.Count > 0 ? runsList.Count : 1);
                         }
+                        totalRunInfoWeight += w;
                     }
                 }
+
+                if (totalBomWeight <= 0)
+                {
+                    totalBomWeight = totalRunInfoWeight;
+                }
+
+                double allowableLoss = totalRunInfoWeight - targetWeight;
+                double totalActualProduced = totalBomWeight - allowableLoss;
+                if (totalActualProduced < 0) totalActualProduced = 0;
+
                 ws.Cells["E8"].Value = totalActualProduced;
                 ws.Cells["H8"].Value = batchStatus;
 
@@ -429,7 +453,7 @@ namespace LongDucProjectTest.Service
                     var telemetryRows = dtTelemetry != null ? dtTelemetry.AsEnumerable().ToList() : new List<DataRow>();
 
                     // Fetch alarms for stage warnings
-                    var dtAlarms = _connector.ExecuteQuery($"SELECT DateTime, CongDoan, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {run.Id} AND Severity IN ('ALARM', 'WARNING') ORDER BY DateTime ASC");
+                    var dtAlarms = _connector.ExecuteQuery($"SELECT DateTime, CongDoan, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {run.Id} AND LOWER(Severity) IN ('alarm', 'warning') ORDER BY DateTime ASC");
                     var alarmRows = dtAlarms != null ? dtAlarms.AsEnumerable().ToList() : new List<DataRow>();
 
                     // Populate 8 stages
@@ -539,16 +563,30 @@ namespace LongDucProjectTest.Service
                             ws.Cells[r, 11].Value = FormatTempForExcel(botTemps); // Bot Temp
                             ws.Cells[r, 12].Value = FormatRangeForExcel(pressures, "", 2); // Pressure (2 decimal places)
 
-                            // Warnings/Alarms count as Note
-                            var stepAlarmsCount = alarmRows.Count(ar => {
+                            // Fetch matching alarms for this step
+                            var stepAlarms = alarmRows.Where(ar => {
                                 DateTime alarmTime = Convert.ToDateTime(ar["DateTime"]);
                                 if (endTime.HasValue) return alarmTime >= startTime && alarmTime <= endTime.Value;
                                 return alarmTime >= startTime;
-                            });
+                            }).ToList();
 
-                            if (stepAlarmsCount > 0)
+                            if (stepAlarms.Count > 0)
                             {
-                                ws.Cells[r, 13].Value = $"{stepAlarmsCount} cảnh báo";
+                                var messages = stepAlarms
+                                    .Select(ar => ar["Message"] != DBNull.Value ? ar["Message"].ToString() : "")
+                                    .Where(msg => !string.IsNullOrEmpty(msg))
+                                    .Distinct()
+                                    .ToList();
+
+                                if (messages.Count > 0)
+                                {
+                                    ws.Cells[r, 13].Value = string.Join("\n", messages);
+                                    ws.Cells[r, 13].Style.WrapText = true;
+                                }
+                                else
+                                {
+                                    ws.Cells[r, 13].Value = "Bình thường";
+                                }
                             }
                             else
                             {
@@ -588,36 +626,31 @@ namespace LongDucProjectTest.Service
                 int qcSectionStart = 41 + currentShift; // Section 4 starts here dynamically
                 
                 // Section 4: KẾT QUẢ ĐẦU RA
-                ws.Cells[qcSectionStart + 2, 2].Value = totalActualProduced; // B43 equivalent
-                ws.Cells[qcSectionStart + 2, 6].Value = 0; // F43 equivalent (produced errors)
+                ws.Cells[qcSectionStart + 2, 2].Value = totalActualProduced; // Sản lượng đạt (totalBomWeight - allowableLoss)
+                ws.Cells[qcSectionStart + 2, 6].Value = 0; // Sản lượng lỗi / loại bỏ
                 
-                double lossPercent = 0;
-                if (targetWeight > 0)
-                {
-                    lossPercent = Math.Round((targetWeight - totalActualProduced) / targetWeight * 100, 2);
-                }
-                ws.Cells[qcSectionStart + 3, 2].Value = lossPercent > 0 ? $"{lossPercent}%" : "0%";
+                ws.Cells[qcSectionStart + 3, 2].Value = allowableLoss; // Hao hụt (dạng số kg thực tế)
                 ws.Cells[qcSectionStart + 3, 6].Value = "-"; // Rework
                 ws.Cells[qcSectionStart + 4, 2].Value = lotNo; // Mã mẫu lưu
                 ws.Cells[qcSectionStart + 4, 6].Value = batchStatus; // Tình trạng lô
 
-                // Section 5: QC LÔ THÀNH PHẨM (Default to "Đạt")
+                // Section 5: QC LÔ THÀNH PHẨM (Leave blank for user to fill manually)
                 int qcTableStart = qcSectionStart + 7; // QC Chỉ tiêu starts
-                ws.Cells[qcTableStart + 1, 2].Value = "Đồng đều, không vón cục"; // Cảm quan
-                ws.Cells[qcTableStart + 1, 3].Value = "Đạt";
-                ws.Cells[qcTableStart + 2, 2].Value = $"{totalActualProduced} KG"; // Khối lượng
-                ws.Cells[qcTableStart + 2, 3].Value = "Đạt";
-                ws.Cells[qcTableStart + 3, 2].Value = "Đầy đủ, kín seal"; // Bao bì
-                ws.Cells[qcTableStart + 3, 3].Value = "Đạt";
-                ws.Cells[qcTableStart + 4, 2].Value = lotNo; // Mã in bao bì
-                ws.Cells[qcTableStart + 4, 3].Value = "Đạt";
-                ws.Cells[qcTableStart + 5, 2].Value = "Đạt tiêu chuẩn"; // Đặc thù
-                ws.Cells[qcTableStart + 5, 3].Value = "Đạt";
+                ws.Cells[qcTableStart + 1, 2].Value = ""; // Cảm quan - Kết quả
+                ws.Cells[qcTableStart + 1, 3].Value = ""; // Cảm quan - Đạt / Không đạt
+                ws.Cells[qcTableStart + 2, 2].Value = ""; // Khối lượng - Kết quả
+                ws.Cells[qcTableStart + 2, 3].Value = ""; // Khối lượng - Đạt / Không đạt
+                ws.Cells[qcTableStart + 3, 2].Value = ""; // Bao bì / seal - Kết quả
+                ws.Cells[qcTableStart + 3, 3].Value = ""; // Bao bì / seal - Đạt / Không đạt
+                ws.Cells[qcTableStart + 4, 2].Value = ""; // Mã in trên bao bì - Kết quả
+                ws.Cells[qcTableStart + 4, 3].Value = ""; // Mã in trên bao bì - Đạt / Không đạt
+                ws.Cells[qcTableStart + 5, 2].Value = ""; // Chỉ tiêu đặc thù - Kết quả
+                ws.Cells[qcTableStart + 5, 3].Value = ""; // Chỉ tiêu đặc thù - Đạt / Không đạt
 
                 // Section 6: SỰ CỐ PHÁT SINH VÀ XỬ LÝ (Populate from realtime_alarms with Severity = ALARM or System pause INFO)
                 int incidentSectionStart = qcTableStart + 7;
                 var dtGlobalAlarms = _connector.ExecuteQuery($@"
-                    SELECT DateTime, Message, Value, Threshold, restore_time 
+                    SELECT DateTime, Message, Value, Threshold, restore_time, CongDoan 
                     FROM realtime_alarms 
                     WHERE batchId = {batchId} 
                       AND (Severity = 'ALARM' OR (Severity = 'INFO' AND TagName = 'System' AND Message = 'Tạm dừng máy')) 
@@ -632,23 +665,34 @@ namespace LongDucProjectTest.Service
                         ws.Cells[r, 1].Value = Convert.ToDateTime(row["DateTime"]).ToString("HH:mm:ss"); // Thời điểm
                         
                         string message = row["Message"].ToString();
+                        string cd = row.Table.Columns.Contains("CongDoan") && row["CongDoan"] != DBNull.Value ? row["CongDoan"].ToString().Trim() : "";
+                        if (cd.Equals("T001", StringComparison.OrdinalIgnoreCase)) cd = "Cấp liệu";
+                        else if (cd.Equals("T002", StringComparison.OrdinalIgnoreCase)) cd = "Trộn 1";
+                        else if (cd.Equals("T003", StringComparison.OrdinalIgnoreCase)) cd = "Xả đáy";
+                        else if (cd.Equals("T004", StringComparison.OrdinalIgnoreCase)) cd = "Rung xả đáy";
+                        else if (cd.Equals("T005", StringComparison.OrdinalIgnoreCase)) cd = "Hút xả đáy";
+                        else if (cd.Equals("T006", StringComparison.OrdinalIgnoreCase)) cd = "Trộn 2";
+                        else if (cd.Equals("T007", StringComparison.OrdinalIgnoreCase)) cd = "Xả hàng";
+                        else if (cd.Equals("T008", StringComparison.OrdinalIgnoreCase)) cd = "Rung xả hàng";
+
                         if (message == "Tạm dừng máy")
                         {
                             var startTime = Convert.ToDateTime(row["DateTime"]);
+                            string suffix = !string.IsNullOrEmpty(cd) ? $" tại công đoạn {cd}" : "";
                             if (row.Table.Columns.Contains("restore_time") && row["restore_time"] != DBNull.Value)
                             {
                                 var restoreTime = Convert.ToDateTime(row["restore_time"]);
                                 var duration = (restoreTime - startTime).TotalSeconds;
-                                message = $"Tạm dừng máy ({duration:F0}s từ {startTime:HH:mm:ss} đến {restoreTime:HH:mm:ss})";
+                                message = $"Tạm dừng máy{suffix} ({duration:F0}s từ {startTime:HH:mm:ss} đến {restoreTime:HH:mm:ss})";
                             }
                             else
                             {
-                                message = $"Tạm dừng máy (Bắt đầu từ {startTime:HH:mm:ss} - chưa chạy lại)";
+                                message = $"Tạm dừng máy{suffix} (Bắt đầu từ {startTime:HH:mm:ss} - chưa chạy lại)";
                             }
                         }
                         
                         ws.Cells[r, 2].Value = message; // Mô tả sự cố
-                        ws.Cells[r, 3].Value = "Tự động xử lý"; // Hành động xử lý
+                        ws.Cells[r, 3].Value = ""; // Hành động xử lý (Để trống cho người dùng tự điền)
                         ws.Cells[r, 4].Value = "Hệ thống"; // Người xử lý
                         ws.Cells[r, 5].Value = "Đã khắc phục"; // Kết quả
                     }

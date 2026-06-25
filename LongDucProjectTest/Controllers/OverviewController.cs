@@ -1,4 +1,4 @@
-using CsvHelper;
+﻿using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -665,6 +665,9 @@ namespace LongDucProject.Controllers
 
                     double averageRunWeight = targetWeight / (totalRuns > 0 ? totalRuns : 1);
 
+                    double totalActualRunsWeight = 0;
+                    double totalCompletedRunsWeight = 0;
+
                     foreach (var run in runsListForWeight)
                     {
                         // Exclude error runs completely
@@ -680,18 +683,25 @@ namespace LongDucProject.Controllers
                             runWeight = runWeightsDict[run.Item1];
                         }
 
-                        totalTargetWeight += runWeight;
+                        totalActualRunsWeight += runWeight;
                         if (run.Item2.Equals("Completed", StringComparison.OrdinalIgnoreCase))
                         {
-                            totalProducedWeight += runWeight;
-                        }
-                        else if (run.Item2.Equals("Active", StringComparison.OrdinalIgnoreCase))
-                        {
-                            // Do not add active produced weight for active runs as per new customer requirement
-                            // (Only add when the run status is "Completed")
+                            totalCompletedRunsWeight += runWeight;
                         }
                     }
 
+                    if (validRunsCount > 0)
+                    {
+                        double allowableLoss = totalActualRunsWeight - targetWeight;
+                        totalProducedWeight = totalCompletedRunsWeight - completedRunsCount * (allowableLoss / validRunsCount);
+                        if (totalProducedWeight < 0) totalProducedWeight = 0;
+                    }
+                    else
+                    {
+                        totalProducedWeight = 0;
+                    }
+
+                    totalTargetWeight = targetWeight;
                     totalRuns = validRunsCount;
                     completedRuns = completedRunsCount;
                 }
@@ -1247,6 +1257,11 @@ namespace LongDucProject.Controllers
                             int totalRunsForBatch = dtRunsForBatch.Rows.Count;
                             double averageRunWeightForBatch = bWeight / (totalRunsForBatch > 0 ? totalRunsForBatch : 1);
 
+                            int validRunsCount = 0;
+                            int completedRunsCount = 0;
+                            double totalRunsWeight = 0;
+                            double completedRunsWeight = 0;
+
                             foreach (DataRow rRow in dtRunsForBatch.Rows)
                             {
                                 int rId = Convert.ToInt32(rRow["id"]);
@@ -1258,34 +1273,28 @@ namespace LongDucProject.Controllers
                                     continue;
                                 }
 
+                                validRunsCount++;
+
                                 double runWeight = averageRunWeightForBatch;
                                 if (runBOMWeights.ContainsKey(rId) && runBOMWeights[rId] > 0)
                                 {
                                     runWeight = runBOMWeights[rId];
                                 }
 
+                                totalRunsWeight += runWeight;
+
                                 if (rStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    bProducedWeight += runWeight;
+                                    completedRunsCount++;
+                                    completedRunsWeight += runWeight;
                                 }
-                                else if (rStatus.Equals("Active", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    int rActiveStepCode = 0;
-                                    var dtActiveStep = connector.ExecuteQuery($"SELECT Description FROM alarmlog WHERE runId = {rId} AND Status = 'Alarm' ORDER BY OccurrenceTime DESC LIMIT 1");
-                                    if (dtActiveStep != null && dtActiveStep.Rows.Count > 0)
-                                    {
-                                        string desc = dtActiveStep.Rows[0]["Description"].ToString();
-                                        if (desc.Contains("Cấp Liệu") || desc.Contains("Cap Lieu")) rActiveStepCode = 1;
-                                        else if (desc.Contains("Trộn 1") || desc.Contains("Tron 1")) rActiveStepCode = 2;
-                                        else if (desc.Contains("Xả Đáy") || desc.Contains("Xa Day")) rActiveStepCode = 3;
-                                        else if (desc.Contains("Rung Xả Đ") || desc.Contains("Rung Xa D")) rActiveStepCode = 4;
-                                        else if (desc.Contains("Hút Xả Đáy") || desc.Contains("Hut Xa Day")) rActiveStepCode = 5;
-                                        else if (desc.Contains("Trộn 2") || desc.Contains("Tron 2")) rActiveStepCode = 6;
-                                        else if (desc.Contains("Xả Hàng") || desc.Contains("Xa Hang")) rActiveStepCode = 7;
-                                        else if (desc.Contains("Rung Xả H") || desc.Contains("Rung Xa H")) rActiveStepCode = 8;
-                                    }
-                                    // Do not add active produced weight for active runs as per new customer requirement
-                                }
+                            }
+
+                            if (validRunsCount > 0)
+                            {
+                                double allowableLoss = totalRunsWeight - bWeight;
+                                bProducedWeight = completedRunsWeight - completedRunsCount * (allowableLoss / validRunsCount);
+                                if (bProducedWeight < 0) bProducedWeight = 0;
                             }
                         }
                         else
