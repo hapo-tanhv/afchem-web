@@ -933,15 +933,15 @@ namespace LongDucProject.Controllers
                                 double val = Convert.ToDouble(row["Value"]);
                                 if (tagName.IndexOf("NhietDoBonTronTren", StringComparison.OrdinalIgnoreCase) >= 0)
                                 {
-                                    topTemps.Add(val / 10.0);
+                                    topTemps.Add(NormalizeTemperature(val));
                                 }
                                 else if (tagName.IndexOf("NhietDoBonTronGiua", StringComparison.OrdinalIgnoreCase) >= 0)
                                 {
-                                    midTemps.Add(val / 10.0);
+                                    midTemps.Add(NormalizeTemperature(val));
                                 }
                                 else if (tagName.IndexOf("NhietDoBonTronDuoi", StringComparison.OrdinalIgnoreCase) >= 0)
                                 {
-                                    botTemps.Add(val / 10.0);
+                                    botTemps.Add(NormalizeTemperature(val));
                                 }
                             }
                         }
@@ -958,15 +958,15 @@ namespace LongDucProject.Controllers
                                 double thresh = Convert.ToDouble(row["Threshold"]);
                                 if (tagName.IndexOf("NhietDoBonTronTren", StringComparison.OrdinalIgnoreCase) >= 0)
                                 {
-                                    topThreshold = thresh / 10.0;
+                                    topThreshold = NormalizeTemperature(thresh);
                                 }
                                 else if (tagName.IndexOf("NhietDoBonTronGiua", StringComparison.OrdinalIgnoreCase) >= 0)
                                 {
-                                    midThreshold = thresh / 10.0;
+                                    midThreshold = NormalizeTemperature(thresh);
                                 }
                                 else if (tagName.IndexOf("NhietDoBonTronDuoi", StringComparison.OrdinalIgnoreCase) >= 0)
                                 {
-                                    botThreshold = thresh / 10.0;
+                                    botThreshold = NormalizeTemperature(thresh);
                                 }
                             }
                         }
@@ -989,8 +989,8 @@ namespace LongDucProject.Controllers
 
                             if (tagName.IndexOf("NhietDo", StringComparison.OrdinalIgnoreCase) >= 0)
                             {
-                                val = val / 10.0;
-                                threshold = threshold / 10.0;
+                                val = NormalizeTemperature(val);
+                                threshold = NormalizeTemperature(threshold);
                             }
 
                             string formatStr = tagName.IndexOf("ApSuat", StringComparison.OrdinalIgnoreCase) >= 0 ? "0.00" : "0.#";
@@ -1420,8 +1420,8 @@ namespace LongDucProject.Controllers
 
                         if (tagName.IndexOf("NhietDo", StringComparison.OrdinalIgnoreCase) >= 0)
                         {
-                            val = val / 10.0;
-                            threshold = threshold / 10.0;
+                            val = NormalizeTemperature(val);
+                            threshold = NormalizeTemperature(threshold);
                         }
 
                         string formatStr = tagName.IndexOf("ApSuat", StringComparison.OrdinalIgnoreCase) >= 0 ? "0.00" : "0.#";

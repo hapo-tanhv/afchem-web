@@ -414,8 +414,8 @@ namespace LongDucProject.Controllers
                             double threshold = Convert.ToDouble(row["Threshold"]);
                             if (tagName.IndexOf("NhietDo", StringComparison.OrdinalIgnoreCase) >= 0)
                             {
-                                val = val / 10.0;
-                                threshold = threshold / 10.0;
+                                val = NormalizeTemperature(val);
+                                threshold = NormalizeTemperature(threshold);
                             }
                             string msg = row["Message"].ToString();
 
@@ -841,6 +841,21 @@ namespace LongDucProject.Controllers
             }
             catch { }
             return 0;
+        }
+
+        private static double NormalizeTemperature(double val)
+        {
+            if (val == 0) return 0;
+            double absVal = Math.Abs(val);
+            if (absVal >= 100.0)
+            {
+                return val / 10.0;
+            }
+            if (absVal > 0 && absVal < 10.0)
+            {
+                return val * 10.0;
+            }
+            return val;
         }
 
     }
