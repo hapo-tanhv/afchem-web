@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewBag.Title = "SOLAR SCADA SYSTEM - OVERVIEW";
     ViewBag.ButtonHome = "active";
     ViewBag.ButtonOverview = "";
@@ -874,6 +874,6 @@
         container.innerHTML = html;
     }
 </script>
-<atscada-task at-interval="1000"></atscada-task>
+<atscada-task at-interval="200"></atscada-task>
 <script type="module" src="~/JavaScript/Core/Component/Task/atscada-task-element.js"></script>
 <script src="~/JavaScript/RealTime/OverviewRealtime.js?v=@DateTime.Now.Ticks"></script>
