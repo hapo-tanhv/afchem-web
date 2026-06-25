@@ -1,4 +1,4 @@
-var activepower;
+﻿var activepower;
 
 var temperature;
 
@@ -28,6 +28,26 @@ document.addEventListener("DOMContentLoaded", function () {
     var activeStepTimer = null;
     var currentBatchInfo = null;
     var currentSteps = null;
+
+    if (typeof toastr !== 'undefined') {
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "6000",
+            "extendedTimeOut": "2000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+    }
 
     var jsAccumulatedTimers = {
         1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0
@@ -904,6 +924,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Polling recent alarms from real database every 2 seconds for high-speed realtime display
+    var lastSeenAlarmId = null;
 
     function fetchRecentAlarms() {
         $.ajax({
@@ -912,6 +933,41 @@ document.addEventListener("DOMContentLoaded", function () {
             dataType: 'json',
             success: function (data) {
                 if (data && !data.error) {
+                    if (data.length > 0) {
+                        var ids = data.map(function(alarm) { return alarm.id || 0; });
+                        var maxId = Math.max.apply(null, ids);
+
+                        if (lastSeenAlarmId === null) {
+                            // On first page load, initialize lastSeenAlarmId to prevent toastr spam for old alarms
+                            lastSeenAlarmId = maxId;
+                        } else {
+                            // Filter and display new alarms that occurred after page load (id > lastSeenAlarmId)
+                            var newAlarms = data.filter(function(alarm) { return (alarm.id || 0) > lastSeenAlarmId; }).reverse();
+                            
+                            newAlarms.forEach(function(alarm) {
+                                var title = alarm.title || "Cảnh báo mới";
+                                var msg = alarm.message || "";
+                                var content = "<strong>" + title + "</strong>" + (msg ? "<br/>" + msg : "");
+                                
+                                if (typeof toastr !== 'undefined') {
+                                    if (alarm.type === 'ALARM') {
+                                        toastr.error(content, 'CẢNH BÁO HỆ THỐNG');
+                                    } else if (alarm.type === 'WARNING') {
+                                        toastr.warning(content, 'CẢNH BÁO HỆ THỐNG');
+                                    }
+                                }
+                            });
+
+                            if (maxId > lastSeenAlarmId) {
+                                lastSeenAlarmId = maxId;
+                            }
+                        }
+                    } else {
+                        if (lastSeenAlarmId === null) {
+                            lastSeenAlarmId = 0;
+                        }
+                    }
+
                     if (typeof renderAlarmList === 'function') {
                         renderAlarmList(data);
                     }
