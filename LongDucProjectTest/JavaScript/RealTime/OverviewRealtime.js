@@ -1,4 +1,4 @@
-﻿var activepower;
+var activepower;
 
 var temperature;
 
@@ -28,6 +28,67 @@ document.addEventListener("DOMContentLoaded", function () {
     var activeStepTimer = null;
     var currentBatchInfo = null;
     var currentSteps = null;
+
+    var jsAccumulatedTimers = {
+        1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0
+    };
+    var jsPreviousTimerValues = {
+        1: null, 2: null, 3: null, 4: null, 5: null, 6: null, 7: null, 8: null
+    };
+
+    function resetJsAccumulators() {
+        for (var code in jsAccumulatedTimers) {
+            jsAccumulatedTimers[code] = 0;
+            jsPreviousTimerValues[code] = null;
+        }
+        console.log('[JSAccumulator] Reset all in-memory accumulators.');
+    }
+
+    function getJsAccumulatedValue(stageCode, alias, currentVal) {
+        if (isNaN(currentVal)) return jsAccumulatedTimers[stageCode] || 0;
+
+        if (jsPreviousTimerValues[stageCode] === null) {
+            jsPreviousTimerValues[stageCode] = currentVal;
+            return jsAccumulatedTimers[stageCode] || 0;
+        }
+
+        var prevVal = jsPreviousTimerValues[stageCode];
+
+        if (currentVal >= prevVal) {
+            var delta = currentVal - prevVal;
+            jsAccumulatedTimers[stageCode] += delta;
+        } else {
+            // Reset detected: add currentVal if > 0
+            if (currentVal > 0) {
+                jsAccumulatedTimers[stageCode] += currentVal;
+            }
+        }
+
+        jsPreviousTimerValues[stageCode] = currentVal;
+        jsAccumulatedTimers[stageCode] = Math.round(jsAccumulatedTimers[stageCode] * 100) / 100;
+
+        return jsAccumulatedTimers[stageCode];
+    }
+
+    function updateTimerTag(dataTag, element, stageCode, alias) {
+        if (dataTag && element) {
+            dataTag.dispatcher.on('valueChanged', (data) => {
+                if (data.e.newValue !== undefined) {
+                    var val = Number(data.e.newValue) || 0;
+                    var accVal = getJsAccumulatedValue(stageCode, alias, val);
+                    element.innerHTML = accVal;
+                    updateCalculatedTime();
+                }
+            });
+
+            if (dataTag.Value !== undefined) {
+                var val = Number(dataTag.Value) || 0;
+                var accVal = getJsAccumulatedValue(stageCode, alias, val);
+                element.innerHTML = accVal;
+                updateCalculatedTime();
+            }
+        }
+    }
 
     var stepElementIds = {
         1: 'feedingTime',
@@ -369,8 +430,51 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Update standby selectors UI state
                     updateStandbyUIState(batchInfo.runStatus);
 
-                    // Track resolved run IDs
+                    // Sync accumulated values from Database (Self-healing)
+                    if (batchInfo.accumulatedValues) {
+                        var mapping = {
+                            1: 'ThoiGianCapLieu',
+                            2: 'ThoiGianTron1',
+                            3: 'ThoiGianXaDay',
+                            4: 'ThoiGianRungXaDay',
+                            5: 'ThoiGianHutXaDay',
+                            6: 'ThoiGianTron2',
+                            7: 'ThoiGianXaHang',
+                            8: 'ThoiGianRungXaHang'
+                        };
+                        for (var code in mapping) {
+                            var alias = mapping[code];
+                            var dbVal = Number(batchInfo.accumulatedValues[alias]) || 0;
+                            if (activeRunId !== batchInfo.runId) {
+                                jsAccumulatedTimers[code] = dbVal;
+                            } else {
+                                jsAccumulatedTimers[code] = Math.max(jsAccumulatedTimers[code] || 0, dbVal);
+                            }
+                        }
+                    }
+
+                    // Track resolved run IDs & detect new run to reset accumulators
                     if (batchInfo.runId) {
+                        if (activeRunId !== null && activeRunId !== batchInfo.runId) {
+                            resetJsAccumulators();
+                            // Re-seed after reset since it's a new run
+                            if (batchInfo.accumulatedValues) {
+                                var mapping = {
+                                    1: 'ThoiGianCapLieu',
+                                    2: 'ThoiGianTron1',
+                                    3: 'ThoiGianXaDay',
+                                    4: 'ThoiGianRungXaDay',
+                                    5: 'ThoiGianHutXaDay',
+                                    6: 'ThoiGianTron2',
+                                    7: 'ThoiGianXaHang',
+                                    8: 'ThoiGianRungXaHang'
+                                };
+                                for (var code in mapping) {
+                                    var alias = mapping[code];
+                                    jsAccumulatedTimers[code] = Number(batchInfo.accumulatedValues[alias]) || 0;
+                                }
+                            }
+                        }
                         selectedRunId = batchInfo.runId;
                         activeRunId = batchInfo.runId;
                     }
@@ -887,14 +991,14 @@ document.addEventListener("DOMContentLoaded", function () {
             }, true);
             updateTag(dataCollection.get(`AFChemTX01.CaiDatApSuat`), document.querySelector('#TankDiagramPressureStandard'), null, true);
 
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianCapLieu`), document.querySelector('#feedingTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianTron1`), document.querySelector('#mix1Time'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianXaDay`), document.querySelector('#bottomDischargeTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaDay`), document.querySelector('#bottomDischargeVibrationTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianHutXaDay`), document.querySelector('#bottomSuctionDischargeTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianTron2`), document.querySelector('#mix2Time'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianXaHang`), document.querySelector('#clearanceSaleTime'), updateCalculatedTime);
-            updateTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaHang`), document.querySelector('#vibrationDischargeTime'), updateCalculatedTime);
+            updateTimerTag(dataCollection.get(`AFChemTX01.ThoiGianCapLieu`), document.querySelector('#feedingTime'), 1, 'ThoiGianCapLieu');
+            updateTimerTag(dataCollection.get(`AFChemTX01.ThoiGianTron1`), document.querySelector('#mix1Time'), 2, 'ThoiGianTron1');
+            updateTimerTag(dataCollection.get(`AFChemTX01.ThoiGianXaDay`), document.querySelector('#bottomDischargeTime'), 3, 'ThoiGianXaDay');
+            updateTimerTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaDay`), document.querySelector('#bottomDischargeVibrationTime'), 4, 'ThoiGianRungXaDay');
+            updateTimerTag(dataCollection.get(`AFChemTX01.ThoiGianHutXaDay`), document.querySelector('#bottomSuctionDischargeTime'), 5, 'ThoiGianHutXaDay');
+            updateTimerTag(dataCollection.get(`AFChemTX01.ThoiGianTron2`), document.querySelector('#mix2Time'), 6, 'ThoiGianTron2');
+            updateTimerTag(dataCollection.get(`AFChemTX01.ThoiGianXaHang`), document.querySelector('#clearanceSaleTime'), 7, 'ThoiGianXaHang');
+            updateTimerTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaHang`), document.querySelector('#vibrationDischargeTime'), 8, 'ThoiGianRungXaHang');
 
             // Periodically update charts every 5 seconds (with debounce / performance throttling)
 

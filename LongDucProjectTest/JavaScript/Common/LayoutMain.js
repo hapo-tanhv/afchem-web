@@ -1,4 +1,4 @@
-﻿// Machine Dropdown Functions
+// Machine Dropdown Functions
 
 function toggleMachineDropdown() {
 
@@ -143,6 +143,7 @@ function updateHeaderStats(data) {
         headerRunningSeconds = Math.floor(Number(batchInfo.batchTotalSeconds)) || 0;
         lastHeaderUpdateLocalTime = Date.now();
         headerMachineStatus = batchInfo.machineStatus || "COMPLETED";
+        window.headerIsPaused = batchInfo.isPaused === 1;
 
         const batchNumEl = document.getElementById("headerBatchNumber");
 
@@ -254,7 +255,7 @@ $(document).ready(function() {
 // Shared ticker to tick the header running time on pages other than Overview
 setInterval(function() {
     const isOverviewPage = document.getElementById('dailyBatchesBody') !== null;
-    if (!isOverviewPage && headerMachineStatus === "RUNNING") {
+    if (!isOverviewPage && headerMachineStatus === "RUNNING" && !window.headerIsPaused) {
         const runningTimeEl = document.getElementById("headerRunningTime");
         if (runningTimeEl && lastHeaderUpdateLocalTime > 0) {
             const elapsedSinceUpdate = Math.floor((Date.now() - lastHeaderUpdateLocalTime) / 1000);

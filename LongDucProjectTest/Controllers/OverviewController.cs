@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -1126,8 +1126,57 @@ namespace LongDucProject.Controllers
                     }
                 }
 
+                var accumulatedValues = new Dictionary<string, double>
+                {
+                    { "ThoiGianCapLieu", 0 },
+                    { "ThoiGianTron1", 0 },
+                    { "ThoiGianXaDay", 0 },
+                    { "ThoiGianRungXaDay", 0 },
+                    { "ThoiGianHutXaDay", 0 },
+                    { "ThoiGianTron2", 0 },
+                    { "ThoiGianXaHang", 0 },
+                    { "ThoiGianRungXaHang", 0 }
+                };
+
+                if (resolvedRunId > 0)
+                {
+                    try
+                    {
+                        var dtAccumulated = connector.ExecuteQuery($@"
+                            SELECT 
+                                MAX(CAST(`ThoiGianCapLieu` AS DECIMAL(10,2))) AS ThoiGianCapLieu,
+                                MAX(CAST(`ThoiGianTron1` AS DECIMAL(10,2))) AS ThoiGianTron1,
+                                MAX(CAST(`ThoiGianXaDay` AS DECIMAL(10,2))) AS ThoiGianXaDay,
+                                MAX(CAST(`ThoiGianRungXaDay` AS DECIMAL(10,2))) AS ThoiGianRungXaDay,
+                                MAX(CAST(`ThoiGianHutXaDay` AS DECIMAL(10,2))) AS ThoiGianHutXaDay,
+                                MAX(CAST(`ThoiGianTron2` AS DECIMAL(10,2))) AS ThoiGianTron2,
+                                MAX(CAST(`ThoiGianXaHang` AS DECIMAL(10,2))) AS ThoiGianXaHang,
+                                MAX(CAST(`ThoiGianRungXaHang` AS DECIMAL(10,2))) AS ThoiGianRungXaHang
+                            FROM `alarmreport` 
+                            WHERE `runId` = {resolvedRunId}");
+
+                        if (dtAccumulated != null && dtAccumulated.Rows.Count > 0)
+                        {
+                            var row = dtAccumulated.Rows[0];
+                            if (row["ThoiGianCapLieu"] != DBNull.Value) accumulatedValues["ThoiGianCapLieu"] = Convert.ToDouble(row["ThoiGianCapLieu"]);
+                            if (row["ThoiGianTron1"] != DBNull.Value) accumulatedValues["ThoiGianTron1"] = Convert.ToDouble(row["ThoiGianTron1"]);
+                            if (row["ThoiGianXaDay"] != DBNull.Value) accumulatedValues["ThoiGianXaDay"] = Convert.ToDouble(row["ThoiGianXaDay"]);
+                            if (row["ThoiGianRungXaDay"] != DBNull.Value) accumulatedValues["ThoiGianRungXaDay"] = Convert.ToDouble(row["ThoiGianRungXaDay"]);
+                            if (row["ThoiGianHutXaDay"] != DBNull.Value) accumulatedValues["ThoiGianHutXaDay"] = Convert.ToDouble(row["ThoiGianHutXaDay"]);
+                            if (row["ThoiGianTron2"] != DBNull.Value) accumulatedValues["ThoiGianTron2"] = Convert.ToDouble(row["ThoiGianTron2"]);
+                            if (row["ThoiGianXaHang"] != DBNull.Value) accumulatedValues["ThoiGianXaHang"] = Convert.ToDouble(row["ThoiGianXaHang"]);
+                            if (row["ThoiGianRungXaHang"] != DBNull.Value) accumulatedValues["ThoiGianRungXaHang"] = Convert.ToDouble(row["ThoiGianRungXaHang"]);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[OverviewController] ERROR querying accumulatedValues: {ex.Message}");
+                    }
+                }
+
                 var batchInfo = new
                 {
+                    accumulatedValues = accumulatedValues,
                     batchId = resolvedBatchId,
                     batchName = batchName,
                     batchStatus = batchStatus,
