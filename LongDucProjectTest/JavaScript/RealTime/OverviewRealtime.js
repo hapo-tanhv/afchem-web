@@ -68,8 +68,16 @@ document.addEventListener("DOMContentLoaded", function () {
         if (isNaN(currentVal) || currentVal <= 0) return jsAccumulatedTimers[stageCode] || 0;
 
         if (jsPreviousTimerValues[stageCode] === null) {
+            var dbVal = jsAccumulatedTimers[stageCode] || 0;
+            if (currentVal >= dbVal) {
+                var initialDelta = currentVal - dbVal;
+                jsAccumulatedTimers[stageCode] += initialDelta;
+            } else {
+                jsAccumulatedTimers[stageCode] += currentVal;
+            }
             jsPreviousTimerValues[stageCode] = currentVal;
-            return jsAccumulatedTimers[stageCode] || 0;
+            jsAccumulatedTimers[stageCode] = Math.round(jsAccumulatedTimers[stageCode] * 100) / 100;
+            return jsAccumulatedTimers[stageCode];
         }
 
         var prevVal = jsPreviousTimerValues[stageCode];

@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -374,11 +374,44 @@ namespace LongDucProject.Controllers
                 DataTable dtTelemetry = null;
                 if (resolvedRunId != -1)
                 {
-                    dtTelemetry = connector.ExecuteQuery($"SELECT DateTime, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi FROM alarmreport WHERE runId = {resolvedRunId} ORDER BY DateTime ASC");
+                    dtTelemetry = connector.ExecuteQuery($"SELECT DateTime, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi, ThoiGianCapLieu, ThoiGianTron1, ThoiGianXaDay, ThoiGianRungXaDay, ThoiGianHutXaDay, ThoiGianTron2, ThoiGianXaHang, ThoiGianRungXaHang FROM alarmreport WHERE runId = {resolvedRunId} ORDER BY DateTime ASC");
                 }
                 else if (resolvedBatchId != -1)
                 {
-                    dtTelemetry = connector.ExecuteQuery($"SELECT DateTime, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi FROM alarmreport WHERE batchId = {resolvedBatchId} ORDER BY DateTime ASC");
+                    dtTelemetry = connector.ExecuteQuery($"SELECT DateTime, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi, ThoiGianCapLieu, ThoiGianTron1, ThoiGianXaDay, ThoiGianRungXaDay, ThoiGianHutXaDay, ThoiGianTron2, ThoiGianXaHang, ThoiGianRungXaHang FROM alarmreport WHERE batchId = {resolvedBatchId} ORDER BY DateTime ASC");
+                }
+
+                var accumulatedValues = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "ThoiGianCapLieu", 0 },
+                    { "ThoiGianTron1", 0 },
+                    { "ThoiGianXaDay", 0 },
+                    { "ThoiGianRungXaDay", 0 },
+                    { "ThoiGianHutXaDay", 0 },
+                    { "ThoiGianTron2", 0 },
+                    { "ThoiGianXaHang", 0 },
+                    { "ThoiGianRungXaHang", 0 }
+                };
+
+                if (dtTelemetry != null && dtTelemetry.Rows.Count > 0)
+                {
+                    foreach (DataRow row in dtTelemetry.Rows)
+                    {
+                        var keys = new List<string>(accumulatedValues.Keys);
+                        foreach (var key in keys)
+                        {
+                            if (row.Table.Columns.Contains(key) && row[key] != DBNull.Value)
+                            {
+                                if (double.TryParse(row[key].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val))
+                                {
+                                    if (val > accumulatedValues[key])
+                                    {
+                                        accumulatedValues[key] = val;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // 4. Fetch realtime_alarms for active run
@@ -395,14 +428,14 @@ namespace LongDucProject.Controllers
                 // 5. Set up standard steps with their alarmlog TagNo mapping & keywords
                 var stepDefs = new[]
                 {
-                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = spCapLieu > 0 ? $"{spCapLieu}s" : "0s" },
-                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = spTron1 > 0 ? $"{spTron1}s" : "0s" },
-                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = spXaDay > 0 ? $"{spXaDay}s" : "0s" },
-                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = spRungXaDay > 0 ? $"{spRungXaDay}s" : "0s" },
-                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = spHutXaDay > 0 ? $"{spHutXaDay}s" : "0s" },
-                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = spTron2 > 0 ? $"{spTron2}s" : "0s" },
-                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = spXaHang > 0 ? $"{spXaHang}s" : "0s" },
-                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = spRungXaHang > 0 ? $"{spRungXaHang}s" : "0s" }
+                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = spCapLieu > 0 ? $"{spCapLieu}s" : "0s", Alias = "ThoiGianCapLieu" },
+                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = spTron1 > 0 ? $"{spTron1}s" : "0s", Alias = "ThoiGianTron1" },
+                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = spXaDay > 0 ? $"{spXaDay}s" : "0s", Alias = "ThoiGianXaDay" },
+                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = spRungXaDay > 0 ? $"{spRungXaDay}s" : "0s", Alias = "ThoiGianRungXaDay" },
+                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = spHutXaDay > 0 ? $"{spHutXaDay}s" : "0s", Alias = "ThoiGianHutXaDay" },
+                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = spTron2 > 0 ? $"{spTron2}s" : "0s", Alias = "ThoiGianTron2" },
+                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = spXaHang > 0 ? $"{spXaHang}s" : "0s", Alias = "ThoiGianXaHang" },
+                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = spRungXaHang > 0 ? $"{spRungXaHang}s" : "0s", Alias = "ThoiGianRungXaHang" }
                 };
 
                 var stepsList = new List<object>();
@@ -808,7 +841,11 @@ namespace LongDucProject.Controllers
                                 endTime = Convert.ToDateTime(stepLogRow["RestoreTime"]);
                                 endStr = endTime.Value.ToString("HH:mm:ss");
                                 double totalSeconds = (endTime.Value - startTime).TotalSeconds;
-                                durationStr = $"{(int)totalSeconds}s";
+                                if (accumulatedValues.ContainsKey(def.Alias) && accumulatedValues[def.Alias] > 0)
+                                {
+                                    totalSeconds = accumulatedValues[def.Alias];
+                                }
+                                durationStr = $"{(int)Math.Round(totalSeconds)}s";
                             }
                         }
 
@@ -1065,12 +1102,21 @@ namespace LongDucProject.Controllers
 
                             if (isCompleted && stepLogRow["RestoreTime"] != DBNull.Value)
                             {
-                                DateTime endTime = Convert.ToDateTime(stepLogRow["RestoreTime"]);
-                                runningSeconds += (endTime - startTime).TotalSeconds;
+                                double stepSecs = (Convert.ToDateTime(stepLogRow["RestoreTime"]) - startTime).TotalSeconds;
+                                if (accumulatedValues.ContainsKey(def.Alias) && accumulatedValues[def.Alias] > 0)
+                                {
+                                    stepSecs = accumulatedValues[def.Alias];
+                                }
+                                runningSeconds += stepSecs;
                             }
                             else if (!isCompleted)
                             {
-                                runningSeconds += (DateTime.Now - startTime).TotalSeconds;
+                                double stepSecs = (DateTime.Now - startTime).TotalSeconds;
+                                if (accumulatedValues.ContainsKey(def.Alias) && accumulatedValues[def.Alias] > 0)
+                                {
+                                    stepSecs = accumulatedValues[def.Alias];
+                                }
+                                runningSeconds += stepSecs;
                             }
                         }
                     }
@@ -1126,53 +1172,7 @@ namespace LongDucProject.Controllers
                     }
                 }
 
-                var accumulatedValues = new Dictionary<string, double>
-                {
-                    { "ThoiGianCapLieu", 0 },
-                    { "ThoiGianTron1", 0 },
-                    { "ThoiGianXaDay", 0 },
-                    { "ThoiGianRungXaDay", 0 },
-                    { "ThoiGianHutXaDay", 0 },
-                    { "ThoiGianTron2", 0 },
-                    { "ThoiGianXaHang", 0 },
-                    { "ThoiGianRungXaHang", 0 }
-                };
 
-                if (resolvedRunId > 0)
-                {
-                    try
-                    {
-                        var dtAccumulated = connector.ExecuteQuery($@"
-                            SELECT 
-                                MAX(CAST(`ThoiGianCapLieu` AS DECIMAL(10,2))) AS ThoiGianCapLieu,
-                                MAX(CAST(`ThoiGianTron1` AS DECIMAL(10,2))) AS ThoiGianTron1,
-                                MAX(CAST(`ThoiGianXaDay` AS DECIMAL(10,2))) AS ThoiGianXaDay,
-                                MAX(CAST(`ThoiGianRungXaDay` AS DECIMAL(10,2))) AS ThoiGianRungXaDay,
-                                MAX(CAST(`ThoiGianHutXaDay` AS DECIMAL(10,2))) AS ThoiGianHutXaDay,
-                                MAX(CAST(`ThoiGianTron2` AS DECIMAL(10,2))) AS ThoiGianTron2,
-                                MAX(CAST(`ThoiGianXaHang` AS DECIMAL(10,2))) AS ThoiGianXaHang,
-                                MAX(CAST(`ThoiGianRungXaHang` AS DECIMAL(10,2))) AS ThoiGianRungXaHang
-                            FROM `alarmreport` 
-                            WHERE `runId` = {resolvedRunId}");
-
-                        if (dtAccumulated != null && dtAccumulated.Rows.Count > 0)
-                        {
-                            var row = dtAccumulated.Rows[0];
-                            if (row["ThoiGianCapLieu"] != DBNull.Value) accumulatedValues["ThoiGianCapLieu"] = Convert.ToDouble(row["ThoiGianCapLieu"]);
-                            if (row["ThoiGianTron1"] != DBNull.Value) accumulatedValues["ThoiGianTron1"] = Convert.ToDouble(row["ThoiGianTron1"]);
-                            if (row["ThoiGianXaDay"] != DBNull.Value) accumulatedValues["ThoiGianXaDay"] = Convert.ToDouble(row["ThoiGianXaDay"]);
-                            if (row["ThoiGianRungXaDay"] != DBNull.Value) accumulatedValues["ThoiGianRungXaDay"] = Convert.ToDouble(row["ThoiGianRungXaDay"]);
-                            if (row["ThoiGianHutXaDay"] != DBNull.Value) accumulatedValues["ThoiGianHutXaDay"] = Convert.ToDouble(row["ThoiGianHutXaDay"]);
-                            if (row["ThoiGianTron2"] != DBNull.Value) accumulatedValues["ThoiGianTron2"] = Convert.ToDouble(row["ThoiGianTron2"]);
-                            if (row["ThoiGianXaHang"] != DBNull.Value) accumulatedValues["ThoiGianXaHang"] = Convert.ToDouble(row["ThoiGianXaHang"]);
-                            if (row["ThoiGianRungXaHang"] != DBNull.Value) accumulatedValues["ThoiGianRungXaHang"] = Convert.ToDouble(row["ThoiGianRungXaHang"]);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"[OverviewController] ERROR querying accumulatedValues: {ex.Message}");
-                    }
-                }
 
                 var batchInfo = new
                 {

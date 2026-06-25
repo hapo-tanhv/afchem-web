@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -406,14 +406,14 @@ namespace LongDucProjectTest.Service
                 // Step definitions for SCADA 8 stages
                 var stepDefs = new[]
                 {
-                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = "60s" },
-                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = "50s" },
-                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = "60s" },
-                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = "20s" },
-                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = "30s" },
-                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = "45s" },
-                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = "100s" },
-                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = "30s" }
+                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = "60s", Alias = "ThoiGianCapLieu" },
+                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = "50s", Alias = "ThoiGianTron1" },
+                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = "60s", Alias = "ThoiGianXaDay" },
+                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = "20s", Alias = "ThoiGianRungXaDay" },
+                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = "30s", Alias = "ThoiGianHutXaDay" },
+                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = "45s", Alias = "ThoiGianTron2" },
+                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = "100s", Alias = "ThoiGianXaHang" },
+                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = "30s", Alias = "ThoiGianRungXaHang" }
                 };
 
                 int bomShift = currentShift;
@@ -449,7 +449,7 @@ namespace LongDucProjectTest.Service
                     var logRows = dtAlarmLog != null ? dtAlarmLog.AsEnumerable().ToList() : new List<DataRow>();
 
                     // Fetch telemetry data
-                    var dtTelemetry = _connector.ExecuteQuery($"SELECT DateTime, NhietDoMoiTruong, DoAmMoiTruong, ApSuat, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi FROM alarmreport WHERE runId = {run.Id} ORDER BY DateTime ASC");
+                    var dtTelemetry = _connector.ExecuteQuery($"SELECT DateTime, NhietDoMoiTruong, DoAmMoiTruong, ApSuat, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi, ThoiGianCapLieu, ThoiGianTron1, ThoiGianXaDay, ThoiGianRungXaDay, ThoiGianHutXaDay, ThoiGianTron2, ThoiGianXaHang, ThoiGianRungXaHang FROM alarmreport WHERE runId = {run.Id} ORDER BY DateTime ASC");
                     var telemetryRows = dtTelemetry != null ? dtTelemetry.AsEnumerable().ToList() : new List<DataRow>();
 
                     // Fetch alarms for stage warnings
@@ -487,7 +487,25 @@ namespace LongDucProjectTest.Service
                                 endTime = Convert.ToDateTime(stepLogRow["RestoreTime"]);
                                 ws.Cells[r, 5].Value = endTime.Value.ToString("HH:mm:ss"); // End Time
                                 double totalSeconds = (endTime.Value - startTime).TotalSeconds;
-                                ws.Cells[r, 6].Value = $"{(int)totalSeconds}s"; // Duration
+                                if (telemetryRows.Any())
+                                {
+                                    double maxVal = 0;
+                                    foreach (var tr in telemetryRows)
+                                    {
+                                        if (tr.Table.Columns.Contains(def.Alias) && tr[def.Alias] != DBNull.Value)
+                                        {
+                                            if (double.TryParse(tr[def.Alias].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val))
+                                            {
+                                                if (val > maxVal) maxVal = val;
+                                            }
+                                        }
+                                    }
+                                    if (maxVal > 0)
+                                    {
+                                        totalSeconds = maxVal;
+                                    }
+                                }
+                                ws.Cells[r, 6].Value = $"{(int)Math.Round(totalSeconds)}s"; // Duration
                             }
 
                             // Calculate temperatures

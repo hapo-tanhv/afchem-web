@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 
 using Hino.Getdata.Common;
 
@@ -271,26 +271,59 @@ namespace LongDucProject.Controllers
                 if (selectedRunId > 0)
                 {
                     dtAlarmLog = connector.ExecuteQuery($"SELECT OccurrenceTime, RestoreTime, Description, Status, TagNo FROM alarmlog WHERE runId = {selectedRunId}");
-                    dtTelemetry = connector.ExecuteQuery($"SELECT DateTime, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi FROM alarmreport WHERE runId = {selectedRunId} ORDER BY DateTime ASC");
+                    dtTelemetry = connector.ExecuteQuery($"SELECT DateTime, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi, ThoiGianCapLieu, ThoiGianTron1, ThoiGianXaDay, ThoiGianRungXaDay, ThoiGianHutXaDay, ThoiGianTron2, ThoiGianXaHang, ThoiGianRungXaHang FROM alarmreport WHERE runId = {selectedRunId} ORDER BY DateTime ASC");
                     dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {selectedRunId} ORDER BY DateTime ASC, id ASC");
                 }
                 else
                 {
                     dtAlarmLog = connector.ExecuteQuery($"SELECT OccurrenceTime, RestoreTime, Description, Status, TagNo FROM alarmlog WHERE batchId = {selectedBatchId}");
-                    dtTelemetry = connector.ExecuteQuery($"SELECT DateTime, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi FROM alarmreport WHERE batchId = {selectedBatchId} ORDER BY DateTime ASC");
+                    dtTelemetry = connector.ExecuteQuery($"SELECT DateTime, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi, ThoiGianCapLieu, ThoiGianTron1, ThoiGianXaDay, ThoiGianRungXaDay, ThoiGianHutXaDay, ThoiGianTron2, ThoiGianXaHang, ThoiGianRungXaHang FROM alarmreport WHERE batchId = {selectedBatchId} ORDER BY DateTime ASC");
                     dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE batchId = {selectedBatchId} ORDER BY DateTime ASC, id ASC");
+                }
+
+                var accumulatedValues = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "ThoiGianCapLieu", 0 },
+                    { "ThoiGianTron1", 0 },
+                    { "ThoiGianXaDay", 0 },
+                    { "ThoiGianRungXaDay", 0 },
+                    { "ThoiGianHutXaDay", 0 },
+                    { "ThoiGianTron2", 0 },
+                    { "ThoiGianXaHang", 0 },
+                    { "ThoiGianRungXaHang", 0 }
+                };
+
+                if (dtTelemetry != null && dtTelemetry.Rows.Count > 0)
+                {
+                    foreach (DataRow row in dtTelemetry.Rows)
+                    {
+                        var keys = new List<string>(accumulatedValues.Keys);
+                        foreach (var key in keys)
+                        {
+                            if (row.Table.Columns.Contains(key) && row[key] != DBNull.Value)
+                            {
+                                if (double.TryParse(row[key].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val))
+                                {
+                                    if (val > accumulatedValues[key])
+                                    {
+                                        accumulatedValues[key] = val;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 var stepDefs = new[]
                 {
-                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = spCapLieu > 0 ? $"{spCapLieu}s" : "0s" },
-                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = spTron1 > 0 ? $"{spTron1}s" : "0s" },
-                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = spXaDay > 0 ? $"{spXaDay}s" : "0s" },
-                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = spRungXaDay > 0 ? $"{spRungXaDay}s" : "0s" },
-                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = spHutXaDay > 0 ? $"{spHutXaDay}s" : "0s" },
-                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = spTron2 > 0 ? $"{spTron2}s" : "0s" },
-                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = spXaHang > 0 ? $"{spXaHang}s" : "0s" },
-                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = spRungXaHang > 0 ? $"{spRungXaHang}s" : "0s" }
+                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = spCapLieu > 0 ? $"{spCapLieu}s" : "0s", Alias = "ThoiGianCapLieu" },
+                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = spTron1 > 0 ? $"{spTron1}s" : "0s", Alias = "ThoiGianTron1" },
+                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = spXaDay > 0 ? $"{spXaDay}s" : "0s", Alias = "ThoiGianXaDay" },
+                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = spRungXaDay > 0 ? $"{spRungXaDay}s" : "0s", Alias = "ThoiGianRungXaDay" },
+                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = spHutXaDay > 0 ? $"{spHutXaDay}s" : "0s", Alias = "ThoiGianHutXaDay" },
+                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = spTron2 > 0 ? $"{spTron2}s" : "0s", Alias = "ThoiGianTron2" },
+                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = spXaHang > 0 ? $"{spXaHang}s" : "0s", Alias = "ThoiGianXaHang" },
+                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = spRungXaHang > 0 ? $"{spRungXaHang}s" : "0s", Alias = "ThoiGianRungXaHang" }
                 };
 
                 var logRows = dtAlarmLog != null ? dtAlarmLog.AsEnumerable().ToList() : new List<DataRow>();
@@ -362,7 +395,11 @@ namespace LongDucProject.Controllers
                                 endTime = Convert.ToDateTime(stepLogRow["RestoreTime"]);
                                 stepEndStr = endTime.Value.ToString("HH:mm:ss");
                                 double totalSeconds = (endTime.Value - startTime).TotalSeconds;
-                                stepDurationStr = $"{(int)totalSeconds}s";
+                                if (accumulatedValues.ContainsKey(def.Alias) && accumulatedValues[def.Alias] > 0)
+                                {
+                                    totalSeconds = accumulatedValues[def.Alias];
+                                }
+                                stepDurationStr = $"{(int)Math.Round(totalSeconds)}s";
                             }
                         }
 
