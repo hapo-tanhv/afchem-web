@@ -138,6 +138,7 @@ namespace LongDucProject.Controllers
                 int spTron2 = 0;
                 int spXaHang = 0;
                 int spRungXaHang = 0;
+                int isPaused = 0;
 
                 if (selectedBatchId <= 0)
                 {
@@ -222,12 +223,13 @@ namespace LongDucProject.Controllers
                 // Override durations with selected run if resolved
                 if (selectedRunId > 0)
                 {
-                    var dtRunInfo = connector.ExecuteQuery($"SELECT name, status, start_time, end_time, sp_thoi_gian_cap_lieu, sp_thoi_gian_tron1, sp_thoi_gian_xa_day, sp_thoi_gian_rung_xa_day, sp_thoi_gian_hut_xa_day_them, sp_thoi_gian_tron2, sp_thoi_gian_xa_hang, sp_thoi_gian_rung_xa_hang FROM runs WHERE id = {selectedRunId} LIMIT 1");
+                    var dtRunInfo = connector.ExecuteQuery($"SELECT name, status, is_paused, start_time, end_time, sp_thoi_gian_cap_lieu, sp_thoi_gian_tron1, sp_thoi_gian_xa_day, sp_thoi_gian_rung_xa_day, sp_thoi_gian_hut_xa_day_them, sp_thoi_gian_tron2, sp_thoi_gian_xa_hang, sp_thoi_gian_rung_xa_hang FROM runs WHERE id = {selectedRunId} LIMIT 1");
                     if (dtRunInfo != null && dtRunInfo.Rows.Count > 0)
                     {
                         var rowRun = dtRunInfo.Rows[0];
                         batchName = rowRun["name"].ToString(); // Display run name instead of batch name in Event Log!
                         batchStatus = rowRun["status"].ToString();
+                        isPaused = rowRun.Table.Columns.Contains("is_paused") && rowRun["is_paused"] != DBNull.Value ? Convert.ToInt32(rowRun["is_paused"]) : 0;
 
                         spCapLieu = rowRun["sp_thoi_gian_cap_lieu"] != DBNull.Value ? Convert.ToInt32(rowRun["sp_thoi_gian_cap_lieu"]) : 0;
                         spTron1 = rowRun["sp_thoi_gian_tron1"] != DBNull.Value ? Convert.ToInt32(rowRun["sp_thoi_gian_tron1"]) : 0;
@@ -343,6 +345,12 @@ namespace LongDucProject.Controllers
                         string statusVal = stepLogRow["Status"].ToString().Trim();
                         bool isCompleted = statusVal.Equals("Resolved", StringComparison.OrdinalIgnoreCase);
 
+                        if (!isCompleted && isPaused == 1)
+                        {
+                            status = "stopped";
+                            statusText = "Tạm dừng";
+                        }
+
                         DateTime? endTime = null;
                         if (isCompleted)
                         {
@@ -448,8 +456,9 @@ namespace LongDucProject.Controllers
                 }
 
                 var cycleSummary = new {
-                    status = batchStatus.ToUpper(),
-                    statusLabel = batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ đang chạy..." : 
+                    status = batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) && isPaused == 1 ? "PAUSED" : batchStatus.ToUpper(),
+                    statusLabel = batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) ? 
+                                  (isPaused == 1 ? "Chu kỳ tạm dừng" : "Chu kỳ đang chạy...") : 
                                   (batchStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ chưa bắt đầu" : 
                                   (batchStatus.Equals("Error", StringComparison.OrdinalIgnoreCase) || batchStatus.Equals("Failed", StringComparison.OrdinalIgnoreCase) ? "Chu kỳ bị lỗi" : "Chu kỳ hoàn tất thành công")),
                     batchId = batchName,

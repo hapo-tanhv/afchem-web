@@ -14,6 +14,9 @@
         if (statusUpper === 'ACTIVE') {
             iconClass = 'in-progress';
             iconHtml = '<i class="fas fa-spinner fa-spin"></i>';
+        } else if (statusUpper === 'PAUSED') {
+            iconClass = 'paused';
+            iconHtml = '<i class="fas fa-pause"></i>';
         } else if (statusUpper === 'ERROR' || statusUpper === 'FAILED') {
             iconClass = 'failed';
             iconHtml = '<i class="fas fa-times"></i>';
