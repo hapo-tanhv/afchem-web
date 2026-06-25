@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -652,18 +652,25 @@ namespace LongDucProjectTest.Service
                 ws.Cells[qcSectionStart + 4, 2].Value = lotNo; // Mã mẫu lưu
                 ws.Cells[qcSectionStart + 4, 6].Value = batchStatus; // Tình trạng lô
 
-                // Section 5: QC LÔ THÀNH PHẨM (Leave blank for user to fill manually)
+                // Section 5: QC LÔ THÀNH PHẨM
                 int qcTableStart = qcSectionStart + 7; // QC Chỉ tiêu starts
-                ws.Cells[qcTableStart + 1, 2].Value = ""; // Cảm quan - Kết quả
-                ws.Cells[qcTableStart + 1, 3].Value = ""; // Cảm quan - Đạt / Không đạt
-                ws.Cells[qcTableStart + 2, 2].Value = ""; // Khối lượng - Kết quả
-                ws.Cells[qcTableStart + 2, 3].Value = ""; // Khối lượng - Đạt / Không đạt
-                ws.Cells[qcTableStart + 3, 2].Value = ""; // Bao bì / seal - Kết quả
-                ws.Cells[qcTableStart + 3, 3].Value = ""; // Bao bì / seal - Đạt / Không đạt
-                ws.Cells[qcTableStart + 4, 2].Value = ""; // Mã in trên bao bì - Kết quả
-                ws.Cells[qcTableStart + 4, 3].Value = ""; // Mã in trên bao bì - Đạt / Không đạt
-                ws.Cells[qcTableStart + 5, 2].Value = ""; // Chỉ tiêu đặc thù - Kết quả
-                ws.Cells[qcTableStart + 5, 3].Value = ""; // Chỉ tiêu đặc thù - Đạt / Không đạt
+                
+                // Rename Column 2 header from "Kết quả" to "Tiêu chuẩn"
+                ws.Cells[qcTableStart, 2].Value = "Tiêu chuẩn";
+                
+                // Write standard values in Column 2 (Tiêu chuẩn)
+                ws.Cells[qcTableStart + 1, 2].Value = "Đồng đều, không vón"; // Cảm quan
+                ws.Cells[qcTableStart + 2, 2].Value = $"{targetWeight} kg"; // Khối lượng
+                ws.Cells[qcTableStart + 3, 2].Value = "Đúng loại, kín"; // Bao bì / seal
+                ws.Cells[qcTableStart + 4, 2].Value = lotNo; // Mã in trên bao bì (same as lotNo / Mã mẫu lưu)
+                ws.Cells[qcTableStart + 5, 2].Value = ""; // Chỉ tiêu đặc thù (Để trống)
+
+                // Leave Column 3 (Đạt / Không đạt) and Column 4 (Ghi chú) completely blank
+                for (int r = qcTableStart + 1; r <= qcTableStart + 5; r++)
+                {
+                    ws.Cells[r, 3].Value = ""; // Đạt / Không đạt
+                    ws.Cells[r, 4].Value = ""; // Ghi chú
+                }
 
                 // Section 6: SỰ CỐ PHÁT SINH VÀ XỬ LÝ (Populate from realtime_alarms with Severity = ALARM or System pause INFO)
                 int incidentSectionStart = qcTableStart + 7;
@@ -723,23 +730,13 @@ namespace LongDucProjectTest.Service
                 // --- POPULATE SECTION 7: XÁC NHẬN ---
                 int signSectionStart = incidentSectionStart + 7;
                 
-                // Write names
-                ws.Cells[signSectionStart + 2, 2].Value = operatorName; // Người vận hành
-                ws.Cells[signSectionStart + 3, 2].Value = supervisorName; // Tổ trưởng / Giám sát
-                ws.Cells[signSectionStart + 4, 2].Value = qcName; // QC xác nhận
-                ws.Cells[signSectionStart + 5, 2].Value = managerName; // Quản lý sản xuất
-
-                // Write confirmation status
-                ws.Cells[signSectionStart + 2, 3].Value = !string.IsNullOrEmpty(operatorName) ? "Đã xác nhận" : "";
-                ws.Cells[signSectionStart + 3, 3].Value = !string.IsNullOrEmpty(supervisorName) ? "Đã duyệt (Base.vn)" : "";
-                ws.Cells[signSectionStart + 4, 3].Value = !string.IsNullOrEmpty(qcName) ? "Đã ký (Base.vn)" : "";
-                ws.Cells[signSectionStart + 5, 3].Value = !string.IsNullOrEmpty(managerName) ? "Đã duyệt (Base.vn)" : "";
-
-                // Write confirmation time
-                ws.Cells[signSectionStart + 2, 4].Value = operatorTime;
-                ws.Cells[signSectionStart + 3, 4].Value = supervisorTime;
-                ws.Cells[signSectionStart + 4, 4].Value = qcTime;
-                ws.Cells[signSectionStart + 5, 4].Value = managerTime;
+                // Do not fill data from base into Operator, Supervisor, QC, and Manager columns (Leave blank)
+                for (int r = signSectionStart + 2; r <= signSectionStart + 5; r++)
+                {
+                    ws.Cells[r, 2].Value = ""; // Họ tên
+                    ws.Cells[r, 3].Value = ""; // Ký xác nhận
+                    ws.Cells[r, 4].Value = ""; // Thời gian
+                }
 
                 // Clean up: delete other sheets
                 if (package.Workbook.Worksheets["Nhat ky san xuat"] != null)
@@ -762,16 +759,7 @@ namespace LongDucProjectTest.Service
                 ws.Column(13).Width = 20;
 
                 // Remove medium bottom border from Section 4 last row
-                for (int col = 1; col <= 13; col++)
-                {
-                    ws.Cells[qcSectionStart + 4, col].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                }
-
-                // Add medium bottom border to Section 7 last row
-                for (int col = 1; col <= 13; col++)
-                {
-                    ws.Cells[signSectionStart + 5, col].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Medium;
-                }
+                // We clear borders for the entire sheet first, so this is handled automatically
 
                 // Dynamically expand backgrounds and merge ranges to column M (13 columns)
                 int maxRow = ws.Dimension.End.Row;
@@ -819,59 +807,163 @@ namespace LongDucProjectTest.Service
                     }
                 }
 
-                // Fix borders for the entire sheet to make them continuous and correct
-                int runStartRow = run1StartRow - 1;
+                // Apply new styling, borders, and colors
                 int bottomRow = signSectionStart + 5;
+
+                // 1. Clear all borders across cells A1:M[bottomRow]
                 for (int r = 1; r <= bottomRow; r++)
                 {
-                    // Outer left and right borders
-                    ws.Cells[r, 1].Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Medium;
-                    ws.Cells[r, 13].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Medium;
-
-                    // If row is a merged header row starting at Column 1 (A:M)
-                    if (ws.Cells[r, 1].Merge)
+                    for (int col = 1; col <= 13; col++)
                     {
-                        // Clear all internal vertical borders
-                        ws.Cells[r, 1].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
-                        for (int col = 2; col <= 13; col++)
-                        {
-                            ws.Cells[r, col].Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
-                            if (col < 13)
-                            {
-                                ws.Cells[r, col].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // Non-merged row
-                        if (r >= runStartRow && r < qcSectionStart)
-                        {
-                            // Section 3 (Runs): draw thin vertical borders for J to M
-                            ws.Cells[r, 9].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                            ws.Cells[r, 10].Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                            
-                            for (int col = 10; col < 13; col++)
-                            {
-                                ws.Cells[r, col].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                                ws.Cells[r, col + 1].Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                            }
-                        }
-                        else
-                        {
-                            // Section 1, 2, 4, 5, 6, 7: clear vertical borders at Column 9 and between J to M
-                            ws.Cells[r, 9].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
-                            for (int col = 10; col <= 13; col++)
-                            {
-                                ws.Cells[r, col].Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
-                                if (col < 13)
-                                {
-                                    ws.Cells[r, col].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
-                                }
-                            }
-                        }
+                        var border = ws.Cells[r, col].Style.Border;
+                        border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                        border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                        border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                        border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
                     }
                 }
+
+                // Format Row 1 (main title) - Background chỉ đến cột I (Col 9)
+                try
+                {
+                    ws.Cells[1, 1, 1, 13].Merge = false;
+                }
+                catch { }
+                ws.Cells[1, 1, 1, 9].Merge = true;
+                for (int col = 10; col <= Math.Max(20, ws.Dimension.End.Column); col++)
+                {
+                    ws.Cells[1, col].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.None;
+                }
+
+                // 2. Set background color #4d94d8 for headings 1-7 (text black, bold) and merge to their respective columns
+                var headingRowTargets = new List<Tuple<int, int>>
+                {
+                    Tuple.Create(3, 9), // Section 1: Col I (9)
+                    Tuple.Create(11, 8), // Section 2: Col H (8)
+                    Tuple.Create(run1StartRow - 1, 13), // Section 3: Col M (13)
+                    Tuple.Create(qcSectionStart, 8), // Section 4: Col H (8)
+                    Tuple.Create(qcTableStart - 1, 4), // Section 5: Col D (4)
+                    Tuple.Create(incidentSectionStart, 5), // Section 6: Col E (5)
+                    Tuple.Create(signSectionStart, 4) // Section 7: Col D (4)
+                };
+
+                foreach (var target in headingRowTargets)
+                {
+                    int row = target.Item1;
+                    int targetCol = target.Item2;
+
+                    try
+                    {
+                        ws.Cells[row, 1, row, 13].Merge = false;
+                    }
+                    catch { }
+
+                    // Apply styles cell-by-cell BEFORE merging to avoid EPPlus merged cell styling issues
+                    for (int col = 1; col <= targetCol; col++)
+                    {
+                        var cell = ws.Cells[row, col];
+                        cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                        cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(77, 148, 216)); // #4d94d8
+                        cell.Style.Font.Color.SetColor(System.Drawing.Color.Black); // Black text
+                        cell.Style.Font.Bold = true;
+                    }
+
+                    ws.Cells[row, 1, row, targetCol].Merge = true;
+
+                    for (int col = targetCol + 1; col <= Math.Max(20, ws.Dimension.End.Column); col++)
+                    {
+                        ws.Cells[row, col].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.None;
+                    }
+                }
+
+                // 3. Set background color #b4c6e7 for table sub-headers
+                var subHeaderRanges = new List<Tuple<int, int, int>>
+                {
+                    Tuple.Create(4, 1, 9), // Section 1: Col I (9)
+                    Tuple.Create(12, 1, 8), // Section 2: Col H (8)
+                    Tuple.Create(qcSectionStart + 1, 1, 8), // Section 4: Col H (8)
+                    Tuple.Create(qcTableStart, 1, 4), // Section 5: Col D (4)
+                    Tuple.Create(incidentSectionStart + 1, 1, 5), // Section 6: Col E (5)
+                    Tuple.Create(signSectionStart + 1, 1, 4) // Section 7: Col D (4)
+                };
+
+                for (int runIdx = 0; runIdx < runsList.Count; runIdx++)
+                {
+                    int blockStartRow = GetRunBlockStartRow(runIdx + 1, bomShift);
+                    subHeaderRanges.Add(Tuple.Create(blockStartRow + 1, 1, 13)); // Section 3 (Runs): Col M (13)
+                }
+
+                foreach (var range in subHeaderRanges)
+                {
+                    int row = range.Item1;
+                    int startCol = range.Item2;
+                    int endCol = range.Item3;
+
+                    // Apply styles cell-by-cell
+                    for (int col = startCol; col <= endCol; col++)
+                    {
+                        var cell = ws.Cells[row, col];
+                        cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                        cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(180, 198, 231)); // #b4c6e7
+                        cell.Style.Font.Color.SetColor(System.Drawing.Color.Black);
+                        cell.Style.Font.Bold = true;
+                    }
+
+                    for (int col = endCol + 1; col <= Math.Max(20, ws.Dimension.End.Column); col++)
+                    {
+                        ws.Cells[row, col].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.None;
+                    }
+                }
+
+                // 4. Remove background color for "Mã mẫu lưu" row
+                for (int col = 1; col <= Math.Max(20, ws.Dimension.End.Column); col++)
+                {
+                    ws.Cells[qcSectionStart + 4, col].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.None;
+                }
+
+                // 5. Bỏ background màu vàng và gạch chân ở ô G9 Mã mẫu lưu (cả ô tiêu đề và giá trị)
+                var cellsToFixG9 = new[] { "G9", "H9", "I9" };
+                foreach (var addr in cellsToFixG9)
+                {
+                    ws.Cells[addr].Style.Font.UnderLine = false;
+                    ws.Cells[addr].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.None;
+                }
+
+                // 6. Action helper to apply thin black borders
+                Action<int, int, int, int> applyThinBorders = (startRow, endRow, startCol, endCol) =>
+                {
+                    for (int r = startRow; r <= endRow; r++)
+                    {
+                        for (int col = startCol; col <= endCol; col++)
+                        {
+                            var border = ws.Cells[r, col].Style.Border;
+                            border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                            border.Top.Color.SetColor(System.Drawing.Color.Black);
+                            border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                            border.Bottom.Color.SetColor(System.Drawing.Color.Black);
+                            border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                            border.Left.Color.SetColor(System.Drawing.Color.Black);
+                            border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                            border.Right.Color.SetColor(System.Drawing.Color.Black);
+                        }
+                    }
+                };
+
+                // 7. Draw thin black borders for each block
+                applyThinBorders(4, 9, 1, 9); // Section 1
+                applyThinBorders(12, 17 + currentShift, 1, 8); // Section 2
+                
+                for (int runIdx = 0; runIdx < runsList.Count; runIdx++)
+                {
+                    int blockStartRow = GetRunBlockStartRow(runIdx + 1, bomShift);
+                    applyThinBorders(blockStartRow + 1, blockStartRow + 9, 1, 13); // Section 3
+                }
+
+                applyThinBorders(qcSectionStart + 1, qcSectionStart + 4, 1, 4); // Section 4 (left)
+                applyThinBorders(qcSectionStart + 1, qcSectionStart + 4, 5, 8); // Section 4 (right)
+                applyThinBorders(qcTableStart, qcTableStart + 5, 1, 4); // Section 5
+                applyThinBorders(incidentSectionStart + 1, incidentSectionStart + 5, 1, 5); // Section 6
+                applyThinBorders(signSectionStart + 1, signSectionStart + 5, 1, 4); // Section 7
 
                 // Rename primary sheet
                 ws.Name = "Nhật ký sản xuất";
