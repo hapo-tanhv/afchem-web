@@ -1,4 +1,4 @@
-﻿var activepower;
+var activepower;
 
 var temperature;
 
@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function getJsAccumulatedValue(stageCode, alias, currentVal) {
-        if (isNaN(currentVal)) return jsAccumulatedTimers[stageCode] || 0;
+        if (isNaN(currentVal) || currentVal <= 0) return jsAccumulatedTimers[stageCode] || 0;
 
         if (jsPreviousTimerValues[stageCode] === null) {
             jsPreviousTimerValues[stageCode] = currentVal;
@@ -78,10 +78,8 @@ document.addEventListener("DOMContentLoaded", function () {
             var delta = currentVal - prevVal;
             jsAccumulatedTimers[stageCode] += delta;
         } else {
-            // Reset detected: add currentVal if > 0
-            if (currentVal > 0) {
-                jsAccumulatedTimers[stageCode] += currentVal;
-            }
+            // Reset detected: add currentVal as it is a genuine reset
+            jsAccumulatedTimers[stageCode] += currentVal;
         }
 
         jsPreviousTimerValues[stageCode] = currentVal;
