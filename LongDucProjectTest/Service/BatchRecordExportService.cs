@@ -494,7 +494,7 @@ namespace LongDucProjectTest.Service
                                     {
                                         if (tr.Table.Columns.Contains(def.Alias) && tr[def.Alias] != DBNull.Value)
                                         {
-                                            if (double.TryParse(tr[def.Alias].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val))
+                                            if (TryParseDouble(tr[def.Alias], out double val))
                                             {
                                                 if (val > maxVal) maxVal = val;
                                             }
@@ -533,27 +533,27 @@ namespace LongDucProjectTest.Service
 
                             foreach (var tr in stepTelemetry)
                             {
-                                if (tr["NhietDoMoiTruong"] != DBNull.Value && double.TryParse(tr["NhietDoMoiTruong"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double et))
+                                if (tr["NhietDoMoiTruong"] != DBNull.Value && TryParseDouble(tr["NhietDoMoiTruong"], out double et))
                                 {
                                     envTemps.Add(NormalizeTemp(et));
                                 }
-                                if (tr["DoAmMoiTruong"] != DBNull.Value && double.TryParse(tr["DoAmMoiTruong"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double eh))
+                                if (tr["DoAmMoiTruong"] != DBNull.Value && TryParseDouble(tr["DoAmMoiTruong"], out double eh))
                                 {
                                     envHumids.Add(eh);
                                 }
-                                if (tr["ApSuat"] != DBNull.Value && double.TryParse(tr["ApSuat"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double ap))
+                                if (tr["ApSuat"] != DBNull.Value && TryParseDouble(tr["ApSuat"], out double ap))
                                 {
                                     pressures.Add(ap);
                                 }
-                                if (tr["NhietDoBonTronTren"] != DBNull.Value && double.TryParse(tr["NhietDoBonTronTren"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double t1))
+                                if (tr["NhietDoBonTronTren"] != DBNull.Value && TryParseDouble(tr["NhietDoBonTronTren"], out double t1))
                                 {
                                     topTemps.Add(NormalizeTemp(t1));
                                 }
-                                if (tr["NhietDoBonTronGiua"] != DBNull.Value && double.TryParse(tr["NhietDoBonTronGiua"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double t2))
+                                if (tr["NhietDoBonTronGiua"] != DBNull.Value && TryParseDouble(tr["NhietDoBonTronGiua"], out double t2))
                                 {
                                     midTemps.Add(NormalizeTemp(t2));
                                 }
-                                if (tr["NhietDoBonTronDuoi"] != DBNull.Value && double.TryParse(tr["NhietDoBonTronDuoi"].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double t3))
+                                if (tr["NhietDoBonTronDuoi"] != DBNull.Value && TryParseDouble(tr["NhietDoBonTronDuoi"], out double t3))
                                 {
                                     botTemps.Add(NormalizeTemp(t3));
                                 }
@@ -891,7 +891,7 @@ namespace LongDucProjectTest.Service
                 for (int runIdx = 0; runIdx < runsList.Count; runIdx++)
                 {
                     int blockStartRow = GetRunBlockStartRow(runIdx + 1, bomShift);
-                    subHeaderRanges.Add(Tuple.Create(blockStartRow + 1, 1, 13)); // Section 3 (Runs): Col M (13)
+                    subHeaderRanges.Add(Tuple.Create(blockStartRow, 1, 13)); // Section 3 (Runs): Col M (13)
                 }
 
                 foreach (var range in subHeaderRanges)
@@ -957,7 +957,7 @@ namespace LongDucProjectTest.Service
                 for (int runIdx = 0; runIdx < runsList.Count; runIdx++)
                 {
                     int blockStartRow = GetRunBlockStartRow(runIdx + 1, bomShift);
-                    applyThinBorders(blockStartRow + 1, blockStartRow + 9, 1, 13); // Section 3
+                    applyThinBorders(blockStartRow, blockStartRow + 8, 1, 13); // Section 3
                 }
 
                 applyThinBorders(qcSectionStart + 1, qcSectionStart + 4, 1, 4); // Section 4 (left)
@@ -1197,6 +1197,32 @@ namespace LongDucProjectTest.Service
                 return val * 10.0;
             }
             return val;
+        }
+
+        private bool TryParseDouble(object val, out double result)
+        {
+            result = 0;
+            if (val == null || val == DBNull.Value) return false;
+            string str = val.ToString().Trim();
+            if (str == "" || str == "-") return false;
+
+            // Remove any unit suffixes like °C, %, bar, etc.
+            str = System.Text.RegularExpressions.Regex.Replace(str, @"[^\d,.\-+]", "").Trim();
+
+            if (double.TryParse(str, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out result))
+            {
+                return true;
+            }
+            if (double.TryParse(str, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out result))
+            {
+                return true;
+            }
+            string replacedStr = str.Replace(',', '.');
+            if (double.TryParse(replacedStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out result))
+            {
+                return true;
+            }
+            return false;
         }
 
         private Dictionary<string, string> ParseUrlEncodedPayload(string payload)

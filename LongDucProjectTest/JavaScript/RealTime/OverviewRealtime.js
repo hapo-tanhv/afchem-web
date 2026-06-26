@@ -8,6 +8,7 @@ var USE_FAKE_DATA = false; // Set to true to use fake data, false to use real SC
 
 var selectedRunId = null;
 var activeRunId = null;
+var previousRunStatus = null;
 window.isHistoricView = false;
 
 window.plcStandardTimes = {
@@ -62,6 +63,36 @@ document.addEventListener("DOMContentLoaded", function () {
             jsPreviousTimerValues[code] = null;
         }
         console.log('[JSAccumulator] Reset all in-memory accumulators.');
+    }
+
+    function resetDiagramRealtimeValues() {
+        // Reset timer text on diagram
+        var timerIds = [
+            '#feedingTime', '#mix1Time', '#bottomDischargeTime', 
+            '#bottomDischargeVibrationTime', '#bottomSuctionDischargeTime', 
+            '#mix2Time', '#clearanceSaleTime', '#vibrationDischargeTime'
+        ];
+        timerIds.forEach(function(id) {
+            var el = document.querySelector(id);
+            if (el) el.innerHTML = "0s";
+        });
+
+        // Reset temperature/pressure values on diagram
+        var tempPressSelectors = [
+            '#TankDiagramTempTop', '#TankDiagramTemp', '#TankDiagramTempBot', 
+            '#TankDiagramPressure'
+        ];
+        tempPressSelectors.forEach(function(selector) {
+            var el = document.querySelector(selector);
+            if (el) {
+                if (selector === '#TankDiagramPressure') {
+                    el.innerHTML = "0.00";
+                } else {
+                    el.innerHTML = "0.0";
+                }
+            }
+        });
+        console.log('[JSAccumulator] Reset diagram realtime values to 0.');
     }
 
     function getJsAccumulatedValue(stageCode, alias, currentVal) {
@@ -483,6 +514,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (batchInfo.runId) {
                         if (activeRunId !== null && activeRunId !== batchInfo.runId) {
                             resetJsAccumulators();
+                            if (batchInfo.runStatus === "Active") {
+                                resetDiagramRealtimeValues();
+                            }
                             // Re-seed after reset since it's a new run
                             if (batchInfo.accumulatedValues) {
                                 var mapping = {
@@ -504,6 +538,12 @@ document.addEventListener("DOMContentLoaded", function () {
                         selectedRunId = batchInfo.runId;
                         activeRunId = batchInfo.runId;
                     }
+
+                    // Also detect status transitions to Active for the same run
+                    if (batchInfo.runStatus === "Active" && previousRunStatus !== null && previousRunStatus !== "Active") {
+                        resetDiagramRealtimeValues();
+                    }
+                    previousRunStatus = batchInfo.runStatus;
 
                     // Update header elements
                     var batchNumEl = document.getElementById("headerBatchNumber");
