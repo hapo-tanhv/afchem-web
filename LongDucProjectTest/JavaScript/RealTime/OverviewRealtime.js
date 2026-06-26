@@ -605,9 +605,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
                         if (batchInfo.machineStatus === "COMPLETED" || window.isHistoricView) {
                             var currentStepEl = document.getElementById("statCurrentStep");
+                            var fbCode = batchInfo.activeStepCode || 8;
+                            var fbCycle = 5;
+                            if (fbCode === 1) fbCycle = 1;
+                            else if (fbCode === 2) fbCycle = 2;
+                            else if (fbCode >= 3 && fbCode <= 5) fbCycle = 3;
+                            else if (fbCode === 6) fbCycle = 4;
+                            else if (fbCode >= 7 && fbCode <= 8) fbCycle = 5;
+
                             if (currentStepEl) {
-                                // For completed/historic runs, show total steps (8/8 or active step completed)
-                                currentStepEl.innerHTML = window.isHistoricView ? (batchInfo.activeStepCode || 8) + " / 8" : "8 / 8";
+                                // For completed/historic runs, show total steps (5/5 or active step completed)
+                                currentStepEl.innerHTML = window.isHistoricView ? fbCycle + " / 5" : "5 / 5";
                             }
 
                             var stdTimeEl = document.getElementById("statStandardTime");
@@ -621,7 +629,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             var remainingEl = document.getElementById("statRemainingTime");
                             if (remainingEl) remainingEl.innerHTML = remaining;
 
-                            var progressPercent = window.isHistoricView ? Math.round(((batchInfo.activeStepCode || 8) / 8) * 100) : 100;
+                            var progressPercent = window.isHistoricView ? Math.round((fbCycle / 5) * 100) : 100;
                             var progressPercentEl = document.getElementById("statProgressPercent");
                             if (progressPercentEl) progressPercentEl.innerHTML = progressPercent + "%";
 
@@ -631,8 +639,45 @@ document.addEventListener("DOMContentLoaded", function () {
                             }
                         } else {
                             var currentStepEl = document.getElementById("statCurrentStep");
+                            var activeCycles = [];
                             if (currentStepEl) {
-                                currentStepEl.innerHTML = batchInfo.activeStepCode ? (batchInfo.activeStepCode + " / 8") : "";
+                                if (window.currentSteps) {
+                                    window.currentSteps.forEach(function(step, index) {
+                                        if (step.status === "in-progress") {
+                                            var stepNum = index + 1;
+                                            var cycleNum = 0;
+                                            if (stepNum === 1) cycleNum = 1;
+                                            else if (stepNum === 2) cycleNum = 2;
+                                            else if (stepNum === 3 || stepNum === 4 || stepNum === 5) cycleNum = 3;
+                                            else if (stepNum === 6) cycleNum = 4;
+                                            else if (stepNum === 7 || stepNum === 8) cycleNum = 5;
+
+                                            if (cycleNum > 0 && activeCycles.indexOf(cycleNum) === -1) {
+                                                activeCycles.push(cycleNum);
+                                            }
+                                        }
+                                    });
+                                }
+                                activeCycles.sort(function(a, b) { return a - b; });
+
+                                if (activeCycles.length > 0) {
+                                    currentStepEl.innerHTML = activeCycles.join(",") + " / 5";
+                                } else {
+                                    var fbCode = batchInfo.activeStepCode;
+                                    var fbCycleStr = "";
+                                    if (fbCode) {
+                                        var fbCycle = 0;
+                                        if (fbCode === 1) fbCycle = 1;
+                                        else if (fbCode === 2) fbCycle = 2;
+                                        else if (fbCode >= 3 && fbCode <= 5) fbCycle = 3;
+                                        else if (fbCode === 6) fbCycle = 4;
+                                        else if (fbCode >= 7 && fbCode <= 8) fbCycle = 5;
+                                        if (fbCycle > 0) {
+                                            fbCycleStr = fbCycle + " / 5";
+                                        }
+                                    }
+                                    currentStepEl.innerHTML = fbCycleStr;
+                                }
                             }
 
                             var stdTimeEl = document.getElementById("statStandardTime");
@@ -653,7 +698,18 @@ document.addEventListener("DOMContentLoaded", function () {
                             if (remainingEl) remainingEl.innerHTML = remaining;
 
                             var activeStepCode = batchInfo.activeStepCode || 0;
-                            var progressPercent = Math.round((activeStepCode / 8) * 100);
+                            var activeCycle = 0;
+                            if (activeStepCode === 1) activeCycle = 1;
+                            else if (activeStepCode === 2) activeCycle = 2;
+                            else if (activeStepCode >= 3 && activeStepCode <= 5) activeCycle = 3;
+                            else if (activeStepCode === 6) activeCycle = 4;
+                            else if (activeStepCode >= 7 && activeStepCode <= 8) activeCycle = 5;
+
+                            if (activeCycle === 0 && activeCycles.length > 0) {
+                                activeCycle = Math.max.apply(null, activeCycles);
+                            }
+
+                            var progressPercent = Math.round((activeCycle / 5) * 100);
                             var progressPercentEl = document.getElementById("statProgressPercent");
                             if (progressPercentEl) progressPercentEl.innerHTML = progressPercent + "%";
 
@@ -1509,6 +1565,8 @@ function updateTimelineUI(activeStepCode, machineStatus, isPaused) {
     var timeline = document.getElementById("processTimeline");
     if (!timeline) return;
     var steps = timeline.querySelectorAll(".step");
+    var stepsData = window.currentSteps || [];
+
     steps.forEach(function(stepEl) {
         var stepNum = parseInt(stepEl.getAttribute("data-step"));
         var iconEl = stepEl.querySelector(".step-icon");
@@ -1519,18 +1577,36 @@ function updateTimelineUI(activeStepCode, machineStatus, isPaused) {
             stepEl.classList.add("completed");
             if (iconEl) iconEl.innerHTML = '<i class="fas fa-check"></i>';
         } else {
-            if (stepNum < activeStepCode) {
-                stepEl.classList.add("completed");
-                if (iconEl) iconEl.innerHTML = '<i class="fas fa-check"></i>';
-            } else if (stepNum === activeStepCode) {
-                if (isPaused === 1) {
-                    stepEl.classList.add("active", "stopped");
+            var stepInfo = stepsData[stepNum - 1];
+            if (stepInfo) {
+                if (stepInfo.status === "completed") {
+                    stepEl.classList.add("completed");
+                    if (iconEl) iconEl.innerHTML = '<i class="fas fa-check"></i>';
+                } else if (stepInfo.status === "in-progress") {
+                    if (isPaused === 1) {
+                        stepEl.classList.add("active", "stopped");
+                    } else {
+                        stepEl.classList.add("active");
+                    }
+                    if (iconEl) iconEl.innerHTML = '';
                 } else {
-                    stepEl.classList.add("active");
+                    if (iconEl) iconEl.innerHTML = '';
                 }
-                if (iconEl) iconEl.innerHTML = '';
             } else {
-                if (iconEl) iconEl.innerHTML = '';
+                // Fallback to sequential logic if no stepInfo available
+                if (stepNum < activeStepCode) {
+                    stepEl.classList.add("completed");
+                    if (iconEl) iconEl.innerHTML = '<i class="fas fa-check"></i>';
+                } else if (stepNum === activeStepCode) {
+                    if (isPaused === 1) {
+                        stepEl.classList.add("active", "stopped");
+                    } else {
+                        stepEl.classList.add("active");
+                    }
+                    if (iconEl) iconEl.innerHTML = '';
+                } else {
+                    if (iconEl) iconEl.innerHTML = '';
+                }
             }
         }
     });

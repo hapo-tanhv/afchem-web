@@ -714,6 +714,7 @@ namespace LongDucProjectTest.Service
                             {
                                 message = $"Tạm dừng máy{suffix} (Bắt đầu từ {startTime:HH:mm:ss} - chưa chạy lại)";
                             }
+
                         }
                         
                         ws.Cells[r, 2].Value = message; // Mô tả sự cố

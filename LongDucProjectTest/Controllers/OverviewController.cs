@@ -452,6 +452,8 @@ namespace LongDucProject.Controllers
                 // 5. Determine the active step and calculate header/panel metrics (pre-calculated to allow stepsList rendering)
                 var activeLogRows = logRows.Where(r => r["Status"] != DBNull.Value && r["Status"].ToString().Trim().Equals("Alarm", StringComparison.OrdinalIgnoreCase)).ToList();
                 int activeStepCode = 0;
+                var activeStepCodes = new List<int>();
+                var activeStepNames = new List<string>();
                 string activeStepName = "";
                 DateTime? activeStepStartTime = null;
 
@@ -479,11 +481,20 @@ namespace LongDucProject.Controllers
 
                         if (match != null)
                         {
-                            activeStepCode = def.Code;
-                            activeStepName = def.Name;
-                            activeStepStartTime = Convert.ToDateTime(match["OccurrenceTime"]);
-                            break;
+                            activeStepCodes.Add(def.Code);
+                            activeStepNames.Add(def.Name);
+                            var t = Convert.ToDateTime(match["OccurrenceTime"]);
+                            if (!activeStepStartTime.HasValue || t < activeStepStartTime.Value)
+                            {
+                                activeStepStartTime = t;
+                            }
                         }
+                    }
+
+                    if (activeStepCodes.Count > 0)
+                    {
+                        activeStepCode = activeStepCodes[0];
+                        activeStepName = string.Join(", ", activeStepNames);
                     }
                 }
 
@@ -646,6 +657,12 @@ namespace LongDucProject.Controllers
                     }
                 }
 
+                // Synchronize activeStepCodes list if fallback logic resolved activeStepCode but list is empty
+                if (activeStepCode > 0 && activeStepCodes.Count == 0)
+                {
+                    activeStepCodes.Add(activeStepCode);
+                }
+
                 // Thresholds building removed as Time-Lag Compensation handles leakage without alarm thresholds
 
                 // Calculate weight metrics based on activeStepCode
@@ -781,7 +798,7 @@ namespace LongDucProject.Controllers
 
                     if (stepLogRow == null)
                     {
-                        if (batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) && def.Code == activeStepCode)
+                        if (batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) && activeStepCodes.Contains(def.Code))
                         {
                             // Inferred active step: treat as in-progress
                             stepsList.Add(new
@@ -825,11 +842,12 @@ namespace LongDucProject.Controllers
                         string startStr = startTime.ToString("HH:mm:ss");
                         string endStr = "-";
                         string durationStr = "-";
-                        string status = "in-progress";
-                        string statusText = "Đang thực hiện";
+                        string status = "pending";
+                        string statusText = "Chưa bắt đầu";
 
                         string statusVal = stepLogRow["Status"].ToString().Trim();
                         bool isCompleted = statusVal.Equals("Resolved", StringComparison.OrdinalIgnoreCase);
+                        bool isAlarm = statusVal.Equals("Alarm", StringComparison.OrdinalIgnoreCase);
 
                         DateTime? endTime = null;
                         if (isCompleted)
@@ -846,6 +864,24 @@ namespace LongDucProject.Controllers
                                     totalSeconds = accumulatedValues[def.Alias];
                                 }
                                 durationStr = $"{(int)Math.Round(totalSeconds)}s";
+                            }
+                        }
+                        else if (isAlarm)
+                        {
+                            status = "in-progress";
+                            statusText = "Đang thực hiện";
+                        }
+                        else
+                        {
+                            if (batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) && activeStepCodes.Contains(def.Code))
+                            {
+                                status = "in-progress";
+                                statusText = "Đang thực hiện";
+                            }
+                            else
+                            {
+                                status = "pending";
+                                statusText = "Chưa bắt đầu";
                             }
                         }
 
