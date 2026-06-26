@@ -68,6 +68,17 @@ namespace LongDucProjectTest.Service
 
         private void WorkerLoop()
         {
+            // Ensure table is created at startup
+            try
+            {
+                var connector = new MySQLConnect { ConnectionString = _connStr };
+                EnsureTableCreated(connector);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[BackendTimerAccumulator] Initial table creation check failed: {ex.Message}");
+            }
+
             while (_isRunning)
             {
                 try
@@ -175,6 +186,7 @@ namespace LongDucProjectTest.Service
 
         private void InitializeDatabaseRows(MySQLConnect connector, int runId)
         {
+            EnsureTableCreated(connector);
             foreach (var stepCode in _stepTags.Keys)
             {
                 var dt = connector.ExecuteQuery($"SELECT COUNT(*) as cnt FROM run_step_accumulated_times WHERE runId = {runId} AND stepCode = {stepCode}");
@@ -182,6 +194,26 @@ namespace LongDucProjectTest.Service
                 {
                     connector.ExecuteNonQuery($"INSERT IGNORE INTO run_step_accumulated_times (runId, stepCode, accumulatedTime) VALUES ({runId}, {stepCode}, 0)");
                 }
+            }
+        }
+
+        private void EnsureTableCreated(MySQLConnect connector)
+        {
+            try
+            {
+                string createTableSql = @"
+                    CREATE TABLE IF NOT EXISTS `run_step_accumulated_times` (
+                      `runId` INT(11) NOT NULL,
+                      `stepCode` INT(11) NOT NULL,
+                      `accumulatedTime` DOUBLE NOT NULL DEFAULT 0,
+                      PRIMARY KEY (`runId`, `stepCode`),
+                      FOREIGN KEY (`runId`) REFERENCES `runs`(`id`) ON DELETE CASCADE
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+                connector.ExecuteNonQuery(createTableSql);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[BackendTimerAccumulator] Error ensuring table created: {ex.Message}");
             }
         }
 
