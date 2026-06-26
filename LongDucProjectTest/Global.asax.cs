@@ -16,6 +16,15 @@ namespace LongDucProjectTest
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+
+            // Start backend timer accumulator service
+            LongDucProjectTest.Service.BackendTimerAccumulator.Instance.Start();
+        }
+
+        protected void Application_End()
+        {
+            // Stop backend timer accumulator service
+            LongDucProjectTest.Service.BackendTimerAccumulator.Instance.Stop();
         }
     }
 }

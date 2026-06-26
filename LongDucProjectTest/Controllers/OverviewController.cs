@@ -393,20 +393,55 @@ namespace LongDucProject.Controllers
                     { "ThoiGianRungXaHang", 0 }
                 };
 
-                if (dtTelemetry != null && dtTelemetry.Rows.Count > 0)
+                if (resolvedRunId != -1)
                 {
-                    foreach (DataRow row in dtTelemetry.Rows)
+                    var dtAcc = connector.ExecuteQuery($"SELECT stepCode, accumulatedTime FROM run_step_accumulated_times WHERE runId = {resolvedRunId}");
+                    if (dtAcc != null && dtAcc.Rows.Count > 0)
                     {
-                        var keys = new List<string>(accumulatedValues.Keys);
-                        foreach (var key in keys)
+                        var mapping = new Dictionary<int, string>
                         {
-                            if (row.Table.Columns.Contains(key) && row[key] != DBNull.Value)
+                            { 1, "ThoiGianCapLieu" },
+                            { 2, "ThoiGianTron1" },
+                            { 3, "ThoiGianXaDay" },
+                            { 4, "ThoiGianRungXaDay" },
+                            { 5, "ThoiGianHutXaDay" },
+                            { 6, "ThoiGianTron2" },
+                            { 7, "ThoiGianXaHang" },
+                            { 8, "ThoiGianRungXaHang" }
+                        };
+
+                        foreach (DataRow row in dtAcc.Rows)
+                        {
+                            if (row["stepCode"] != DBNull.Value && row["accumulatedTime"] != DBNull.Value)
                             {
-                                if (double.TryParse(row[key].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val))
+                                int code = Convert.ToInt32(row["stepCode"]);
+                                double accTime = Convert.ToDouble(row["accumulatedTime"]);
+                                if (mapping.ContainsKey(code))
                                 {
-                                    if (val > accumulatedValues[key])
+                                    accumulatedValues[mapping[code]] = accTime;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Fallback to telemetry-max calculations for older historical runs
+                        if (dtTelemetry != null && dtTelemetry.Rows.Count > 0)
+                        {
+                            foreach (DataRow row in dtTelemetry.Rows)
+                            {
+                                var keys = new List<string>(accumulatedValues.Keys);
+                                foreach (var key in keys)
+                                {
+                                    if (row.Table.Columns.Contains(key) && row[key] != DBNull.Value)
                                     {
-                                        accumulatedValues[key] = val;
+                                        if (double.TryParse(row[key].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val))
+                                        {
+                                            if (val > accumulatedValues[key])
+                                            {
+                                                accumulatedValues[key] = val;
+                                            }
+                                        }
                                     }
                                 }
                             }

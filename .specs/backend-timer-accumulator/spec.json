@@ -1,0 +1,39 @@
+{
+  "feature_name": "backend-timer-accumulator",
+  "created_at": "2026-06-26T10:48:00+07:00",
+  "updated_at": "2026-06-26T11:35:00+07:00",
+  "language": "vi",
+  "phase": "implemented",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "scope_lock": {
+    "source": "Thiết kế giải pháp cho bài toán dừng mẻ theo phương án 1 (Background Service tích lũy thời gian ở Backend)",
+    "in_scope": [],
+    "out_of_scope": [],
+    "expansion_policy": "requires-user-approval"
+  },
+  "design_context": {
+    "discovery_mode": "light",
+    "discovery_reason": "Giải pháp mở rộng hệ thống thời gian thực hiện tại qua việc thêm background worker và bảng database phụ",
+    "validation_recommended": false
+  },
+  "validation": {
+    "status": "validated",
+    "session_count": 1,
+    "questions_asked": 0,
+    "last_validated_at": "2026-06-26T11:35:00+07:00"
+  },
+  "ready_for_implementation": true
+}
