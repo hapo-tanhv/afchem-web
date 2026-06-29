@@ -1,4 +1,4 @@
-var EventPage = (function () {
+﻿var EventPage = (function () {
 
     // Keep a local copy of events to support tab filtering client-side
     var currentEvents = [];
