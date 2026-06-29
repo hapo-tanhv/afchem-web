@@ -1,4 +1,4 @@
-﻿var EventPage = (function () {
+var EventPage = (function () {
 
     // Keep a local copy of events to support tab filtering client-side
     var currentEvents = [];
@@ -80,7 +80,7 @@
             if (phase.alerts) {
                 filteredAlerts = phase.alerts.filter(function (a) {
                     var t = (a.type || '').toUpperCase();
-                    return t === 'ALARM' || t === 'WARNING' || t === 'INFO' || t === 'HIGH' || t === 'AVERAGE' || t === 'LOW';
+                    return t === 'ALARM' || t === 'WARNING' || t === 'HIGH' || t === 'AVERAGE';
                 });
             }
             var alertCount = filteredAlerts.length;
@@ -91,8 +91,8 @@
             if (alertCount === 0) {
                 anomalyHtml = '<span class="evt-anomaly-badge none"><i class="fas fa-check-circle"></i> Không có</span>';
             } else {
-                var badgeClass = hasAlarm ? 'has-alert alarm-type' : (hasWarning ? 'has-alert' : 'has-alert info-type');
-                var color = hasAlarm ? '#ef4444' : (hasWarning ? '#f59e0b' : '#eab308');
+                var badgeClass = hasAlarm ? 'has-alert alarm-type' : 'has-alert';
+                var color = hasAlarm ? '#ef4444' : '#f59e0b';
                 anomalyHtml = '<span class="evt-anomaly-badge ' + badgeClass + '" onclick="EventPage.togglePhaseAlarm(this)" style="color:' + color + '; cursor:pointer;">' +
                     '<i class="fas fa-exclamation-triangle"></i> ' + alertCount +
                     ' <i class="fas fa-chevron-down toggle-icon" style="font-size:10px;margin-left:2px;"></i></span>';
@@ -108,7 +108,7 @@
                 '<td>' + anomalyHtml + '</td></tr>';
 
             if (alertCount > 0) {
-                var bgTint = hasAlarm ? 'rgba(239,68,68,0.05)' : (hasWarning ? 'rgba(245,158,11,0.05)' : 'rgba(234,179,8,0.05)');
+                var bgTint = hasAlarm ? 'rgba(239,68,68,0.05)' : 'rgba(245,158,11,0.05)';
                 html += '<tr class="evt-alarm-detail-row" style="display:none;"><td colspan="7" style="padding:0;">' +
                     '<div class="evt-alarm-detail-content" style="background:' + bgTint + ';">';
 
@@ -119,9 +119,6 @@
                     if (typeUpper === 'WARNING' || typeUpper === 'AVERAGE') {
                         color = '#f59e0b';
                         badgeType = 'warning';
-                    } else if (typeUpper === 'INFO' || typeUpper === 'LOW') {
-                        color = '#eab308';
-                        badgeType = 'info';
                     }
                     html += '<div class="evt-alarm-item">' +
                         '<div class="evt-alarm-item-left">' +

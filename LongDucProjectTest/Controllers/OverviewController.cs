@@ -1,4 +1,4 @@
-using CsvHelper;
+﻿using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -453,11 +453,11 @@ namespace LongDucProject.Controllers
                 DataTable dtAlarms = null;
                 if (resolvedRunId != -1)
                 {
-                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {resolvedRunId} AND Severity IN ('ALARM', 'WARNING') ORDER BY DateTime ASC, id ASC");
+                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {resolvedRunId} AND Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') ORDER BY DateTime ASC, id ASC");
                 }
                 else if (resolvedBatchId != -1)
                 {
-                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE batchId = {resolvedBatchId} AND Severity IN ('ALARM', 'WARNING') ORDER BY DateTime ASC, id ASC");
+                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE batchId = {resolvedBatchId} AND Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') ORDER BY DateTime ASC, id ASC");
                 }
 
                 // 5. Set up standard steps with their alarmlog TagNo mapping & keywords
@@ -1615,11 +1615,11 @@ namespace LongDucProject.Controllers
                 DataTable dtAlarms = null;
                 if (resolvedRunId != -1)
                 {
-                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {resolvedRunId} AND Severity IN ('ALARM', 'WARNING') ORDER BY DateTime ASC, id ASC");
+                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {resolvedRunId} AND Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') ORDER BY DateTime ASC, id ASC");
                 }
                 else if (resolvedBatchId != -1)
                 {
-                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE batchId = {resolvedBatchId} AND Severity IN ('ALARM', 'WARNING') ORDER BY DateTime ASC, id ASC");
+                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE batchId = {resolvedBatchId} AND Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') ORDER BY DateTime ASC, id ASC");
                 }
 
                 var stepDefs = new[]
@@ -2058,7 +2058,7 @@ namespace LongDucProject.Controllers
                 // 2. Fetch realtime_alarms for active run (limit to top 30 to de-duplicate, then take top 5)
                 DataTable dtAlarms = connector.ExecuteQuery(
                     $"SELECT id, DateTime, Severity, TagName, Value, Threshold, Message FROM realtime_alarms " +
-                    $"WHERE runId = {runId} AND Severity IN ('ALARM', 'WARNING') " +
+                    $"WHERE runId = {runId} AND Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') " +
                     $"ORDER BY DateTime DESC, id DESC LIMIT 30"
                 );
 
