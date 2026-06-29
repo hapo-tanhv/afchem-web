@@ -1,4 +1,4 @@
-﻿var activepower;
+var activepower;
 
 var temperature;
 
@@ -1057,8 +1057,10 @@ document.addEventListener("DOMContentLoaded", function () {
                                         toastr.error(content, 'CẢNH BÁO NGUY HIỂM');
                                     } else if (typeUpper === 'WARNING' || typeUpper === 'AVERAGE') {
                                         toastr.warning(content, 'CẢNH BÁO BẤT THƯỜNG');
-                                    } else if (typeUpper === 'INFO' || typeUpper === 'LOW') {
-                                        toastr.info(content, 'THÔNG TIN CẢNH BÁO');
+                                    } else if (typeUpper === 'LOW') {
+                                        toastr.warning(content, 'CẢNH BÁO MỨC THẤP');
+                                    } else if (typeUpper === 'INFO') {
+                                        toastr.info(content, 'THÔNG TIN HỆ THỐNG');
                                     }
                                 }
                             });
@@ -1662,6 +1664,14 @@ function updateChartWithDynamicBands(chartInstance, value, max, config) {
 
 // Function to update timeline step items styling
 function updateTimelineUI(activeStepCode, machineStatus, isPaused) {
+    // Chuẩn hóa machineStatus từ database (Ví dụ: "Active" -> "RUNNING", "Completed" -> "COMPLETED")
+    if (machineStatus) {
+        machineStatus = machineStatus.toUpperCase();
+        if (machineStatus === "ACTIVE") {
+            machineStatus = "RUNNING";
+        }
+    }
+
     var timeline = document.getElementById("processTimeline");
     if (!timeline) return;
     var steps = timeline.querySelectorAll(".step");

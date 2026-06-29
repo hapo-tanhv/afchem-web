@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -967,34 +967,41 @@ namespace LongDucProject.Controllers
 
                             string cd = r["CongDoan"] != DBNull.Value ? r["CongDoan"].ToString().Trim() : "";
                             bool codeMatches = false;
+                            bool cdMatchesAny = false;
                             if (!string.IsNullOrEmpty(cd))
                             {
-                                // 1. Match by TagNo (T001 - T008)
-                                if (cd.Equals(def.TagNo, StringComparison.OrdinalIgnoreCase)) codeMatches = true;
-
-                                // 2. Match by Name (Cấp liệu, Trộn 1...)
-                                else if (cd.Equals(def.Name, StringComparison.OrdinalIgnoreCase)) codeMatches = true;
-
-                                // 3. Robust check: compare unaccented / lower-case variations
-                                else
+                                foreach (var otherDef in stepDefs)
                                 {
-                                    string cdLower = RemoveSign4VietnameseString(cd).ToLower();
-                                    string defNameLower = RemoveSign4VietnameseString(def.Name).ToLower();
-                                    if (cdLower == defNameLower) codeMatches = true;
+                                    bool matchThis = false;
+                                    if (cd.Equals(otherDef.TagNo, StringComparison.OrdinalIgnoreCase)) matchThis = true;
+                                    else if (cd.Equals(otherDef.Name, StringComparison.OrdinalIgnoreCase)) matchThis = true;
+                                    else
+                                    {
+                                        string cdLower = RemoveSign4VietnameseString(cd).ToLower();
+                                        string otherDefNameLower = RemoveSign4VietnameseString(otherDef.Name).ToLower();
+                                        if (cdLower == otherDefNameLower) matchThis = true;
+                                        else if (otherDef.Code == 1 && (cdLower.Contains("cap lieu") || cdLower.Contains("cấp liệu") || cdLower.Contains("t001"))) matchThis = true;
+                                        else if (otherDef.Code == 2 && (cdLower.Contains("tron 1") || cdLower.Contains("trộn 1") || cdLower.Contains("t002"))) matchThis = true;
+                                        else if (otherDef.Code == 3 && (cdLower.Contains("xa day") || cdLower.Contains("xả đáy") || cdLower.Contains("t003"))) matchThis = true;
+                                        else if (otherDef.Code == 4 && (cdLower.Contains("rung xa day") || cdLower.Contains("rung xả đáy") || cdLower.Contains("t004"))) matchThis = true;
+                                        else if (otherDef.Code == 5 && (cdLower.Contains("hut xa day") || cdLower.Contains("hút xả đáy") || cdLower.Contains("t005"))) matchThis = true;
+                                        else if (otherDef.Code == 6 && (cdLower.Contains("tron 2") || cdLower.Contains("trộn 2") || cdLower.Contains("t006"))) matchThis = true;
+                                        else if (otherDef.Code == 7 && (cdLower.Contains("xa hang") || cdLower.Contains("xả hàng") || cdLower.Contains("t007")) && !cdLower.Contains("rung")) matchThis = true;
+                                        else if (otherDef.Code == 8 && (cdLower.Contains("rung xa hang") || cdLower.Contains("rung xả hàng") || cdLower.Contains("t008"))) matchThis = true;
+                                    }
 
-                                    // 4. Support partial keyword matching or alternate mapping (e.g. "Cap lieu" -> "cap lieu")
-                                    else if (def.Code == 1 && (cdLower.Contains("cap lieu") || cdLower.Contains("cấp liệu") || cdLower.Contains("t001"))) codeMatches = true;
-                                    else if (def.Code == 2 && (cdLower.Contains("tron 1") || cdLower.Contains("trộn 1") || cdLower.Contains("t002"))) codeMatches = true;
-                                    else if (def.Code == 3 && (cdLower.Contains("xa day") || cdLower.Contains("xả đáy") || cdLower.Contains("t003"))) codeMatches = true;
-                                    else if (def.Code == 4 && (cdLower.Contains("rung xa day") || cdLower.Contains("rung xả đáy") || cdLower.Contains("t004"))) codeMatches = true;
-                                    else if (def.Code == 5 && (cdLower.Contains("hut xa day") || cdLower.Contains("hút xả đáy") || cdLower.Contains("t005"))) codeMatches = true;
-                                    else if (def.Code == 6 && (cdLower.Contains("tron 2") || cdLower.Contains("trộn 2") || cdLower.Contains("t006"))) codeMatches = true;
-                                    else if (def.Code == 7 && (cdLower.Contains("xa hang") || cdLower.Contains("xả hàng") || cdLower.Contains("t007")) && !cdLower.Contains("rung")) codeMatches = true;
-                                    else if (def.Code == 8 && (cdLower.Contains("rung xa hang") || cdLower.Contains("rung xả hàng") || cdLower.Contains("t008"))) codeMatches = true;
+                                    if (matchThis)
+                                    {
+                                        cdMatchesAny = true;
+                                        if (otherDef.Code == def.Code)
+                                        {
+                                            codeMatches = true;
+                                        }
+                                    }
                                 }
                             }
 
-                            return codeMatches || timeInStep;
+                            return cdMatchesAny ? codeMatches : timeInStep;
                         }).ToList();
 
                         // Calculate temperatures (Bồn trên, Bồn giữa, Bồn dưới)
@@ -1958,26 +1965,41 @@ namespace LongDucProject.Controllers
 
                             string cd = r["CongDoan"] != DBNull.Value ? r["CongDoan"].ToString().Trim() : "";
                             bool codeMatches = false;
+                            bool cdMatchesAny = false;
                             if (!string.IsNullOrEmpty(cd))
                             {
-                                if (cd.Equals(def.TagNo, StringComparison.OrdinalIgnoreCase)) codeMatches = true;
-                                else if (cd.Equals(def.Name, StringComparison.OrdinalIgnoreCase)) codeMatches = true;
-                                else
+                                foreach (var otherDef in stepDefs)
                                 {
-                                    string cdLower = RemoveSign4VietnameseString(cd).ToLower();
-                                    string defNameLower = RemoveSign4VietnameseString(def.Name).ToLower();
-                                    if (cdLower == defNameLower) codeMatches = true;
-                                    else if (def.Code == 1 && (cdLower.Contains("cap lieu") || cdLower.Contains("c\u1ea5p li\u1ec7u") || cdLower.Contains("t001"))) codeMatches = true;
-                                    else if (def.Code == 2 && (cdLower.Contains("tron 1") || cdLower.Contains("tr\u1ed9n 1") || cdLower.Contains("t002"))) codeMatches = true;
-                                    else if (def.Code == 3 && (cdLower.Contains("xa day") || cdLower.Contains("x\u1ea3 \u0111\u00e1y") || cdLower.Contains("t003"))) codeMatches = true;
-                                    else if (def.Code == 4 && (cdLower.Contains("rung xa day") || cdLower.Contains("rung x\u1ea3 \u0111\u00e1y") || cdLower.Contains("t004"))) codeMatches = true;
-                                    else if (def.Code == 5 && (cdLower.Contains("hut xa day") || cdLower.Contains("h\u00fat x\u1ea3 \u0111\u00e1y") || cdLower.Contains("t005"))) codeMatches = true;
-                                    else if (def.Code == 6 && (cdLower.Contains("tron 2") || cdLower.Contains("tr\u1ed9n 2") || cdLower.Contains("t006"))) codeMatches = true;
-                                    else if (def.Code == 7 && (cdLower.Contains("xa hang") || cdLower.Contains("x\u1ea3 h\u00e0ng") || cdLower.Contains("t007")) && !cdLower.Contains("rung")) codeMatches = true;
-                                    else if (def.Code == 8 && (cdLower.Contains("rung xa hang") || cdLower.Contains("rung x\u1ea3 h\u00e0ng") || cdLower.Contains("t008"))) codeMatches = true;
+                                    bool matchThis = false;
+                                    if (cd.Equals(otherDef.TagNo, StringComparison.OrdinalIgnoreCase)) matchThis = true;
+                                    else if (cd.Equals(otherDef.Name, StringComparison.OrdinalIgnoreCase)) matchThis = true;
+                                    else
+                                    {
+                                        string cdLower = RemoveSign4VietnameseString(cd).ToLower();
+                                        string otherDefNameLower = RemoveSign4VietnameseString(otherDef.Name).ToLower();
+                                        if (cdLower == otherDefNameLower) matchThis = true;
+                                        else if (otherDef.Code == 1 && (cdLower.Contains("cap lieu") || cdLower.Contains("c\u1ea5p li\u1ec7u") || cdLower.Contains("t001"))) matchThis = true;
+                                        else if (otherDef.Code == 2 && (cdLower.Contains("tron 1") || cdLower.Contains("tr\u1ed9n 1") || cdLower.Contains("t002"))) matchThis = true;
+                                        else if (otherDef.Code == 3 && (cdLower.Contains("xa day") || cdLower.Contains("x\u1ea3 \u0111\u00e1y") || cdLower.Contains("t003"))) matchThis = true;
+                                        else if (otherDef.Code == 4 && (cdLower.Contains("rung xa day") || cdLower.Contains("rung x\u1ea3 \u0111\u00e1y") || cdLower.Contains("t004"))) matchThis = true;
+                                        else if (otherDef.Code == 5 && (cdLower.Contains("hut xa day") || cdLower.Contains("h\u00fat x\u1ea3 \u0111\u00e1y") || cdLower.Contains("t005"))) matchThis = true;
+                                        else if (otherDef.Code == 6 && (cdLower.Contains("tron 2") || cdLower.Contains("tr\u1ed9n 2") || cdLower.Contains("t006"))) matchThis = true;
+                                        else if (otherDef.Code == 7 && (cdLower.Contains("xa hang") || cdLower.Contains("x\u1ea3 h\u00e0ng") || cdLower.Contains("t007")) && !cdLower.Contains("rung")) matchThis = true;
+                                        else if (otherDef.Code == 8 && (cdLower.Contains("rung xa hang") || cdLower.Contains("rung x\u1ea3 h\u00e0ng") || cdLower.Contains("t008"))) matchThis = true;
+                                    }
+
+                                    if (matchThis)
+                                    {
+                                        cdMatchesAny = true;
+                                        if (otherDef.Code == def.Code)
+                                        {
+                                            codeMatches = true;
+                                        }
+                                    }
                                 }
                             }
-                            return codeMatches || timeInStep;
+
+                            return cdMatchesAny ? codeMatches : timeInStep;
                         }).ToList();
 
                         foreach (var row in stepAlarms)
