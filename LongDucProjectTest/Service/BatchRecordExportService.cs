@@ -453,7 +453,7 @@ namespace LongDucProjectTest.Service
                     var telemetryRows = dtTelemetry != null ? dtTelemetry.AsEnumerable().ToList() : new List<DataRow>();
 
                     // Fetch alarms for stage warnings
-                    var dtAlarms = _connector.ExecuteQuery($"SELECT DateTime, CongDoan, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {run.Id} AND LOWER(Severity) IN ('alarm', 'warning') ORDER BY DateTime ASC");
+                    var dtAlarms = _connector.ExecuteQuery($"SELECT DateTime, CongDoan, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {run.Id} AND LOWER(Severity) IN ('alarm', 'warning') AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0)) ORDER BY DateTime ASC");
                     var alarmRows = dtAlarms != null ? dtAlarms.AsEnumerable().ToList() : new List<DataRow>();
 
                     // Populate 8 stages
@@ -679,6 +679,7 @@ namespace LongDucProjectTest.Service
                     FROM realtime_alarms 
                     WHERE batchId = {batchId} 
                       AND (Severity = 'ALARM' OR (Severity = 'INFO' AND TagName = 'System' AND Message = 'Tạm dừng máy')) 
+                      AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0))
                     ORDER BY DateTime ASC LIMIT 4");
                 
                 if (dtGlobalAlarms != null && dtGlobalAlarms.Rows.Count > 0)

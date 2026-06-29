@@ -197,7 +197,7 @@ namespace LongDucProject.Controllers
                     }
                 }
 
-                string baseQuery = "FROM realtime_alarms a INNER JOIN batches b ON a.batchId = b.id WHERE a.Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW')";
+                string baseQuery = "FROM realtime_alarms a INNER JOIN batches b ON a.batchId = b.id WHERE a.Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') AND NOT ((a.TagName LIKE '%ThoiGian%' OR a.Message LIKE '%thời gian%') AND (a.Value + 0) <= (a.Threshold + 0))";
                 string filterQuery = "";
 
                 if (isInitialLoad == true && resolvedBatchId > 0)
@@ -436,7 +436,7 @@ namespace LongDucProject.Controllers
                 }
             }
 
-            string baseQuery = "FROM realtime_alarms a INNER JOIN batches b ON a.batchId = b.id WHERE a.Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW')";
+            string baseQuery = "FROM realtime_alarms a INNER JOIN batches b ON a.batchId = b.id WHERE a.Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') AND NOT ((a.TagName LIKE '%ThoiGian%' OR a.Message LIKE '%thời gian%') AND (a.Value + 0) <= (a.Threshold + 0))";
             string filterQuery = $" AND a.DateTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.DateTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
 
             if (hasRunFilter)
@@ -532,7 +532,7 @@ namespace LongDucProject.Controllers
                 }
             }
 
-            string baseQuery = "FROM realtime_alarms a INNER JOIN batches b ON a.batchId = b.id WHERE a.Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW')";
+            string baseQuery = "FROM realtime_alarms a INNER JOIN batches b ON a.batchId = b.id WHERE a.Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') AND NOT ((a.TagName LIKE '%ThoiGian%' OR a.Message LIKE '%thời gian%') AND (a.Value + 0) <= (a.Threshold + 0))";
             string filterQuery = $" AND a.DateTime >= '{startDate.ToString("yyyy-MM-dd HH:mm:ss")}' AND a.DateTime <= '{endDate.ToString("yyyy-MM-dd HH:mm:ss")}'";
 
             if (hasRunFilter)

@@ -272,13 +272,13 @@ namespace LongDucProject.Controllers
                 {
                     dtAlarmLog = connector.ExecuteQuery($"SELECT OccurrenceTime, RestoreTime, Description, Status, TagNo FROM alarmlog WHERE runId = {selectedRunId}");
                     dtTelemetry = connector.ExecuteQuery($"SELECT DateTime, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi, ThoiGianCapLieu, ThoiGianTron1, ThoiGianXaDay, ThoiGianRungXaDay, ThoiGianHutXaDay, ThoiGianTron2, ThoiGianXaHang, ThoiGianRungXaHang FROM alarmreport WHERE runId = {selectedRunId} ORDER BY DateTime ASC");
-                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {selectedRunId} ORDER BY DateTime ASC, id ASC");
+                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {selectedRunId} AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0)) ORDER BY DateTime ASC, id ASC");
                 }
                 else
                 {
                     dtAlarmLog = connector.ExecuteQuery($"SELECT OccurrenceTime, RestoreTime, Description, Status, TagNo FROM alarmlog WHERE batchId = {selectedBatchId}");
                     dtTelemetry = connector.ExecuteQuery($"SELECT DateTime, NhietDoBonTronTren, NhietDoBonTronGiua, NhietDoBonTronDuoi, ThoiGianCapLieu, ThoiGianTron1, ThoiGianXaDay, ThoiGianRungXaDay, ThoiGianHutXaDay, ThoiGianTron2, ThoiGianXaHang, ThoiGianRungXaHang FROM alarmreport WHERE batchId = {selectedBatchId} ORDER BY DateTime ASC");
-                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE batchId = {selectedBatchId} ORDER BY DateTime ASC, id ASC");
+                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE batchId = {selectedBatchId} AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0)) ORDER BY DateTime ASC, id ASC");
                 }
 
                 var accumulatedValues = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase)
@@ -606,7 +606,7 @@ namespace LongDucProject.Controllers
             var list = new List<EventExportDto>();
             if (selectedRunId > 0)
             {
-                var dtAlarms = connector.ExecuteQuery($"SELECT DateTime, CongDoan, Message, Severity FROM realtime_alarms WHERE runId = {selectedRunId} ORDER BY DateTime ASC, id ASC");
+                var dtAlarms = connector.ExecuteQuery($"SELECT DateTime, CongDoan, Message, Severity FROM realtime_alarms WHERE runId = {selectedRunId} AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0)) ORDER BY DateTime ASC, id ASC");
                 if (dtAlarms != null)
                 {
                     foreach (DataRow row in dtAlarms.Rows)
@@ -637,7 +637,7 @@ namespace LongDucProject.Controllers
             }
             else if (selectedBatchId > 0)
             {
-                var dtAlarms = connector.ExecuteQuery($"SELECT DateTime, CongDoan, Message, Severity FROM realtime_alarms WHERE batchId = {selectedBatchId} ORDER BY DateTime ASC, id ASC");
+                var dtAlarms = connector.ExecuteQuery($"SELECT DateTime, CongDoan, Message, Severity FROM realtime_alarms WHERE batchId = {selectedBatchId} AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0)) ORDER BY DateTime ASC, id ASC");
                 if (dtAlarms != null)
                 {
                     foreach (DataRow row in dtAlarms.Rows)
@@ -692,7 +692,7 @@ namespace LongDucProject.Controllers
 
             if (selectedRunId > 0)
             {
-                var dtAlarms = connector.ExecuteQuery($"SELECT DateTime, CongDoan, Message, Severity FROM realtime_alarms WHERE runId = {selectedRunId} ORDER BY DateTime ASC, id ASC");
+                var dtAlarms = connector.ExecuteQuery($"SELECT DateTime, CongDoan, Message, Severity FROM realtime_alarms WHERE runId = {selectedRunId} AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0)) ORDER BY DateTime ASC, id ASC");
                 if (dtAlarms != null)
                 {
                     foreach (DataRow row in dtAlarms.Rows)
@@ -723,7 +723,7 @@ namespace LongDucProject.Controllers
             }
             else if (selectedBatchId > 0)
             {
-                var dtAlarms = connector.ExecuteQuery($"SELECT DateTime, CongDoan, Message, Severity FROM realtime_alarms WHERE batchId = {selectedBatchId} ORDER BY DateTime ASC, id ASC");
+                var dtAlarms = connector.ExecuteQuery($"SELECT DateTime, CongDoan, Message, Severity FROM realtime_alarms WHERE batchId = {selectedBatchId} AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0)) ORDER BY DateTime ASC, id ASC");
                 if (dtAlarms != null)
                 {
                     foreach (DataRow row in dtAlarms.Rows)

@@ -453,11 +453,11 @@ namespace LongDucProject.Controllers
                 DataTable dtAlarms = null;
                 if (resolvedRunId != -1)
                 {
-                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {resolvedRunId} AND Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') ORDER BY DateTime ASC, id ASC");
+                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {resolvedRunId} AND Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0)) ORDER BY DateTime ASC, id ASC");
                 }
                 else if (resolvedBatchId != -1)
                 {
-                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE batchId = {resolvedBatchId} AND Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') ORDER BY DateTime ASC, id ASC");
+                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE batchId = {resolvedBatchId} AND Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0)) ORDER BY DateTime ASC, id ASC");
                 }
 
                 // 5. Set up standard steps with their alarmlog TagNo mapping & keywords
@@ -1198,7 +1198,7 @@ namespace LongDucProject.Controllers
                 int alarmCount = 0;
                 if (resolvedRunId != -1)
                 {
-                    var dtAlarmCount = connector.ExecuteQuery($"SELECT COUNT(*) FROM realtime_alarms WHERE runId = {resolvedRunId} AND Severity != 'INFO'");
+                    var dtAlarmCount = connector.ExecuteQuery($"SELECT COUNT(*) FROM realtime_alarms WHERE runId = {resolvedRunId} AND Severity != 'INFO' AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0))");
                     if (dtAlarmCount != null && dtAlarmCount.Rows.Count > 0)
                     {
                         alarmCount = Convert.ToInt32(dtAlarmCount.Rows[0][0]);
@@ -1206,7 +1206,7 @@ namespace LongDucProject.Controllers
                 }
                 else if (resolvedBatchId != -1)
                 {
-                    var dtAlarmCount = connector.ExecuteQuery($"SELECT COUNT(*) FROM realtime_alarms WHERE batchId = {resolvedBatchId} AND Severity != 'INFO'");
+                    var dtAlarmCount = connector.ExecuteQuery($"SELECT COUNT(*) FROM realtime_alarms WHERE batchId = {resolvedBatchId} AND Severity != 'INFO' AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0))");
                     if (dtAlarmCount != null && dtAlarmCount.Rows.Count > 0)
                     {
                         alarmCount = Convert.ToInt32(dtAlarmCount.Rows[0][0]);
@@ -1615,11 +1615,11 @@ namespace LongDucProject.Controllers
                 DataTable dtAlarms = null;
                 if (resolvedRunId != -1)
                 {
-                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {resolvedRunId} AND Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') ORDER BY DateTime ASC, id ASC");
+                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {resolvedRunId} AND Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0)) ORDER BY DateTime ASC, id ASC");
                 }
                 else if (resolvedBatchId != -1)
                 {
-                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE batchId = {resolvedBatchId} AND Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') ORDER BY DateTime ASC, id ASC");
+                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE batchId = {resolvedBatchId} AND Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0)) ORDER BY DateTime ASC, id ASC");
                 }
 
                 var stepDefs = new[]
@@ -2059,6 +2059,7 @@ namespace LongDucProject.Controllers
                 DataTable dtAlarms = connector.ExecuteQuery(
                     $"SELECT id, DateTime, Severity, TagName, Value, Threshold, Message FROM realtime_alarms " +
                     $"WHERE runId = {runId} AND Severity IN ('ALARM', 'WARNING', 'HIGH', 'AVERAGE', 'LOW') " +
+                    $"AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0)) " +
                     $"ORDER BY DateTime DESC, id DESC LIMIT 30"
                 );
 
