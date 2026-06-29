@@ -1,4 +1,4 @@
-﻿/* ================= EVENT PAGE LAYOUT ================= */
+/* ================= EVENT PAGE LAYOUT ================= */
 .event-top-grid {
     display: grid;
     grid-template-columns: 1fr 34.375rem;
@@ -326,6 +326,12 @@
     border: 0.0625rem solid rgba(239, 68, 68, 0.2);
 }
 
+.evt-alarm-badge.info, .evt-alarm-badge.low {
+    background: rgba(234, 179, 8, 0.1);
+    color: #eab308;
+    border: 0.0625rem solid rgba(234, 179, 8, 0.2);
+}
+
 /* ================= EVENT DETAIL TABLE ================= */
 .evt-filter-tabs {
     display: flex;
@@ -372,22 +378,22 @@
     font-weight: 700;
 }
 
-.evt-severity-badge.WARNING {
+.evt-severity-badge.WARNING, .evt-severity-badge.AVERAGE {
     background: rgba(245, 158, 11, 0.1);
     color: #f59e0b;
     border: 0.0625rem solid rgba(245, 158, 11, 0.2);
 }
 
-.evt-severity-badge.ALARM {
+.evt-severity-badge.ALARM, .evt-severity-badge.HIGH {
     background: rgba(239, 68, 68, 0.1);
     color: #ef4444;
     border: 0.0625rem solid rgba(239, 68, 68, 0.2);
 }
 
-.evt-severity-badge.INFO {
-    background: rgba(59, 130, 246, 0.08);
-    color: #94a3b8;
-    border: 0.0625rem solid rgba(255, 255, 255, 0.1);
+.evt-severity-badge.INFO, .evt-severity-badge.LOW {
+    background: rgba(234, 179, 8, 0.1);
+    color: #eab308;
+    border: 0.0625rem solid rgba(234, 179, 8, 0.2);
 }
 
 /* ================= EVENT NOTE ================= */

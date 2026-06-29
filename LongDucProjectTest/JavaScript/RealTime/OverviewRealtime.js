@@ -1052,10 +1052,13 @@ document.addEventListener("DOMContentLoaded", function () {
                                 var content = "<strong>" + title + "</strong>" + (msg ? "<br/>" + msg : "");
                                 
                                 if (typeof toastr !== 'undefined') {
-                                    if (alarm.type === 'ALARM') {
-                                        toastr.error(content, 'CẢNH BÁO HỆ THỐNG');
-                                    } else if (alarm.type === 'WARNING') {
-                                        toastr.warning(content, 'CẢNH BÁO HỆ THỐNG');
+                                    var typeUpper = (alarm.type || '').toUpperCase();
+                                    if (typeUpper === 'ALARM' || typeUpper === 'HIGH') {
+                                        toastr.error(content, 'CẢNH BÁO NGUY HIỂM');
+                                    } else if (typeUpper === 'WARNING' || typeUpper === 'AVERAGE') {
+                                        toastr.warning(content, 'CẢNH BÁO BẤT THƯỜNG');
+                                    } else if (typeUpper === 'INFO' || typeUpper === 'LOW') {
+                                        toastr.info(content, 'THÔNG TIN CẢNH BÁO');
                                     }
                                 }
                             });

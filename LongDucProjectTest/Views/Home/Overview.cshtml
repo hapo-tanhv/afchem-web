@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewBag.Title = "SOLAR SCADA SYSTEM - OVERVIEW";
     ViewBag.ButtonHome = "active";
     ViewBag.ButtonOverview = "";
@@ -715,10 +715,27 @@
     <span class="status-badge ${step.status}">${step.statusText}</span>
     </td>`;
             if (step.alerts && step.alerts.length > 0) {
-                const alarmCount = step.alerts.filter(a => a.type === 'ALARM').length;
-                const mainType = alarmCount > 0 ? 'ALARM' : 'WARNING';
-                const iconColor = mainType === 'ALARM' ? '#ef4444' : '#f59e0b';
-                const blinkClass = mainType === 'ALARM' ? 'blink-alarm' : '';
+                const alarmCount = step.alerts.filter(a => a.type === 'ALARM' || a.type === 'HIGH').length;
+                const averageCount = step.alerts.filter(a => a.type === 'WARNING' || a.type === 'AVERAGE').length;
+                const mainType = alarmCount > 0 ? 'HIGH' : (averageCount > 0 ? 'AVERAGE' : 'LOW');
+                
+                let iconColor = '#ef4444';
+                let blinkClass = 'blink-alarm';
+                let bgTint = 'rgba(239, 68, 68, 0.08)';
+                let borderTint = 'rgba(239, 68, 68, 0.15)';
+                
+                if (mainType === 'AVERAGE') {
+                    iconColor = '#f59e0b';
+                    blinkClass = '';
+                    bgTint = 'rgba(245, 158, 11, 0.08)';
+                    borderTint = 'rgba(245, 158, 11, 0.15)';
+                } else if (mainType === 'LOW') {
+                    iconColor = '#eab308';
+                    blinkClass = '';
+                    bgTint = 'rgba(234, 179, 8, 0.08)';
+                    borderTint = 'rgba(234, 179, 8, 0.15)';
+                }
+                
                 html += `<td class="td-alerts text-warning" colspan="3" style="padding: 0; vertical-align: middle;">
     <div class="alarm-summary" onclick="toggleAlarmCollapse(this)" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; padding: 0.75rem 0.625rem; height: 100%;">
     <div class="alarm-icon warning ${blinkClass}" style="color: ${iconColor}; font-size: 1.25rem;">
@@ -728,15 +745,24 @@
     <i class="fas fa-chevron-up toggle-icon" style="font-size: 0.75rem; color: #94a3b8; margin-left: 0.25rem; transition: transform 0.2s;"></i>
     </div>
     </td></tr>`;
-                const bgTint = mainType === 'ALARM' ? 'rgba(239, 68, 68, 0.08)' : 'rgba(245, 158, 11, 0.08)';
-                const borderTint = mainType === 'ALARM' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)';
                 html += `<tr class="alarm-detail-row" style="display: none;">
     <td colspan="12" style="padding: 0;">
     <div class="alarm-collapse-content" style="background: ${bgTint}; padding: 0.9375rem 1.25rem; border-top: 0.0625rem solid ${borderTint}; text-align: left; margin: 0; box-shadow: inset 0 0.125rem 0.625rem rgba(0,0,0,0.2);">`;
                 step.alerts.forEach(alert => {
-                    const color = alert.type === 'ALARM' ? '#ef4444' : '#f59e0b';
-                    const badgeBg = alert.type === 'ALARM' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)';
-                    const badgeBorder = alert.type === 'ALARM' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)';
+                    const typeUpper = (alert.type || '').toUpperCase();
+                    let color = '#ef4444';
+                    let badgeBg = 'rgba(239, 68, 68, 0.1)';
+                    let badgeBorder = 'rgba(239, 68, 68, 0.2)';
+                    
+                    if (typeUpper === 'WARNING' || typeUpper === 'AVERAGE') {
+                        color = '#f59e0b';
+                        badgeBg = 'rgba(245, 158, 11, 0.1)';
+                        badgeBorder = 'rgba(245, 158, 11, 0.2)';
+                    } else if (typeUpper === 'INFO' || typeUpper === 'LOW') {
+                        color = '#eab308';
+                        badgeBg = 'rgba(234, 179, 8, 0.1)';
+                        badgeBorder = 'rgba(234, 179, 8, 0.2)';
+                    }
                     html += `<div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.625rem;">
     <div style="display: flex; gap: 1.25rem;">
     <div style="color: ${color}; font-size: 0.625rem; margin-top: 0.25rem;"><i class="fas fa-circle"></i></div>
@@ -783,11 +809,23 @@
         let html = '';
         // Always display at most 5 items
         data.slice(0, 5).forEach(alarm => {
-            const isAlarm = alarm.type === 'ALARM';
-            const color = isAlarm ? '#ef4444' : '#f59e0b';
-            const badgeBg = isAlarm ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)';
-            const badgeBorder = isAlarm ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)';
-            const iconClass = isAlarm ? 'alarm' : 'warning';
+            const typeUpper = (alarm.type || '').toUpperCase();
+            let color = '#ef4444';
+            let badgeBg = 'rgba(239, 68, 68, 0.1)';
+            let badgeBorder = 'rgba(239, 68, 68, 0.2)';
+            let iconClass = 'alarm';
+            
+            if (typeUpper === 'WARNING' || typeUpper === 'AVERAGE') {
+                color = '#f59e0b';
+                badgeBg = 'rgba(245, 158, 11, 0.1)';
+                badgeBorder = 'rgba(245, 158, 11, 0.2)';
+                iconClass = 'warning';
+            } else if (typeUpper === 'INFO' || typeUpper === 'LOW') {
+                color = '#eab308';
+                badgeBg = 'rgba(234, 179, 8, 0.1)';
+                badgeBorder = 'rgba(234, 179, 8, 0.2)';
+                iconClass = 'warning'; // Keep standard warning layout class
+            }
             html += `<div class="alarm-item" style="display: flex; align-items: flex-start; gap: 0.625rem; padding-bottom: 0.3125rem; border-bottom: 0.0625rem solid rgba(255,255,255,0.05); min-width: 0;">
     <div class="alarm-icon ${iconClass}" style="color: ${color}; font-size: 1.125rem; padding-top: 0.375rem; flex-shrink: 0;">
     <i class="fas fa-exclamation-triangle"></i>
