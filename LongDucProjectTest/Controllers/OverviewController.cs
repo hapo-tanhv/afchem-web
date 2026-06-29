@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -1490,6 +1490,545 @@ namespace LongDucProject.Controllers
                 }
 
                 return Json(new { steps = stepsList, globalAlarms = sortedGlobalAlarms, batchInfo = batchInfo, dailyBatches = dailyBatchesList, bom = bomList, pendingRunNote = pendingRunNote }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpGet]
+        public JsonResult GetLightweightStepStatus(int? runId = null)
+        {
+            try
+            {
+                var connector = new MySQLConnect()
+                {
+                    ConnectionString = "Server=localhost;Database=scada;Uid=root;Pwd=101101;"
+                };
+
+                var resolution = LongDucProject.Helpers.BatchResolver.Resolve(connector, null, runId?.ToString());
+                int resolvedBatchId = resolution.BatchId;
+                int resolvedRunId = resolution.RunId;
+
+                int isPaused = 0;
+                int spCapLieu = 0;
+                int spTron1 = 0;
+                int spXaDay = 0;
+                int spRungXaDay = 0;
+                int spHutXaDay = 0;
+                int spTron2 = 0;
+                int spXaHang = 0;
+                int spRungXaHang = 0;
+
+                string runStatus = "";
+                string runStart = "";
+                string runEnd = "";
+                string batchStatus = "";
+                string batchStart = "";
+
+                if (resolvedRunId > 0)
+                {
+                    var dtRun = connector.ExecuteQuery($"SELECT status, is_paused, start_time, end_time, sp_thoi_gian_cap_lieu, sp_thoi_gian_tron1, sp_thoi_gian_xa_day, sp_thoi_gian_rung_xa_day, sp_thoi_gian_hut_xa_day_them, sp_thoi_gian_tron2, sp_thoi_gian_xa_hang, sp_thoi_gian_rung_xa_hang FROM runs WHERE id = {resolvedRunId} LIMIT 1");
+                    if (dtRun != null && dtRun.Rows.Count > 0)
+                    {
+                        runStatus = dtRun.Rows[0]["status"] != DBNull.Value ? dtRun.Rows[0]["status"].ToString() : "";
+                        isPaused = dtRun.Rows[0]["is_paused"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["is_paused"]) : 0;
+                        runStart = dtRun.Rows[0]["start_time"] != DBNull.Value ? Convert.ToDateTime(dtRun.Rows[0]["start_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
+                        runEnd = dtRun.Rows[0]["end_time"] != DBNull.Value ? Convert.ToDateTime(dtRun.Rows[0]["end_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
+
+                        spCapLieu = dtRun.Rows[0]["sp_thoi_gian_cap_lieu"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["sp_thoi_gian_cap_lieu"]) : 0;
+                        spTron1 = dtRun.Rows[0]["sp_thoi_gian_tron1"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["sp_thoi_gian_tron1"]) : 0;
+                        spXaDay = dtRun.Rows[0]["sp_thoi_gian_xa_day"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["sp_thoi_gian_xa_day"]) : 0;
+                        spRungXaDay = dtRun.Rows[0]["sp_thoi_gian_rung_xa_day"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["sp_thoi_gian_rung_xa_day"]) : 0;
+                        spHutXaDay = dtRun.Rows[0]["sp_thoi_gian_hut_xa_day_them"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["sp_thoi_gian_hut_xa_day_them"]) : 0;
+                        spTron2 = dtRun.Rows[0]["sp_thoi_gian_tron2"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["sp_thoi_gian_tron2"]) : 0;
+                        spXaHang = dtRun.Rows[0]["sp_thoi_gian_xa_hang"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["sp_thoi_gian_xa_hang"]) : 0;
+                        spRungXaHang = dtRun.Rows[0]["sp_thoi_gian_rung_xa_hang"] != DBNull.Value ? Convert.ToInt32(dtRun.Rows[0]["sp_thoi_gian_rung_xa_hang"]) : 0;
+                    }
+                }
+
+                if (resolvedBatchId > 0)
+                {
+                    var dtBatch = connector.ExecuteQuery($"SELECT status, start_time FROM batches WHERE id = {resolvedBatchId} LIMIT 1");
+                    if (dtBatch != null && dtBatch.Rows.Count > 0)
+                    {
+                        batchStatus = dtBatch.Rows[0]["status"] != DBNull.Value ? dtBatch.Rows[0]["status"].ToString() : "";
+                        batchStart = dtBatch.Rows[0]["start_time"] != DBNull.Value ? Convert.ToDateTime(dtBatch.Rows[0]["start_time"]).ToString("yyyy-MM-dd HH:mm:ss") : "";
+                    }
+                }
+
+                DataTable dtAlarmLog = null;
+                if (resolvedRunId != -1)
+                {
+                    dtAlarmLog = connector.ExecuteQuery($"SELECT OccurrenceTime, RestoreTime, Description, Status, TagNo FROM alarmlog WHERE runId = {resolvedRunId}");
+                }
+                else if (resolvedBatchId != -1)
+                {
+                    dtAlarmLog = connector.ExecuteQuery($"SELECT OccurrenceTime, RestoreTime, Description, Status, TagNo FROM alarmlog WHERE batchId = {resolvedBatchId}");
+                }
+
+                var accumulatedValues = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "ThoiGianCapLieu", 0 },
+                    { "ThoiGianTron1", 0 },
+                    { "ThoiGianXaDay", 0 },
+                    { "ThoiGianRungXaDay", 0 },
+                    { "ThoiGianHutXaDay", 0 },
+                    { "ThoiGianTron2", 0 },
+                    { "ThoiGianXaHang", 0 },
+                    { "ThoiGianRungXaHang", 0 }
+                };
+
+                if (resolvedRunId != -1)
+                {
+                    var dtAcc = connector.ExecuteQuery($"SELECT stepCode, accumulatedTime FROM run_step_accumulated_times WHERE runId = {resolvedRunId}");
+                    if (dtAcc != null && dtAcc.Rows.Count > 0)
+                    {
+                        var mapping = new Dictionary<int, string>
+                        {
+                            { 1, "ThoiGianCapLieu" },
+                            { 2, "ThoiGianTron1" },
+                            { 3, "ThoiGianXaDay" },
+                            { 4, "ThoiGianRungXaDay" },
+                            { 5, "ThoiGianHutXaDay" },
+                            { 6, "ThoiGianTron2" },
+                            { 7, "ThoiGianXaHang" },
+                            { 8, "ThoiGianRungXaHang" }
+                        };
+
+                        foreach (DataRow row in dtAcc.Rows)
+                        {
+                            if (row["stepCode"] != DBNull.Value && row["accumulatedTime"] != DBNull.Value)
+                            {
+                                int code = Convert.ToInt32(row["stepCode"]);
+                                double accTime = Convert.ToDouble(row["accumulatedTime"]);
+                                if (mapping.ContainsKey(code))
+                                {
+                                    accumulatedValues[mapping[code]] = accTime;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                DataTable dtAlarms = null;
+                if (resolvedRunId != -1)
+                {
+                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {resolvedRunId} AND Severity IN ('ALARM', 'WARNING') ORDER BY DateTime ASC, id ASC");
+                }
+                else if (resolvedBatchId != -1)
+                {
+                    dtAlarms = connector.ExecuteQuery($"SELECT id, DateTime, CongDoan, Severity, TagName, Value, Threshold, Message FROM realtime_alarms WHERE batchId = {resolvedBatchId} AND Severity IN ('ALARM', 'WARNING') ORDER BY DateTime ASC, id ASC");
+                }
+
+                var stepDefs = new[]
+                {
+                    new { Code = 1, TagNo = "T001", Name = "Cấp liệu", Standard = spCapLieu > 0 ? $"{spCapLieu}s" : "0s", Alias = "ThoiGianCapLieu" },
+                    new { Code = 2, TagNo = "T002", Name = "Trộn 1", Standard = spTron1 > 0 ? $"{spTron1}s" : "0s", Alias = "ThoiGianTron1" },
+                    new { Code = 3, TagNo = "T003", Name = "Xả đáy", Standard = spXaDay > 0 ? $"{spXaDay}s" : "0s", Alias = "ThoiGianXaDay" },
+                    new { Code = 4, TagNo = "T004", Name = "Rung xả đáy", Standard = spRungXaDay > 0 ? $"{spRungXaDay}s" : "0s", Alias = "ThoiGianRungXaDay" },
+                    new { Code = 5, TagNo = "T005", Name = "Hút xả đáy", Standard = spHutXaDay > 0 ? $"{spHutXaDay}s" : "0s", Alias = "ThoiGianHutXaDay" },
+                    new { Code = 6, TagNo = "T006", Name = "Trộn 2", Standard = spTron2 > 0 ? $"{spTron2}s" : "0s", Alias = "ThoiGianTron2" },
+                    new { Code = 7, TagNo = "T007", Name = "Xả hàng", Standard = spXaHang > 0 ? $"{spXaHang}s" : "0s", Alias = "ThoiGianXaHang" },
+                    new { Code = 8, TagNo = "T008", Name = "Rung xả hàng", Standard = spRungXaHang > 0 ? $"{spRungXaHang}s" : "0s", Alias = "ThoiGianRungXaHang" }
+                };
+
+                var stepsList = new List<object>();
+
+                var logRows = dtAlarmLog != null 
+                    ? dtAlarmLog.AsEnumerable()
+                                 .OrderByDescending(r => r["OccurrenceTime"] != DBNull.Value ? Convert.ToDateTime(r["OccurrenceTime"]) : DateTime.MinValue)
+                                 .ToList() 
+                    : new List<DataRow>();
+                var alarmRows = dtAlarms != null ? dtAlarms.AsEnumerable().ToList() : new List<DataRow>();
+
+                var activeLogRows = logRows.Where(r => r["Status"] != DBNull.Value && r["Status"].ToString().Trim().Equals("Alarm", StringComparison.OrdinalIgnoreCase)).ToList();
+                int activeStepCode = 0;
+                var activeStepCodes = new List<int>();
+                var activeStepNames = new List<string>();
+                string activeStepName = "";
+                DateTime? activeStepStartTime = null;
+
+                if (activeLogRows.Count > 0)
+                {
+                    foreach (var def in stepDefs)
+                    {
+                        var match = activeLogRows.FirstOrDefault(r => {
+                            string rowTagNo = r.Table.Columns.Contains("TagNo") && r["TagNo"] != DBNull.Value ? r["TagNo"].ToString().Trim() : "";
+                            if (!string.IsNullOrEmpty(rowTagNo))
+                            {
+                                return rowTagNo.Equals(def.TagNo, StringComparison.OrdinalIgnoreCase);
+                            }
+                            string desc = r["Description"] != DBNull.Value ? r["Description"].ToString() : "";
+                            if (def.Code == 1 && (desc.IndexOf("Cấp Liệu", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Cap Lieu", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 2 && (desc.IndexOf("Trộn 1", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Tron 1", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 3 && (desc.IndexOf("Xả Đáy", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Xa Day", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 4 && (desc.IndexOf("Rung Xả Đ", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Rung Xa D", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 5 && (desc.IndexOf("Hút Xả Đáy", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Hut Xa Day", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 6 && (desc.IndexOf("Trộn 2", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Tron 2", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            if (def.Code == 7 && (desc.IndexOf("Xả Hàng", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Xa Hang", StringComparison.OrdinalIgnoreCase) >= 0) && desc.IndexOf("Rung", StringComparison.OrdinalIgnoreCase) < 0) return true;
+                            if (def.Code == 8 && (desc.IndexOf("Rung Xả H", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Rung Xa H", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                            return false;
+                        });
+
+                        if (match != null)
+                        {
+                            activeStepCodes.Add(def.Code);
+                            activeStepNames.Add(def.Name);
+                            var t = Convert.ToDateTime(match["OccurrenceTime"]);
+                            if (!activeStepStartTime.HasValue || t < activeStepStartTime.Value)
+                            {
+                                activeStepStartTime = t;
+                            }
+                        }
+                    }
+
+                    if (activeStepCodes.Count > 0)
+                    {
+                        activeStepCode = activeStepCodes[0];
+                        activeStepName = string.Join(", ", activeStepNames);
+                    }
+                }
+
+                if (batchStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase))
+                {
+                    activeStepCode = 8;
+                    var step8Row = logRows.FirstOrDefault(r => {
+                        string rowTagNo = r.Table.Columns.Contains("TagNo") && r["TagNo"] != DBNull.Value ? r["TagNo"].ToString().Trim() : "";
+                        if (!string.IsNullOrEmpty(rowTagNo))
+                        {
+                            return rowTagNo.Equals("T008", StringComparison.OrdinalIgnoreCase);
+                        }
+                        string desc = r["Description"] != DBNull.Value ? r["Description"].ToString() : "";
+                        return desc.IndexOf("Rung Xả H", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Rung Xa H", StringComparison.OrdinalIgnoreCase) >= 0;
+                    });
+                    if (step8Row != null)
+                    {
+                        activeStepStartTime = Convert.ToDateTime(step8Row["OccurrenceTime"]);
+                    }
+                }
+                else if (batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) && activeStepCode == 0)
+                {
+                    int inferredCd = 0;
+                    try
+                    {
+                        var dtTelemetryCD = connector.ExecuteQuery($"SELECT CongDoanMay FROM alarmreport WHERE runId = {resolvedRunId} ORDER BY id DESC LIMIT 1");
+                        if (dtTelemetryCD != null && dtTelemetryCD.Rows.Count > 0 && dtTelemetryCD.Rows[0]["CongDoanMay"] != DBNull.Value)
+                        {
+                            inferredCd = Convert.ToInt32(dtTelemetryCD.Rows[0]["CongDoanMay"]);
+                        }
+                    }
+                    catch { }
+
+                    if (inferredCd > 0)
+                    {
+                        if (inferredCd == 1) activeStepCode = 1;
+                        else if (inferredCd == 2) activeStepCode = 2;
+                        else if (inferredCd == 3)
+                        {
+                            bool isT004Resolved = logRows.Any(r => r["TagNo"] != DBNull.Value && r["TagNo"].ToString().Trim().Equals("T004", StringComparison.OrdinalIgnoreCase) && r["Status"].ToString().Trim().Equals("Resolved", StringComparison.OrdinalIgnoreCase));
+                            bool isT003Resolved = logRows.Any(r => r["TagNo"] != DBNull.Value && r["TagNo"].ToString().Trim().Equals("T003", StringComparison.OrdinalIgnoreCase) && r["Status"].ToString().Trim().Equals("Resolved", StringComparison.OrdinalIgnoreCase));
+                            if (isT004Resolved) activeStepCode = 5;
+                            else if (isT003Resolved) activeStepCode = 4;
+                            else activeStepCode = 3;
+                        }
+                        else if (inferredCd == 4) activeStepCode = 6;
+                        else if (inferredCd == 5)
+                        {
+                            bool isT007Resolved = logRows.Any(r => r["TagNo"] != DBNull.Value && r["TagNo"].ToString().Trim().Equals("T007", StringComparison.OrdinalIgnoreCase) && r["Status"].ToString().Trim().Equals("Resolved", StringComparison.OrdinalIgnoreCase));
+                            if (isT007Resolved) activeStepCode = 8;
+                            else activeStepCode = 7;
+                        }
+                    }
+
+                    if (activeStepCode == 0)
+                    {
+                        int maxResolvedCode = 0;
+                        foreach (var def in stepDefs)
+                        {
+                            var match = logRows.FirstOrDefault(r => {
+                                string rowTagNo = r.Table.Columns.Contains("TagNo") && r["TagNo"] != DBNull.Value ? r["TagNo"].ToString().Trim() : "";
+                                if (!string.IsNullOrEmpty(rowTagNo))
+                                {
+                                    return rowTagNo.Equals(def.TagNo, StringComparison.OrdinalIgnoreCase);
+                                }
+                                string desc = r["Description"] != DBNull.Value ? r["Description"].ToString() : "";
+                                if (def.Code == 1 && (desc.IndexOf("Cấp Liệu", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Cap Lieu", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                                if (def.Code == 2 && (desc.IndexOf("Trộn 1", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Tron 1", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                                if (def.Code == 3 && (desc.IndexOf("Xả Đáy", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Xa Day", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                                if (def.Code == 4 && (desc.IndexOf("Rung Xả Đ", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Rung Xa D", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                                if (def.Code == 5 && (desc.IndexOf("Hút Xả Đáy", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Hut Xa Day", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                                if (def.Code == 6 && (desc.IndexOf("Trộn 2", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Tron 2", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                                if (def.Code == 7 && (desc.IndexOf("Xả Hàng", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Xa Hang", StringComparison.OrdinalIgnoreCase) >= 0) && desc.IndexOf("Rung", StringComparison.OrdinalIgnoreCase) < 0) return true;
+                                if (def.Code == 8 && (desc.IndexOf("Rung Xả H", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Rung Xa H", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                                return false;
+                            });
+
+                            if (match != null && match["Status"] != DBNull.Value && match["Status"].ToString().Trim().Equals("Resolved", StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (def.Code > maxResolvedCode)
+                                {
+                                    maxResolvedCode = def.Code;
+                                }
+                            }
+                        }
+
+                        if (maxResolvedCode < 8)
+                        {
+                            activeStepCode = maxResolvedCode + 1;
+                        }
+                    }
+
+                    if (activeStepCode > 0)
+                    {
+                        var inferredDef = stepDefs.FirstOrDefault(d => d.Code == activeStepCode);
+                        if (inferredDef != null)
+                        {
+                            activeStepName = inferredDef.Name;
+                            int prevStepCode = activeStepCode - 1;
+                            var prevDef = stepDefs.FirstOrDefault(d => d.Code == prevStepCode);
+                            if (prevDef != null)
+                            {
+                                var prevMatch = logRows.FirstOrDefault(r => {
+                                    string rowTagNo = r.Table.Columns.Contains("TagNo") && r["TagNo"] != DBNull.Value ? r["TagNo"].ToString().Trim() : "";
+                                    if (!string.IsNullOrEmpty(rowTagNo))
+                                    {
+                                        return rowTagNo.Equals(prevDef.TagNo, StringComparison.OrdinalIgnoreCase);
+                                    }
+                                    string desc = r["Description"] != DBNull.Value ? r["Description"].ToString() : "";
+                                    if (prevDef.Code == 1 && (desc.IndexOf("Cấp Liệu", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Cap Lieu", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                                    if (prevDef.Code == 2 && (desc.IndexOf("Trộn 1", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Tron 1", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                                    if (prevDef.Code == 3 && (desc.IndexOf("Xả Đáy", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Xa Day", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                                    if (prevDef.Code == 4 && (desc.IndexOf("Rung Xả Đ", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Rung Xa D", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                                    if (prevDef.Code == 5 && (desc.IndexOf("Hút Xả Đáy", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Hut Xa Day", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                                    if (prevDef.Code == 6 && (desc.IndexOf("Trộn 2", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Tron 2", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                                    if (prevDef.Code == 7 && (desc.IndexOf("Xả Hàng", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Xa Hang", StringComparison.OrdinalIgnoreCase) >= 0) && desc.IndexOf("Rung", StringComparison.OrdinalIgnoreCase) < 0) return true;
+                                    if (prevDef.Code == 8 && (desc.IndexOf("Rung Xả H", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Rung Xa H", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                                    return false;
+                                });
+
+                                if (prevMatch != null && prevMatch["RestoreTime"] != DBNull.Value)
+                                {
+                                    activeStepStartTime = Convert.ToDateTime(prevMatch["RestoreTime"]);
+                                }
+                            }
+                        }
+                    }
+
+                    if (!activeStepStartTime.HasValue)
+                    {
+                        if (!string.IsNullOrEmpty(runStart))
+                        {
+                            activeStepStartTime = Convert.ToDateTime(runStart);
+                        }
+                        else if (!string.IsNullOrEmpty(batchStart))
+                        {
+                            activeStepStartTime = Convert.ToDateTime(batchStart);
+                        }
+                    }
+                }
+                else if (batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) && !activeStepStartTime.HasValue)
+                {
+                    if (!string.IsNullOrEmpty(runStart))
+                    {
+                        activeStepStartTime = Convert.ToDateTime(runStart);
+                    }
+                    else if (!string.IsNullOrEmpty(batchStart))
+                    {
+                        activeStepStartTime = Convert.ToDateTime(batchStart);
+                    }
+                }
+
+                if (activeStepCode > 0 && activeStepCodes.Count == 0)
+                {
+                    activeStepCodes.Add(activeStepCode);
+                }
+
+                foreach (var def in stepDefs)
+                {
+                    var stepLogRow = logRows.FirstOrDefault(r => {
+                        string rowTagNo = r.Table.Columns.Contains("TagNo") && r["TagNo"] != DBNull.Value ? r["TagNo"].ToString().Trim() : "";
+                        if (!string.IsNullOrEmpty(rowTagNo))
+                        {
+                            return rowTagNo.Equals(def.TagNo, StringComparison.OrdinalIgnoreCase);
+                        }
+                        string desc = r["Description"] != DBNull.Value ? r["Description"].ToString() : "";
+                        if (def.Code == 1 && (desc.IndexOf("Cấp Liệu", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Cap Lieu", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                        if (def.Code == 2 && (desc.IndexOf("Trộn 1", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Tron 1", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                        if (def.Code == 3 && (desc.IndexOf("Xả Đáy", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Xa Day", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                        if (def.Code == 4 && (desc.IndexOf("Rung Xả Đ", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Rung Xa D", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                        if (def.Code == 5 && (desc.IndexOf("Hút Xả Đáy", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Hut Xa Day", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                        if (def.Code == 6 && (desc.IndexOf("Trộn 2", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Tron 2", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                        if (def.Code == 7 && (desc.IndexOf("Xả Hàng", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Xa Hang", StringComparison.OrdinalIgnoreCase) >= 0) && desc.IndexOf("Rung", StringComparison.OrdinalIgnoreCase) < 0) return true;
+                        if (def.Code == 8 && (desc.IndexOf("Rung Xả H", StringComparison.OrdinalIgnoreCase) >= 0 || desc.IndexOf("Rung Xa H", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+                        return false;
+                    });
+
+                    if (stepLogRow == null)
+                    {
+                        if (batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) && activeStepCodes.Contains(def.Code))
+                        {
+                            stepsList.Add(new
+                            {
+                                process = def.Name,
+                                standard = def.Standard,
+                                start = activeStepStartTime.HasValue ? activeStepStartTime.Value.ToString("HH:mm:ss") : "-",
+                                end = "-",
+                                duration = "-",
+                                tempTop = "-",
+                                tempMid = "-",
+                                tempBot = "-",
+                                status = "in-progress",
+                                statusText = "Đang thực hiện",
+                                alerts = new List<object>()
+                            });
+                        }
+                        else
+                        {
+                            stepsList.Add(new
+                            {
+                                process = def.Name,
+                                standard = def.Standard,
+                                start = "-",
+                                end = "-",
+                                duration = "-",
+                                tempTop = "-",
+                                tempMid = "-",
+                                tempBot = "-",
+                                status = "pending",
+                                statusText = "Chờ chạy",
+                                alerts = new List<object>()
+                            });
+                        }
+                    }
+                    else
+                    {
+                        DateTime startTime = Convert.ToDateTime(stepLogRow["OccurrenceTime"]);
+                        string startStr = startTime.ToString("HH:mm:ss");
+                        string endStr = "-";
+                        string durationStr = "-";
+                        string status = "pending";
+                        string statusText = "Chờ chạy";
+
+                        string statusVal = stepLogRow["Status"].ToString().Trim();
+                        bool isCompleted = statusVal.Equals("Resolved", StringComparison.OrdinalIgnoreCase);
+                        bool isAlarm = statusVal.Equals("Alarm", StringComparison.OrdinalIgnoreCase);
+
+                        DateTime? endTime = null;
+                        if (isCompleted)
+                        {
+                            status = "completed";
+                            statusText = "Hoàn thành";
+                            if (stepLogRow["RestoreTime"] != DBNull.Value)
+                            {
+                                endTime = Convert.ToDateTime(stepLogRow["RestoreTime"]);
+                                endStr = endTime.Value.ToString("HH:mm:ss");
+                                double totalSeconds = (endTime.Value - startTime).TotalSeconds;
+                                if (accumulatedValues.ContainsKey(def.Alias) && accumulatedValues[def.Alias] > 0)
+                                {
+                                    totalSeconds = accumulatedValues[def.Alias];
+                                }
+                                durationStr = $"{(int)Math.Round(totalSeconds)}s";
+                            }
+                        }
+                        else if (isAlarm)
+                        {
+                            status = "in-progress";
+                            statusText = "Đang thực hiện";
+                        }
+                        else
+                        {
+                            if (batchStatus.Equals("Active", StringComparison.OrdinalIgnoreCase) && activeStepCodes.Contains(def.Code))
+                            {
+                                status = "in-progress";
+                                statusText = "Đang thực hiện";
+                            }
+                            else
+                            {
+                                status = "pending";
+                                statusText = "Chờ chạy";
+                            }
+                        }
+
+                        var stepAlertsList = new List<object>();
+                        var stepAlarms = alarmRows.Where(r => {
+                            DateTime alarmTime = Convert.ToDateTime(r["DateTime"]);
+                            bool timeInStep = endTime.HasValue ? (alarmTime >= startTime && alarmTime <= endTime.Value) : (alarmTime >= startTime);
+
+                            string cd = r["CongDoan"] != DBNull.Value ? r["CongDoan"].ToString().Trim() : "";
+                            bool codeMatches = false;
+                            if (!string.IsNullOrEmpty(cd))
+                            {
+                                if (cd.Equals(def.TagNo, StringComparison.OrdinalIgnoreCase)) codeMatches = true;
+                                else if (cd.Equals(def.Name, StringComparison.OrdinalIgnoreCase)) codeMatches = true;
+                                else
+                                {
+                                    string cdLower = RemoveSign4VietnameseString(cd).ToLower();
+                                    string defNameLower = RemoveSign4VietnameseString(def.Name).ToLower();
+                                    if (cdLower == defNameLower) codeMatches = true;
+                                    else if (def.Code == 1 && (cdLower.Contains("cap lieu") || cdLower.Contains("c\u1ea5p li\u1ec7u") || cdLower.Contains("t001"))) codeMatches = true;
+                                    else if (def.Code == 2 && (cdLower.Contains("tron 1") || cdLower.Contains("tr\u1ed9n 1") || cdLower.Contains("t002"))) codeMatches = true;
+                                    else if (def.Code == 3 && (cdLower.Contains("xa day") || cdLower.Contains("x\u1ea3 \u0111\u00e1y") || cdLower.Contains("t003"))) codeMatches = true;
+                                    else if (def.Code == 4 && (cdLower.Contains("rung xa day") || cdLower.Contains("rung x\u1ea3 \u0111\u00e1y") || cdLower.Contains("t004"))) codeMatches = true;
+                                    else if (def.Code == 5 && (cdLower.Contains("hut xa day") || cdLower.Contains("h\u00fat x\u1ea3 \u0111\u00e1y") || cdLower.Contains("t005"))) codeMatches = true;
+                                    else if (def.Code == 6 && (cdLower.Contains("tron 2") || cdLower.Contains("tr\u1ed9n 2") || cdLower.Contains("t006"))) codeMatches = true;
+                                    else if (def.Code == 7 && (cdLower.Contains("xa hang") || cdLower.Contains("x\u1ea3 h\u00e0ng") || cdLower.Contains("t007")) && !cdLower.Contains("rung")) codeMatches = true;
+                                    else if (def.Code == 8 && (cdLower.Contains("rung xa hang") || cdLower.Contains("rung x\u1ea3 h\u00e0ng") || cdLower.Contains("t008"))) codeMatches = true;
+                                }
+                            }
+                            return codeMatches || timeInStep;
+                        }).ToList();
+
+                        foreach (var row in stepAlarms)
+                        {
+                            DateTime alarmTime = Convert.ToDateTime(row["DateTime"]);
+                            string severity = row["Severity"].ToString();
+                            string tagName = row["TagName"].ToString();
+                            double val = Convert.ToDouble(row["Value"]);
+                            double threshold = Convert.ToDouble(row["Threshold"]);
+                            string msg = row["Message"].ToString();
+
+                            string unit = tagName.IndexOf("NhietDo", StringComparison.OrdinalIgnoreCase) >= 0 ? "°C" :
+                                         tagName.IndexOf("ApSuat", StringComparison.OrdinalIgnoreCase) >= 0 ? "bar" : "";
+
+                            if (tagName.IndexOf("NhietDo", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                val = NormalizeTemperature(val);
+                                threshold = NormalizeTemperature(threshold);
+                            }
+
+                            string formatStr = tagName.IndexOf("ApSuat", StringComparison.OrdinalIgnoreCase) >= 0 ? "0.00" : "0.#";
+                            string detailMessage = $"Giá trị: {val.ToString(formatStr, CultureInfo.InvariantCulture)} {unit} (ngưỡng: {threshold.ToString(formatStr, CultureInfo.InvariantCulture)} {unit})";
+
+                            stepAlertsList.Add(new
+                            {
+                                id = Convert.ToInt32(row["id"]),
+                                time = alarmTime.ToString("HH:mm:ss"),
+                                type = severity,
+                                title = msg,
+                                message = detailMessage
+                            });
+                        }
+
+                        stepsList.Add(new
+                        {
+                            process = def.Name,
+                            standard = def.Standard,
+                            start = startStr,
+                            end = endStr,
+                            duration = durationStr,
+                            tempTop = "-",
+                            tempMid = "-",
+                            tempBot = "-",
+                            status = status,
+                            statusText = statusText,
+                            alerts = stepAlertsList
+                        });
+                    }
+                }
+
+                return Json(new { activeStepCode = activeStepCode, runStatus = runStatus, isPaused = isPaused, steps = stepsList }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {

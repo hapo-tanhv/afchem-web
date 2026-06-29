@@ -1081,15 +1081,72 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function fetchLightweightStepStatus() {
+        if (window.isHistoricView) return;
+
+        $.ajax({
+            url: '/Overview/GetLightweightStepStatus',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                if (data && !data.error) {
+                    // Update currentBatchInfo fields
+                    if (currentBatchInfo) {
+                        currentBatchInfo.activeStepCode = data.activeStepCode;
+                        currentBatchInfo.runStatus = data.runStatus;
+                        currentBatchInfo.isPaused = data.isPaused;
+                    }
+
+                    // Update currentSteps and window.currentSteps statuses, times, and durations
+                    if (currentSteps && data.steps) {
+                        currentSteps.forEach(function(step, index) {
+                            var s = data.steps[index];
+                            if (s) {
+                                step.status = s.status;
+                                step.statusText = s.statusText;
+                                step.start = s.start;
+                                step.end = s.end;
+                                step.duration = s.duration;
+                                step.alerts = s.alerts;
+                            }
+                        });
+                        window.currentSteps = currentSteps;
+                    } else if (!currentSteps && data.steps) {
+                        currentSteps = data.steps;
+                        window.currentSteps = data.steps;
+                    }
+
+                    // Update timeline step classes (highlights and flow animations)
+                    updateTimelineUI(data.activeStepCode, data.runStatus, data.isPaused);
+
+                    // Update the batch steps table
+                    if (typeof renderBatchTable === 'function' && currentSteps) {
+                        renderBatchTable(currentSteps);
+                    }
+
+                    // Update elapsed and remaining time stats panel
+                    if (typeof updateStepStatsUI === 'function') {
+                        updateStepStatsUI();
+                    }
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error fetching lightweight step status:', error);
+            }
+        });
+    }
+
     // Call immediately on load
 
     fetchCurrentBatchStats();
+    fetchLightweightStepStatus();
     fetchRecentAlarms();
     loadStandbyData();
 
     // Set polling intervals
 
     setInterval(fetchCurrentBatchStats, 30000); // 30 seconds for table stats
+    setInterval(fetchLightweightStepStatus, 2000); // 2 seconds for active step status
     setInterval(fetchRecentAlarms, 2000);       // 2 seconds for active alarms
 
     var latestNhietDoMoiTruong = 0;

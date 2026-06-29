@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -965,6 +965,17 @@ namespace LongDucProjectTest.Service
                 applyThinBorders(qcTableStart, qcTableStart + 5, 1, 4); // Section 5
                 applyThinBorders(incidentSectionStart + 1, incidentSectionStart + 5, 1, 5); // Section 6
                 applyThinBorders(signSectionStart + 1, signSectionStart + 5, 1, 4); // Section 7
+
+                // Remove background color and bold font from "Mẻ" cells (column 1, rows blockStartRow + 1 to blockStartRow + 8) in Section 3
+                for (int runIdx = 0; runIdx < runsList.Count; runIdx++)
+                {
+                    int blockStartRow = GetRunBlockStartRow(runIdx + 1, bomShift);
+                    for (int r = blockStartRow + 1; r <= blockStartRow + 8; r++)
+                    {
+                        ws.Cells[r, 1].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.None;
+                        ws.Cells[r, 1].Style.Font.Bold = false;
+                    }
+                }
 
                 // Rename primary sheet
                 ws.Name = "Nhật ký sản xuất";
