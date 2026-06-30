@@ -423,24 +423,22 @@ namespace LongDucProject.Controllers
                             }
                         }
                     }
-                    else
+
+                    // Always apply telemetry-max calculations to refine/correct accumulated times (recover lost seconds from polling delay)
+                    if (dtTelemetry != null && dtTelemetry.Rows.Count > 0)
                     {
-                        // Fallback to telemetry-max calculations for older historical runs
-                        if (dtTelemetry != null && dtTelemetry.Rows.Count > 0)
+                        foreach (DataRow row in dtTelemetry.Rows)
                         {
-                            foreach (DataRow row in dtTelemetry.Rows)
+                            var keys = new List<string>(accumulatedValues.Keys);
+                            foreach (var key in keys)
                             {
-                                var keys = new List<string>(accumulatedValues.Keys);
-                                foreach (var key in keys)
+                                if (row.Table.Columns.Contains(key) && row[key] != DBNull.Value)
                                 {
-                                    if (row.Table.Columns.Contains(key) && row[key] != DBNull.Value)
+                                    if (double.TryParse(row[key].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val))
                                     {
-                                        if (double.TryParse(row[key].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val))
+                                        if (val > accumulatedValues[key])
                                         {
-                                            if (val > accumulatedValues[key])
-                                            {
-                                                accumulatedValues[key] = val;
-                                            }
+                                            accumulatedValues[key] = val;
                                         }
                                     }
                                 }
@@ -1575,6 +1573,16 @@ namespace LongDucProject.Controllers
                     dtAlarmLog = connector.ExecuteQuery($"SELECT OccurrenceTime, RestoreTime, Description, Status, TagNo FROM alarmlog WHERE batchId = {resolvedBatchId}");
                 }
 
+                DataTable dtTelemetry = null;
+                if (resolvedRunId != -1)
+                {
+                    dtTelemetry = connector.ExecuteQuery($"SELECT ThoiGianCapLieu, ThoiGianTron1, ThoiGianXaDay, ThoiGianRungXaDay, ThoiGianHutXaDay, ThoiGianTron2, ThoiGianXaHang, ThoiGianRungXaHang FROM alarmreport WHERE runId = {resolvedRunId}");
+                }
+                else if (resolvedBatchId != -1)
+                {
+                    dtTelemetry = connector.ExecuteQuery($"SELECT ThoiGianCapLieu, ThoiGianTron1, ThoiGianXaDay, ThoiGianRungXaDay, ThoiGianHutXaDay, ThoiGianTron2, ThoiGianXaHang, ThoiGianRungXaHang FROM alarmreport WHERE batchId = {resolvedBatchId}");
+                }
+
                 var accumulatedValues = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase)
                 {
                     { "ThoiGianCapLieu", 0 },
@@ -1613,6 +1621,28 @@ namespace LongDucProject.Controllers
                                 if (mapping.ContainsKey(code))
                                 {
                                     accumulatedValues[mapping[code]] = accTime;
+                                }
+                            }
+                        }
+                    }
+
+                    // Apply telemetry-max calculations to refine/correct accumulated times (recover lost seconds from polling delay)
+                    if (dtTelemetry != null && dtTelemetry.Rows.Count > 0)
+                    {
+                        foreach (DataRow row in dtTelemetry.Rows)
+                        {
+                            var keys = new List<string>(accumulatedValues.Keys);
+                            foreach (var key in keys)
+                            {
+                                if (row.Table.Columns.Contains(key) && row[key] != DBNull.Value)
+                                {
+                                    if (double.TryParse(row[key].ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val))
+                                    {
+                                        if (val > accumulatedValues[key])
+                                        {
+                                            accumulatedValues[key] = val;
+                                        }
+                                    }
                                 }
                             }
                         }

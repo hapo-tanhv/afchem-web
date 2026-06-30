@@ -48,7 +48,7 @@
         events.forEach(function (e) {
             var sevUpper = (e.severity || '').toUpperCase();
             if (sevUpper === 'ALARM' || sevUpper === 'HIGH') alarmCount++;
-            else if (sevUpper === 'WARNING' || sevUpper === 'AVERAGE') warningCount++;
+            else if (sevUpper === 'WARNING' || sevUpper === 'AVERAGE' || sevUpper === 'LOW') warningCount++;
             else infoCount++;
         });
 
@@ -145,8 +145,8 @@
         var filtered = [];
         if (filter === 'all') filtered = currentEvents.slice();
         else if (filter === 'alarm') filtered = currentEvents.filter(function (e) { var s = (e.severity || '').toUpperCase(); return s === 'ALARM' || s === 'HIGH'; });
-        else if (filter === 'warning') filtered = currentEvents.filter(function (e) { var s = (e.severity || '').toUpperCase(); return s === 'WARNING' || s === 'AVERAGE'; });
-        else if (filter === 'info') filtered = currentEvents.filter(function (e) { var s = (e.severity || '').toUpperCase(); return s === 'INFO' || s === 'LOW'; });
+        else if (filter === 'warning') filtered = currentEvents.filter(function (e) { var s = (e.severity || '').toUpperCase(); return s === 'WARNING' || s === 'AVERAGE' || s === 'LOW'; });
+        else if (filter === 'info') filtered = currentEvents.filter(function (e) { var s = (e.severity || '').toUpperCase(); return s === 'INFO'; });
 
         // Sort by time
         filtered.sort(function (a, b) {
@@ -176,9 +176,9 @@
         tbody.innerHTML = html;
 
         // Render tabs
-        var alarmCount = currentEvents.filter(function (e) { return e.severity === 'ALARM'; }).length;
-        var warningCount = currentEvents.filter(function (e) { return e.severity === 'WARNING'; }).length;
-        var infoCount = currentEvents.filter(function (e) { return e.severity === 'INFO'; }).length;
+        var alarmCount = currentEvents.filter(function (e) { var s = (e.severity || '').toUpperCase(); return s === 'ALARM' || s === 'HIGH'; }).length;
+        var warningCount = currentEvents.filter(function (e) { var s = (e.severity || '').toUpperCase(); return s === 'WARNING' || s === 'AVERAGE' || s === 'LOW'; }).length;
+        var infoCount = currentEvents.filter(function (e) { var s = (e.severity || '').toUpperCase(); return s === 'INFO'; }).length;
         var total = currentEvents.length;
 
         var tabsHtml = '<div class="evt-tab ' + (filter === 'all' ? 'active' : '') + '" onclick="EventPage.filterEvents(\'all\')">Tất cả (' + total + ')</div>' +

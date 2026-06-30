@@ -1,4 +1,4 @@
-﻿using LongDucProjectTest.ServiceReference1;
+using LongDucProjectTest.ServiceReference1;
 using Hino.DatabaseConnector;
 using System;
 using System.Collections.Generic;
@@ -124,11 +124,22 @@ namespace LongDucProjectTest.Service
                 // Ensure rows exist in database
                 InitializeDatabaseRows(connector, runId);
 
-                // Read current PLC values to seed baseline (do not count them as delta)
+                // Read current PLC values to seed baseline
                 var currentPlcValues = ReadPlcTimerValues();
                 foreach (var stepCode in _stepTags.Keys)
                 {
-                    _prevTimerValues[stepCode] = currentPlcValues.ContainsKey(stepCode) ? currentPlcValues[stepCode] : 0;
+                    double currentVal = currentPlcValues.ContainsKey(stepCode) ? currentPlcValues[stepCode] : 0;
+                    // If the run just switched and the value is small (e.g. < 15s), it means the step has just started,
+                    // so we should accumulate this initial value. Set baseline to 0.
+                    // Otherwise, if it's large, it might be a residual value or the run was restarted mid-way, so we seed with currentVal.
+                    if (currentVal < 15)
+                    {
+                        _prevTimerValues[stepCode] = 0;
+                    }
+                    else
+                    {
+                        _prevTimerValues[stepCode] = currentVal;
+                    }
                 }
                 return;
             }

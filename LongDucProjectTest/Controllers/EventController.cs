@@ -293,6 +293,39 @@ namespace LongDucProject.Controllers
                     { "ThoiGianRungXaHang", 0 }
                 };
 
+                if (selectedRunId > 0)
+                {
+                    var dtAcc = connector.ExecuteQuery($"SELECT stepCode, accumulatedTime FROM run_step_accumulated_times WHERE runId = {selectedRunId}");
+                    if (dtAcc != null && dtAcc.Rows.Count > 0)
+                    {
+                        var mapping = new Dictionary<int, string>
+                        {
+                            { 1, "ThoiGianCapLieu" },
+                            { 2, "ThoiGianTron1" },
+                            { 3, "ThoiGianXaDay" },
+                            { 4, "ThoiGianRungXaDay" },
+                            { 5, "ThoiGianHutXaDay" },
+                            { 6, "ThoiGianTron2" },
+                            { 7, "ThoiGianXaHang" },
+                            { 8, "ThoiGianRungXaHang" }
+                        };
+
+                        foreach (DataRow row in dtAcc.Rows)
+                        {
+                            if (row["stepCode"] != DBNull.Value && row["accumulatedTime"] != DBNull.Value)
+                            {
+                                int code = Convert.ToInt32(row["stepCode"]);
+                                double accTime = Convert.ToDouble(row["accumulatedTime"]);
+                                if (mapping.ContainsKey(code))
+                                {
+                                    accumulatedValues[mapping[code]] = accTime;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Always apply telemetry-max calculations to refine/correct accumulated times (recover lost seconds from polling delay)
                 if (dtTelemetry != null && dtTelemetry.Rows.Count > 0)
                 {
                     foreach (DataRow row in dtTelemetry.Rows)
@@ -419,27 +452,41 @@ namespace LongDucProject.Controllers
 
                             string cd = r["CongDoan"] != DBNull.Value ? r["CongDoan"].ToString().Trim() : "";
                             bool codeMatches = false;
+                            bool cdMatchesAny = false;
                             if (!string.IsNullOrEmpty(cd))
                             {
-                                if (cd.Equals(def.TagNo, StringComparison.OrdinalIgnoreCase)) codeMatches = true;
-                                else if (cd.Equals(def.Name, StringComparison.OrdinalIgnoreCase)) codeMatches = true;
-                                else
+                                foreach (var otherDef in stepDefs)
                                 {
-                                    string cdLower = RemoveSign4VietnameseString(cd).ToLower();
-                                    string defNameLower = RemoveSign4VietnameseString(def.Name).ToLower();
-                                    if (cdLower == defNameLower) codeMatches = true;
-                                    else if (def.Code == 1 && (cdLower.Contains("cap lieu") || cdLower.Contains("cấp liệu") || cdLower.Contains("t001"))) codeMatches = true;
-                                    else if (def.Code == 2 && (cdLower.Contains("tron 1") || cdLower.Contains("trộn 1") || cdLower.Contains("t002"))) codeMatches = true;
-                                    else if (def.Code == 3 && (cdLower.Contains("xa day") || cdLower.Contains("xả đáy") || cdLower.Contains("t003"))) codeMatches = true;
-                                    else if (def.Code == 4 && (cdLower.Contains("rung xa day") || cdLower.Contains("rung xả đáy") || cdLower.Contains("t004"))) codeMatches = true;
-                                    else if (def.Code == 5 && (cdLower.Contains("hut xa day") || cdLower.Contains("hút xả đáy") || cdLower.Contains("t005"))) codeMatches = true;
-                                    else if (def.Code == 6 && (cdLower.Contains("tron 2") || cdLower.Contains("trộn 2") || cdLower.Contains("t006"))) codeMatches = true;
-                                    else if (def.Code == 7 && (cdLower.Contains("xa hang") || cdLower.Contains("xả hàng") || cdLower.Contains("t007")) && !cdLower.Contains("rung")) codeMatches = true;
-                                    else if (def.Code == 8 && (cdLower.Contains("rung xa hang") || cdLower.Contains("rung xả hàng") || cdLower.Contains("t008"))) codeMatches = true;
+                                    bool matchThis = false;
+                                    if (cd.Equals(otherDef.TagNo, StringComparison.OrdinalIgnoreCase)) matchThis = true;
+                                    else if (cd.Equals(otherDef.Name, StringComparison.OrdinalIgnoreCase)) matchThis = true;
+                                    else
+                                    {
+                                        string cdLower = RemoveSign4VietnameseString(cd).ToLower();
+                                        string otherDefNameLower = RemoveSign4VietnameseString(otherDef.Name).ToLower();
+                                        if (cdLower == otherDefNameLower) matchThis = true;
+                                        else if (otherDef.Code == 1 && (cdLower.Contains("cap lieu") || cdLower.Contains("cấp liệu") || cdLower.Contains("t001"))) matchThis = true;
+                                        else if (otherDef.Code == 2 && (cdLower.Contains("tron 1") || cdLower.Contains("trộn 1") || cdLower.Contains("t002"))) matchThis = true;
+                                        else if (otherDef.Code == 3 && (cdLower.Contains("xa day") || cdLower.Contains("xả đáy") || cdLower.Contains("t003"))) matchThis = true;
+                                        else if (otherDef.Code == 4 && (cdLower.Contains("rung xa day") || cdLower.Contains("rung xả đáy") || cdLower.Contains("t004"))) matchThis = true;
+                                        else if (otherDef.Code == 5 && (cdLower.Contains("hut xa day") || cdLower.Contains("hút xả đáy") || cdLower.Contains("t005"))) matchThis = true;
+                                        else if (otherDef.Code == 6 && (cdLower.Contains("tron 2") || cdLower.Contains("trộn 2") || cdLower.Contains("t006"))) matchThis = true;
+                                        else if (otherDef.Code == 7 && (cdLower.Contains("xa hang") || cdLower.Contains("xả hàng") || cdLower.Contains("t007")) && !cdLower.Contains("rung")) matchThis = true;
+                                        else if (otherDef.Code == 8 && (cdLower.Contains("rung xa hang") || cdLower.Contains("rung xả hàng") || cdLower.Contains("t008"))) matchThis = true;
+                                    }
+
+                                    if (matchThis)
+                                    {
+                                        cdMatchesAny = true;
+                                        if (otherDef.Code == def.Code)
+                                        {
+                                            codeMatches = true;
+                                        }
+                                    }
                                 }
                             }
 
-                            return codeMatches || timeInStep;
+                            return cdMatchesAny ? codeMatches : timeInStep;
                         }).ToList();
 
                         foreach (var row in stepAlarms)

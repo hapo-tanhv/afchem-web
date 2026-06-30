@@ -316,7 +316,7 @@ namespace LongDucProject.Controllers
                 int recordsFiltered = Convert.ToInt32(connector.ExecuteScalarQuery(countQuery));
                 int recordsTotal = recordsFiltered;
 
-                string dataQuery = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime ASC, a.ID ASC LIMIT {length} OFFSET {start}";
+                string dataQuery = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ThoiGianDongCoTron, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime ASC, a.ID ASC LIMIT {length} OFFSET {start}";
 
                 var data = new List<object>();
                 var dt = connector.ExecuteQuery(dataQuery);
@@ -337,8 +337,7 @@ namespace LongDucProject.Controllers
                         double tgXaHang = TryGetDouble(row["ThoiGianXaHang"]);
                         double tgRungXaHang = TryGetDouble(row["ThoiGianRungXaHang"]);
 
-                        // Exclude bottom discharge (Xả đáy) from total time as requested
-                        double tongTgTron = tgCapLieu + tgTron1 + tgRungXaDay + tgHutXaDay + tgTron2 + tgXaHang + tgRungXaHang;
+                        double tongTgTron = TryGetDouble(row["ThoiGianDongCoTron"]);
 
                         data.Add(new
                         {
@@ -629,7 +628,7 @@ namespace LongDucProject.Controllers
                 filterQuery += $" AND (b.name LIKE '%{searchValue.Replace("'", "''")}%' OR a.ApSuat LIKE '%{searchValue.Replace("'", "''")}%' OR a.NhietDoMoiTruong LIKE '%{searchValue.Replace("'", "''")}%' OR a.NhietDoBonTronTren LIKE '%{searchValue.Replace("'", "''")}%')";
             }
 
-            string query = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime ASC, a.ID ASC";
+            string query = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ThoiGianDongCoTron, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime ASC, a.ID ASC";
 
             var list = new List<ReportExportDto>();
             var dt = connector.ExecuteQuery(query);
@@ -650,8 +649,7 @@ namespace LongDucProject.Controllers
                     double tgXaHang = TryGetDouble(row["ThoiGianXaHang"]);
                     double tgRungXaHang = TryGetDouble(row["ThoiGianRungXaHang"]);
 
-                    // Exclude bottom discharge (Xả đáy) from total time as requested
-                    double tongTgTron = tgCapLieu + tgTron1 + tgRungXaDay + tgHutXaDay + tgTron2 + tgXaHang + tgRungXaHang;
+                    double tongTgTron = TryGetDouble(row["ThoiGianDongCoTron"]);
 
                     list.Add(new ReportExportDto
                     {
@@ -741,7 +739,7 @@ namespace LongDucProject.Controllers
                 filterQuery += $" AND (b.name LIKE '%{searchValue.Replace("'", "''")}%' OR a.ApSuat LIKE '%{searchValue.Replace("'", "''")}%' OR a.NhietDoMoiTruong LIKE '%{searchValue.Replace("'", "''")}%' OR a.NhietDoBonTronTren LIKE '%{searchValue.Replace("'", "''")}%')";
             }
 
-            string query = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime ASC, a.ID ASC";
+            string query = $"SELECT a.DateTime, a.QuyTrinh, a.CongDoanMay, a.ThoiGianCapLieu, a.ThoiGianTron1, a.ThoiGianXaDay, a.ThoiGianRungXaDay, a.ThoiGianHutXaDay, a.ThoiGianTron2, a.ThoiGianXaHang, a.ThoiGianRungXaHang, a.ThoiGianDongCoTron, a.ApSuat, a.NhietDoMoiTruong, a.DoAmMoiTruong, a.NhietDoBonTronTren, a.NhietDoBonTronGiua, a.NhietDoBonTronDuoi {baseQuery} {filterQuery} ORDER BY a.DateTime ASC, a.ID ASC";
 
             var list = new List<ReportExportDto>();
             var dt = connector.ExecuteQuery(query);
@@ -762,8 +760,7 @@ namespace LongDucProject.Controllers
                     double tgXaHang = TryGetDouble(row["ThoiGianXaHang"]);
                     double tgRungXaHang = TryGetDouble(row["ThoiGianRungXaHang"]);
 
-                    // Exclude bottom discharge (Xả đáy) from total time as requested
-                    double tongTgTron = tgCapLieu + tgTron1 + tgRungXaDay + tgHutXaDay + tgTron2 + tgXaHang + tgRungXaHang;
+                    double tongTgTron = TryGetDouble(row["ThoiGianDongCoTron"]);
 
                     list.Add(new ReportExportDto
                     {
