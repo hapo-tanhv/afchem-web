@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
@@ -2301,20 +2301,32 @@
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Css\Overview.css" />
+    <Content Include="Css\Event.css" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
     <Content Include="Image\2.png" />
+    <Content Include="Image\3.png" />
+    <Content Include="Image\4.png" />
     <Content Include="Image\5.png" />
+    <Content Include="Image\6.png" />
+    <Content Include="Image\afchem_logo.png" />
     <Content Include="Image\anh VN.jpg" />
+    <Content Include="Image\card_overview.png" />
     <Content Include="Image\electric_pole.png" />
+    <Content Include="Image\header.png" />
     <Content Include="Image\info.png" />
+    <Content Include="Image\layout.jpg" />
     <Content Include="Image\Login.jpg" />
     <Content Include="Image\LoginBackGroud2.jpg" />
     <Content Include="Image\Login_new.jpg" />
     <Content Include="Image\MapVN.png" />
     <Content Include="Image\MapVN1.png" />
+    <Content Include="Image\power.png" />
+    <Content Include="Image\realtime-card.png" />
+    <Content Include="Image\sodobontron.jpg" />
+    <Content Include="Image\sodobontron2.jpeg" />
     <Content Include="JavaScript\Core\Common\atscada-dispatcher.js" />
     <Content Include="JavaScript\Core\Common\atscada-fetch-service.js" />
     <Content Include="JavaScript\Core\Common\atscada-importer.js" />
@@ -2335,6 +2347,7 @@
     <Content Include="JavaScript\Common\LayoutMain.js" />
     <Content Include="JavaScript\Common\login.js" />
     <Content Include="JavaScript\RealTime\OverviewRealtime.js" />
+    <Content Include="JavaScript\Event\EventPage.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="AdminLTE-master\.browserslistrc" />
@@ -2709,25 +2722,10 @@
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\_LayoutMain.cshtml" />
     <Content Include="Views\Home\Overview.cshtml" />
-    <Content Include="Views\Shared\_LayoutProject3.cshtml" />
-    <Content Include="Views\Shared\_LayoutProject4.cshtml" />
-    <Content Include="Views\Shared\_LayoutProject2.cshtml" />
     <Content Include="Views\Home\Alarm.cshtml" />
     <Content Include="Views\Home\Event.cshtml" />
     <Content Include="Views\Home\Login.cshtml" />
-    <Content Include="Views\Shared\_LayoutProject1.cshtml" />
-    <Content Include="Views\Shared\_LayoutProject5.cshtml" />
-    <Content Include="Views\Shared\_LayoutProject6.cshtml" />
-    <Content Include="Views\Shared\_LayoutProject7.cshtml" />
-    <Content Include="Views\Shared\_LayoutSignage1.cshtml" />
-    <Content Include="Views\Shared\_LayoutSignage2.cshtml" />
-    <Content Include="Views\Shared\_LayoutSignage3.cshtml" />
-    <Content Include="Views\Shared\_LayoutSignage4.cshtml" />
-    <Content Include="Views\Shared\_LayoutSignage5.cshtml" />
-    <Content Include="Views\Shared\_LayoutSignage6.cshtml" />
-    <Content Include="Views\Shared\_LayoutSignage7.cshtml" />
-    <Content Include="Views\Shared\_LayoutSignageAdmin.cshtml" />
-    <Content Include="Views\Shared\_LayoutLDIP.cshtml" />
+    <Content Include="Views\Home\Report.cshtml" />
     <Content Include="Views\Home\UserSetting.cshtml" />
   </ItemGroup>
   <ItemGroup>

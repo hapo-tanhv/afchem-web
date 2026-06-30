@@ -95,6 +95,27 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log('[JSAccumulator] Reset diagram realtime values to 0.');
     }
 
+    function updateDiagramTimers() {
+        var isCompleted = currentBatchInfo && (currentBatchInfo.runStatus === "Completed" || currentBatchInfo.machineStatus === "COMPLETED");
+        var mapping = {
+            1: '#feedingTime',
+            2: '#mix1Time',
+            3: '#bottomDischargeTime',
+            4: '#bottomDischargeVibrationTime',
+            5: '#bottomSuctionDischargeTime',
+            6: '#mix2Time',
+            7: '#clearanceSaleTime',
+            8: '#vibrationDischargeTime'
+        };
+        for (var code in mapping) {
+            var el = document.querySelector(mapping[code]);
+            if (el) {
+                var val = isCompleted ? 0 : (jsAccumulatedTimers[code] || 0);
+                el.innerHTML = val;
+            }
+        }
+    }
+
     function getJsAccumulatedValue(stageCode, alias, currentVal) {
         if (isNaN(currentVal) || currentVal <= 0) return jsAccumulatedTimers[stageCode] || 0;
 
@@ -133,7 +154,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (data.e.newValue !== undefined) {
                     var val = Number(data.e.newValue) || 0;
                     var accVal = getJsAccumulatedValue(stageCode, alias, val);
-                    element.innerHTML = accVal;
+                    var isCompleted = currentBatchInfo && (currentBatchInfo.runStatus === "Completed" || currentBatchInfo.machineStatus === "COMPLETED");
+                    element.innerHTML = isCompleted ? 0 : accVal;
                     updateCalculatedTime();
                 }
             });
@@ -141,7 +163,8 @@ document.addEventListener("DOMContentLoaded", function () {
             if (dataTag.Value !== undefined) {
                 var val = Number(dataTag.Value) || 0;
                 var accVal = getJsAccumulatedValue(stageCode, alias, val);
-                element.innerHTML = accVal;
+                var isCompleted = currentBatchInfo && (currentBatchInfo.runStatus === "Completed" || currentBatchInfo.machineStatus === "COMPLETED");
+                element.innerHTML = isCompleted ? 0 : accVal;
                 updateCalculatedTime();
             }
         }
@@ -509,6 +532,9 @@ document.addEventListener("DOMContentLoaded", function () {
                             }
                         }
                     }
+
+                    // Update diagram timers to reflect the correct state (Completed -> 0)
+                    updateDiagramTimers();
 
                     // Track resolved run IDs & detect new run to reset accumulators
                     if (batchInfo.runId) {
@@ -1123,6 +1149,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     // Update timeline step classes (highlights and flow animations)
                     updateTimelineUI(data.activeStepCode, data.runStatus, data.isPaused);
+
+                    // Update diagram timers to reflect the correct state (Completed -> 0)
+                    updateDiagramTimers();
 
                     // Update the batch steps table
                     if (typeof renderBatchTable === 'function' && currentSteps) {

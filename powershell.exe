@@ -1,0 +1,1 @@
+-ExecutionPolicy Bypass -Command "Import-Module WebAdministration; Start-WebAppPool 'LongDucPool'; Start-Website 'AfchemSystem'"
