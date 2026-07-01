@@ -17,11 +17,10 @@
 ## 2. THANH TRẠNG THÁI CHUNG (SYSTEM HEADER)
 * **Chức năng chính:**
   * Giám sát trạng thái hoạt động thực tế của máy trộn TX01 trực quan qua màu sắc:
-    * Chữ màu xanh lá `"RUNNING"`: Máy đang trộn/hoạt động bình thường.
+    * Chữ màu xanh lá `"Active"`: Mẻ sản xuất đang hoạt động/chạy bình thường.
     * Chữ màu vàng `"PAUSED"`: Máy đang tạm dừng trộn (có tín hiệu tạm dừng từ tủ PLC, WebApp tự động khóa bộ đếm thời gian).
-    * Chữ màu xám `"PENDING"`: Mẻ sản xuất đang ở trạng thái chờ kích hoạt.
-    * Chữ màu xanh dương `"COMPLETED"`: Mẻ/lô sản xuất hiện tại đã hoàn tất chu kỳ trộn.
-    * Chữ màu xám `"OFFLINE"`: Máy tính SCADA mất kết nối vật lý với PLC.
+    * Chữ màu xanh dương `"Pending"` / `"Standby"`: Mẻ sản xuất đang ở trạng thái chờ hoặc sẵn sàng kích hoạt.
+    * Chữ màu xanh dương `"Completed"`: Mẻ/lô sản xuất hiện tại đã hoàn tất chu kỳ trộn.
   * Tự động đếm giờ thực tế hoạt động tích lũy (`headerRunningTime`) của mẻ đang chạy.
   * Đóng băng bộ đếm giờ (ngừng tăng giây) khi máy chuyển sang trạng thái tạm dừng `"PAUSED"` để tránh sai lệch dữ liệu.
   * Tự động hiển thị và phân ca làm việc của Operator dựa trên đồng hồ thời gian thực:

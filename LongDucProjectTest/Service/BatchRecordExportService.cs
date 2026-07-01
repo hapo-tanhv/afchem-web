@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -536,11 +536,6 @@ namespace LongDucProjectTest.Service
                                     var cell = ws.Cells[r, 6];
                                     cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
                                     cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 0, 0)); // Red (#FF0000)
-                                } else if (diff > 0 && diff < 300)
-                                {
-                                    var cell = ws.Cells[r, 6];
-                                    cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-                                    cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 255, 0)); // Yellow (#FFFF00)
                                 }
                             }
 
@@ -805,8 +800,8 @@ namespace LongDucProjectTest.Service
                         ws.Cells[r, 2].Value = message; // Mô tả sự cố
                         ws.Cells[r, 2].Style.WrapText = true;
                         ws.Cells[r, 3].Value = ""; // Hành động xử lý (Để trống cho người dùng tự điền)
-                        ws.Cells[r, 4].Value = "Hệ thống"; // Người xử lý
-                        ws.Cells[r, 5].Value = "Đã khắc phục"; // Kết quả
+                        ws.Cells[r, 4].Value = ""; // Người xử lý
+                        ws.Cells[r, 5].Value = ""; // Kết quả
 
                         // Ensure thin borders and font are applied to columns 1 to 5
                         for (int col = 1; col <= 5; col++)
