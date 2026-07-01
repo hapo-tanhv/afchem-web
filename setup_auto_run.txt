@@ -1,0 +1,103 @@
+* Tạo file script auto deploy Core:
+- B1: Chuẩn bị file tunnel.js
+- B2: Tạo file start-localtunnel.bat
+- B3: Mở Task Scheduler:
+  + Nhấn Win + R
+  + gõ taskschd.msc
+- B4: Tạo Task mới
+  + General:
+    . Name: LocalTunnel KeepAlive
+    . Tick: 
+	☑ Run only when user is logged on
+        ☑ Run with highest privileges
+  + Trigger:
+    . Begin the task: At startup
+    . Delay task for: 30 seconds
+    . Tick Enabled
+  + Action:
+    . Program/script: D:\project\afchem-core\start-localtunnel.bat
+    . Start in: D:\project\afchem-core
+  + Conditions:
+    . Bỏ tick: ☑ Start the task only if computer is on AC power
+  + Settings:
+    . Tick:
+	☑ Allow task to be run on demand
+	☑ If the task fails, restart every: 1 / 999
+
+* Tạo Task Scheduler auto run cho RealtimeApp và Core
+- RealtimeApp:
+  + Trigger: Để delay 20 seconds
+  + Action:
+    . Program/script: D:\project\afchem-test-realtime\RealTimeApp\bin\Release\RealTimeApp.exe
+    . Start in: D:\project\afchem-test-realtime\RealTimeApp\bin\Release
+- HinoToolsAlarm: để delay 20 seconds
+  + Trigger: Để delay 20 seconds
+  + Action:
+    . Program/script: D:\project\afchem-core\WindowsFormsApp1\bin\Release\WindowsFormsApp1.exe
+    . Start in: D:\project\afchem-core\WindowsFormsApp1\bin\Release
+
+* Setup Website tự chạy khi Windows khởi động
+- B1: Cài IIS
+  + Nhấn Win + R
+  + gõ optionalfeatures
+  + Tick các mục sau:
+Internet Information Services
+ ├── Web Management Tools
+ │     └── IIS Management Console
+ │
+ └── World Wide Web Services
+       ├── Application Development Features
+       │      ☑ .NET Extensibility 4.8
+       │      ☑ ASP.NET 4.8
+       │      ☑ ISAPI Extensions
+       │      ☑ ISAPI Filters
+       │
+       ├── Common HTTP Features
+       │      ☑ Default Document
+       │      ☑ Static Content
+       │      ☑ HTTP Errors
+       │
+       ├── Security
+       │      ☑ Request Filtering
+       │
+       └── Performance Features
+              ☑ Static Content Compression
+- B2: Kiểm tra IIS đã được cài chưa
+  + Mở browser: http://localhost, nếu thấy IIS Windows Server => Cài thành công
+- B3: Public project MVC
+  + Mở VS, Build => Publish
+  + Chọn Folder: C:\Websites\AfChem
+- B4: Mở IIS Manager
+  + Nhấn Win + R
+  + gõ inetmgr
+- B5: Tạo Application Pool
+  + Chọn Application Pools => Add Application Pool
+    . Tên: AfchemPool
+    . .NET CLR Version v4.0
+    . Managed pipeline: Integrated
+- B6: Tạo website
+  + Chọn Sites => Add Website
+    . Tên: AfchemSystem
+    . Application Pool: AfchemPool
+    . Physical path: C:\Websites\AfChem
+    . Port: 8080
+- B7: Test
+- B8: Cấu hình tự chạy sau reboot
+  + Trong IIS:
+    . Application Pool chọn Advanced Settings, đặt Start Mode = AlwaysRunning
+    . Website chọn Advanced Settings, đặt Preload Enabled = True
+- B9: Cấp quyền thư mục:
+  + Mở C:\Websites\AfChem, chọn Properties -> Security -> Edit -> Add
+  + Thêm IIS_IUSRS, cấp Read & Execute, List Folder, Read
+- B10: Khởi động Website
+  + Chuột phải AfchemSystem -> Manage Website -> Start
+- B11: Test
+  + Mở browser: http://localhost:8080
+
+* Tạo Task Schedule tự động chạy Website đã publish
+- B1: Tạo task OpenWebUI
+- B2: Trigger: Delay 1 minute
+- B3: Action:
+  + Program/script: C:\Windows\explorer.exe
+  + Add arguments: http://localhost:8080
+- B4: Conditions và Settings như các task khác
