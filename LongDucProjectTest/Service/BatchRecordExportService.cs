@@ -481,6 +481,21 @@ namespace LongDucProjectTest.Service
                             string statusVal = stepLogRow["Status"].ToString().Trim();
                             bool isCompleted = statusVal.Equals("Resolved", StringComparison.OrdinalIgnoreCase);
 
+                            // Get setup parameter for this step
+                            int spVal = 0;
+                            switch (stepIdx)
+                            {
+                                case 0: spVal = run.SpCapLieu; break;
+                                case 1: spVal = run.SpTron1; break;
+                                case 2: spVal = run.SpXaDay; break;
+                                case 3: spVal = run.SpRungXaDay; break;
+                                case 4: spVal = run.SpHutXaDay; break;
+                                case 5: spVal = run.SpTron2; break;
+                                case 6: spVal = run.SpXaHang; break;
+                                case 7: spVal = run.SpRungXaHang; break;
+                            }
+                            ws.Cells[r, 3].Value = $"{spVal}s"; // Column C: Thông số cài đặt
+
                             DateTime? endTime = null;
                             if (isCompleted && stepLogRow["RestoreTime"] != DBNull.Value)
                             {
@@ -505,7 +520,28 @@ namespace LongDucProjectTest.Service
                                         totalSeconds = maxVal;
                                     }
                                 }
-                                ws.Cells[r, 6].Value = $"{(int)Math.Round(totalSeconds)}s"; // Duration
+                                int actualSeconds = (int)Math.Round(totalSeconds);
+                                ws.Cells[r, 6].Value = $"{actualSeconds}s"; // Duration
+
+                                // Highlight background if actual duration exceeds setup parameters
+                                int diff = actualSeconds - spVal;
+                                if (diff >= 300 && diff <= 600)
+                                {
+                                    var cell = ws.Cells[r, 6];
+                                    cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                                    cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 165, 0)); // Orange (#FFA500)
+                                }
+                                else if (diff > 600)
+                                {
+                                    var cell = ws.Cells[r, 6];
+                                    cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                                    cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 0, 0)); // Red (#FF0000)
+                                } else if (diff > 0 && diff < 300)
+                                {
+                                    var cell = ws.Cells[r, 6];
+                                    cell.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                                    cell.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 255, 0)); // Yellow (#FFFF00)
+                                }
                             }
 
                             // Calculate temperatures
@@ -559,21 +595,6 @@ namespace LongDucProjectTest.Service
                                 }
                             }
 
-                            // Get setup parameter for this step
-                            int spVal = 0;
-                            switch (stepIdx)
-                            {
-                                case 0: spVal = run.SpCapLieu; break;
-                                case 1: spVal = run.SpTron1; break;
-                                case 2: spVal = run.SpXaDay; break;
-                                case 3: spVal = run.SpRungXaDay; break;
-                                case 4: spVal = run.SpHutXaDay; break;
-                                case 5: spVal = run.SpTron2; break;
-                                case 6: spVal = run.SpXaHang; break;
-                                case 7: spVal = run.SpRungXaHang; break;
-                            }
-
-                            ws.Cells[r, 3].Value = $"{spVal}s"; // Column C: Thông số cài đặt
                             ws.Cells[r, 7].Value = FormatRangeForExcel(envTemps, "°C"); // Ambient Temp
                             ws.Cells[r, 8].Value = FormatRangeForExcel(envHumids, "%"); // Ambient Humid
                             ws.Cells[r, 9].Value = FormatTempForExcel(topTemps); // Top Temp
@@ -1173,9 +1194,11 @@ namespace LongDucProjectTest.Service
 
         private string FormatTempForExcel(List<double> temps)
         {
-            if (temps == null || temps.Count == 0) return "-";
-            double min = temps.Min();
-            double max = temps.Max();
+            if (temps == null) return "-";
+            var validTemps = temps.Where(t => t != 0).ToList();
+            if (validTemps.Count == 0) return "-";
+            double min = validTemps.Min();
+            double max = validTemps.Max();
             string minStr = Math.Round(min, 1).ToString("0.#", CultureInfo.InvariantCulture);
             string maxStr = Math.Round(max, 1).ToString("0.#", CultureInfo.InvariantCulture);
             
@@ -1185,9 +1208,11 @@ namespace LongDucProjectTest.Service
 
         private string FormatRangeForExcel(List<double> values, string suffix = "", int decimalPlaces = 1)
         {
-            if (values == null || values.Count == 0) return "-";
-            double min = values.Min();
-            double max = values.Max();
+            if (values == null) return "-";
+            var validValues = values.Where(v => v != 0).ToList();
+            if (validValues.Count == 0) return "-";
+            double min = validValues.Min();
+            double max = validValues.Max();
             string format = decimalPlaces == 2 ? "0.00" : "0.#";
             string minStr = Math.Round(min, decimalPlaces).ToString(format, CultureInfo.InvariantCulture);
             string maxStr = Math.Round(max, decimalPlaces).ToString(format, CultureInfo.InvariantCulture);
