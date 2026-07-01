@@ -816,8 +816,8 @@ namespace LongDucProjectTest.Service
                             cell.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
                             cell.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
                             cell.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
-                            cell.Style.Font.Name = "Arial";
-                            cell.Style.Font.Size = 9;
+                            cell.Style.Font.Name = "Carlito";
+                            cell.Style.Font.Size = 11;
                             if (col == 1)
                             {
                                 cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
