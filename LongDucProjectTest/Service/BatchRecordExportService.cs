@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -453,7 +453,7 @@ namespace LongDucProjectTest.Service
                     var telemetryRows = dtTelemetry != null ? dtTelemetry.AsEnumerable().ToList() : new List<DataRow>();
 
                     // Fetch alarms for stage warnings
-                    var dtAlarms = _connector.ExecuteQuery($"SELECT DateTime, CongDoan, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {run.Id} AND LOWER(Severity) IN ('alarm', 'warning') AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0)) ORDER BY DateTime ASC");
+                    var dtAlarms = _connector.ExecuteQuery($"SELECT DateTime, CongDoan, TagName, Value, Threshold, Message FROM realtime_alarms WHERE runId = {run.Id} AND LOWER(Severity) IN ('alarm', 'warning', 'high', 'average', 'low') AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0)) ORDER BY DateTime ASC");
                     var alarmRows = dtAlarms != null ? dtAlarms.AsEnumerable().ToList() : new List<DataRow>();
 
                     // Populate 8 stages
@@ -605,8 +605,45 @@ namespace LongDucProjectTest.Service
                             // Fetch matching alarms for this step
                             var stepAlarms = alarmRows.Where(ar => {
                                 DateTime alarmTime = Convert.ToDateTime(ar["DateTime"]);
-                                if (endTime.HasValue) return alarmTime >= startTime && alarmTime <= endTime.Value;
-                                return alarmTime >= startTime;
+                                bool timeInStep = endTime.HasValue ? (alarmTime >= startTime && alarmTime <= endTime.Value) : (alarmTime >= startTime);
+
+                                string cd = ar["CongDoan"] != DBNull.Value ? ar["CongDoan"].ToString().Trim() : "";
+                                bool codeMatches = false;
+                                bool cdMatchesAny = false;
+                                if (!string.IsNullOrEmpty(cd))
+                                {
+                                    foreach (var otherDef in stepDefs)
+                                    {
+                                        bool matchThis = false;
+                                        if (cd.Equals(otherDef.TagNo, StringComparison.OrdinalIgnoreCase)) matchThis = true;
+                                        else if (cd.Equals(otherDef.Name, StringComparison.OrdinalIgnoreCase)) matchThis = true;
+                                        else
+                                        {
+                                            string cdLower = RemoveSign4VietnameseString(cd).ToLower();
+                                            string otherDefNameLower = RemoveSign4VietnameseString(otherDef.Name).ToLower();
+                                            if (cdLower == otherDefNameLower) matchThis = true;
+                                            else if (otherDef.Code == 1 && (cdLower.Contains("cap lieu") || cdLower.Contains("cấp liệu") || cdLower.Contains("t001"))) matchThis = true;
+                                            else if (otherDef.Code == 2 && (cdLower.Contains("tron 1") || cdLower.Contains("trộn 1") || cdLower.Contains("t002"))) matchThis = true;
+                                            else if (otherDef.Code == 3 && (cdLower.Contains("xa day") || cdLower.Contains("xả đáy") || cdLower.Contains("t003"))) matchThis = true;
+                                            else if (otherDef.Code == 4 && (cdLower.Contains("rung xa day") || cdLower.Contains("rung xả đáy") || cdLower.Contains("t004"))) matchThis = true;
+                                            else if (otherDef.Code == 5 && (cdLower.Contains("hut xa day") || cdLower.Contains("hút xả đáy") || cdLower.Contains("t005"))) matchThis = true;
+                                            else if (otherDef.Code == 6 && (cdLower.Contains("tron 2") || cdLower.Contains("trộn 2") || cdLower.Contains("t006"))) matchThis = true;
+                                            else if (otherDef.Code == 7 && (cdLower.Contains("xa hang") || cdLower.Contains("xả hàng") || cdLower.Contains("t007") && !cdLower.Contains("rung"))) matchThis = true;
+                                            else if (otherDef.Code == 8 && (cdLower.Contains("rung xa hang") || cdLower.Contains("rung xả hàng") || cdLower.Contains("t008"))) matchThis = true;
+                                        }
+
+                                        if (matchThis)
+                                        {
+                                            cdMatchesAny = true;
+                                            if (otherDef.Code == def.Code)
+                                            {
+                                                codeMatches = true;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                return cdMatchesAny ? codeMatches : timeInStep;
                             }).ToList();
 
                             if (stepAlarms.Count > 0)
@@ -694,18 +731,44 @@ namespace LongDucProjectTest.Service
                 }
 
                 // Section 6: SỰ CỐ PHÁT SINH VÀ XỬ LÝ (Populate from realtime_alarms with Severity = ALARM or System pause INFO)
-                int incidentSectionStart = qcTableStart + 7;
+                int incidentSectionStart = qcTableStart + 6;
                 var dtGlobalAlarms = _connector.ExecuteQuery($@"
                     SELECT DateTime, Message, Value, Threshold, restore_time, CongDoan 
                     FROM realtime_alarms 
                     WHERE batchId = {batchId} 
-                      AND (Severity = 'ALARM' OR (Severity = 'INFO' AND TagName = 'System' AND Message = 'Tạm dừng máy')) 
+                      AND (Severity IN ('ALARM', 'HIGH') OR (Severity = 'INFO' AND TagName = 'System' AND Message = 'Tạm dừng máy')) 
                       AND NOT ((TagName LIKE '%ThoiGian%' OR Message LIKE '%thời gian%') AND (Value + 0) <= (Threshold + 0))
-                    ORDER BY DateTime ASC LIMIT 4");
+                    ORDER BY DateTime ASC");
                 
-                if (dtGlobalAlarms != null && dtGlobalAlarms.Rows.Count > 0)
+                int incidentCount = dtGlobalAlarms != null ? dtGlobalAlarms.Rows.Count : 0;
+                int incidentRowsToInsert = 0;
+                if (incidentCount > 4)
                 {
-                    for (int idx = 0; idx < dtGlobalAlarms.Rows.Count; idx++)
+                    incidentRowsToInsert = incidentCount - 4;
+                    // Insert incidentRowsToInsert + 1 rows to include a blank spacer row before Section 7
+                    ws.InsertRow(incidentSectionStart + 6, incidentRowsToInsert + 1);
+                    for (int i = 0; i < incidentRowsToInsert; i++)
+                    {
+                        CopyRowStyles(ws, incidentSectionStart + 2, incidentSectionStart + 6 + i);
+                    }
+                    
+                    // Clear styles/borders on the spacer row
+                    int spacerRow = incidentSectionStart + 6 + incidentRowsToInsert;
+                    ws.Row(spacerRow).Height = 15;
+                    ws.Row(spacerRow).CustomHeight = true;
+                    for (int col = 1; col <= 13; col++)
+                    {
+                        ws.Cells[spacerRow, col].Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                        ws.Cells[spacerRow, col].Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                        ws.Cells[spacerRow, col].Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                        ws.Cells[spacerRow, col].Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+                        ws.Cells[spacerRow, col].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.None;
+                    }
+                }
+
+                if (incidentCount > 0)
+                {
+                    for (int idx = 0; idx < incidentCount; idx++)
                     {
                         int r = incidentSectionStart + 2 + idx;
                         var row = dtGlobalAlarms.Rows[idx];
@@ -740,18 +803,51 @@ namespace LongDucProjectTest.Service
                         }
                         
                         ws.Cells[r, 2].Value = message; // Mô tả sự cố
+                        ws.Cells[r, 2].Style.WrapText = true;
                         ws.Cells[r, 3].Value = ""; // Hành động xử lý (Để trống cho người dùng tự điền)
                         ws.Cells[r, 4].Value = "Hệ thống"; // Người xử lý
                         ws.Cells[r, 5].Value = "Đã khắc phục"; // Kết quả
+
+                        // Ensure thin borders and font are applied to columns 1 to 5
+                        for (int col = 1; col <= 5; col++)
+                        {
+                            var cell = ws.Cells[r, col];
+                            cell.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                            cell.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                            cell.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                            cell.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                            cell.Style.Font.Name = "Arial";
+                            cell.Style.Font.Size = 9;
+                            if (col == 1)
+                            {
+                                cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                            }
+                            else if (col == 2 || col == 3)
+                            {
+                                cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+                            }
+                            else
+                            {
+                                cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
+                            }
+                        }
                     }
                 }
                 else
                 {
                     ws.Cells[incidentSectionStart + 2, 2].Value = "Không có sự cố phát sinh.";
+                    for (int col = 1; col <= 5; col++)
+                    {
+                        var cell = ws.Cells[incidentSectionStart + 2, col];
+                        cell.Style.Border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        cell.Style.Border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        cell.Style.Border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                        cell.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
+                    }
                 }
 
                 // --- POPULATE SECTION 7: XÁC NHẬN ---
-                int signSectionStart = incidentSectionStart + 7;
+                int signSectionStart = incidentSectionStart + 7 + (incidentRowsToInsert > 0 ? incidentRowsToInsert + 1 : 0);
                 
                 // Do not fill data from base into Operator, Supervisor, QC, and Manager columns (Leave blank)
                 for (int r = signSectionStart + 2; r <= signSectionStart + 5; r++)
@@ -985,7 +1081,7 @@ namespace LongDucProjectTest.Service
                 applyThinBorders(qcSectionStart + 1, qcSectionStart + 4, 1, 4); // Section 4 (left)
                 applyThinBorders(qcSectionStart + 1, qcSectionStart + 4, 5, 8); // Section 4 (right)
                 applyThinBorders(qcTableStart, qcTableStart + 5, 1, 4); // Section 5
-                applyThinBorders(incidentSectionStart + 1, incidentSectionStart + 5, 1, 5); // Section 6
+                applyThinBorders(incidentSectionStart + 1, incidentSectionStart + 1 + (incidentCount > 4 ? incidentCount : 4), 1, 5); // Section 6
                 applyThinBorders(signSectionStart + 1, signSectionStart + 5, 1, 4); // Section 7
 
                 // Remove background color and bold font from "Mẻ" cells (column 1, rows blockStartRow + 1 to blockStartRow + 8) in Section 3
@@ -1324,6 +1420,41 @@ namespace LongDucProjectTest.Service
             }
             catch { }
             return result;
+        }
+
+        private static string RemoveSign4VietnameseString(string str)
+        {
+            if (string.IsNullOrEmpty(str)) return "";
+            string[] signedPattern = new string[]
+            {
+                "aàảãáạăằẳẵắặâầẩẫấậ",
+                "dđ",
+                "eèẻẽéẹêềểễếệ",
+                "iìỉĩíị",
+                "oòỏõóọôồổỗốộơờởỡớợ",
+                "uùủũúụưừửữứự",
+                "yỳỷỹýỵ",
+                "AÀẢÃÁẠĂẰẲẴẮẶÂẦẨẪẤẬ",
+                "DĐ",
+                "EÈẺẼÉẸÊỀỂỄẾỆ",
+                "IÌỈĨÍỊ",
+                "OÒỎÕÓỌÔỒỔỖỐỘƠỜỞỠỚỢ",
+                "UÙỦŨÚỤƯỪỬỮỨỰ",
+                "YỲỶỸÝÝ"
+            };
+            string[] unsignedReplacement = new string[]
+            {
+                "a", "d", "e", "i", "o", "u", "y",
+                "A", "D", "E", "I", "O", "U", "Y"
+            };
+            for (int i = 0; i < signedPattern.Length; i++)
+            {
+                for (int j = 0; j < signedPattern[i].Length; j++)
+                {
+                    str = str.Replace(signedPattern[i][j], unsignedReplacement[i][0]);
+                }
+            }
+            return str;
         }
 
         private string GetField(Dictionary<string, string> dict, string key, string fallback)

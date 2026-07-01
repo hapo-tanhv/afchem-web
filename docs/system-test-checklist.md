@@ -228,7 +228,6 @@ Trước khi thực hiện kiểm thử, cần chuẩn bị sẵn 2 tài khoản
 - [ ] **Phân ca tự động (`#headerCurrentShift`):** Lịch trình ca hiện tại tự động tính toán dựa trên thời gian thực tế thông qua hàm `getCurrentShift()`:
   - [ ] Khung giờ `08:00 - 11:59` $\rightarrow$ Hiển thị ca: `"08:00 - 12:00"`
   - [ ] Khung giờ `13:00 - 16:59` $\rightarrow$ Hiển thị ca: `"13:00 - 17:00"`
-  - [ ] Khung giờ `18:00 - 21:59` $\rightarrow$ Hiển thị ca: `"18:00 - 22:00"`
   - [ ] Các khung giờ còn lại $\rightarrow$ Hiển thị trạng thái: `"Ngoài ca"`
 
 ### 6.2. Kiểm thử Cập nhật Chỉ số Vận hành (Batch & Process Step Stats)

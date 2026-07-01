@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using Hino.Getdata.Common;
 using Microsoft.Win32;
 using OfficeOpenXml;
@@ -226,7 +226,18 @@ namespace LongDucProject.Controllers
 
                 if (!string.IsNullOrEmpty(severity))
                 {
-                    filterQuery += $" AND a.Severity = '{severity.Replace("'", "''")}'";
+                    if (severity.Equals("ALARM", StringComparison.OrdinalIgnoreCase))
+                    {
+                        filterQuery += " AND a.Severity IN ('ALARM', 'HIGH')";
+                    }
+                    else if (severity.Equals("WARNING", StringComparison.OrdinalIgnoreCase))
+                    {
+                        filterQuery += " AND a.Severity IN ('WARNING', 'AVERAGE', 'LOW')";
+                    }
+                    else
+                    {
+                        filterQuery += $" AND a.Severity = '{severity.Replace("'", "''")}'";
+                    }
                 }
                 var searchValue = Request.Form["search[value]"];
                 if (!string.IsNullOrEmpty(searchValue))
@@ -450,7 +461,18 @@ namespace LongDucProject.Controllers
 
             if (!string.IsNullOrEmpty(severity))
             {
-                filterQuery += $" AND a.Severity = '{severity.Replace("'", "''")}'";
+                if (severity.Equals("ALARM", StringComparison.OrdinalIgnoreCase))
+                {
+                    filterQuery += " AND a.Severity IN ('ALARM', 'HIGH')";
+                }
+                else if (severity.Equals("WARNING", StringComparison.OrdinalIgnoreCase))
+                {
+                    filterQuery += " AND a.Severity IN ('WARNING', 'AVERAGE', 'LOW')";
+                }
+                else
+                {
+                    filterQuery += $" AND a.Severity = '{severity.Replace("'", "''")}'";
+                }
             }
             if (!string.IsNullOrEmpty(searchValue))
             {
@@ -546,7 +568,18 @@ namespace LongDucProject.Controllers
 
             if (!string.IsNullOrEmpty(severity))
             {
-                filterQuery += $" AND a.Severity = '{severity.Replace("'", "''")}'";
+                if (severity.Equals("ALARM", StringComparison.OrdinalIgnoreCase))
+                {
+                    filterQuery += " AND a.Severity IN ('ALARM', 'HIGH')";
+                }
+                else if (severity.Equals("WARNING", StringComparison.OrdinalIgnoreCase))
+                {
+                    filterQuery += " AND a.Severity IN ('WARNING', 'AVERAGE', 'LOW')";
+                }
+                else
+                {
+                    filterQuery += $" AND a.Severity = '{severity.Replace("'", "''")}'";
+                }
             }
             if (!string.IsNullOrEmpty(searchValue))
             {

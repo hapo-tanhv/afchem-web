@@ -1,4 +1,4 @@
-﻿// Machine Dropdown Functions
+// Machine Dropdown Functions
 
 function toggleMachineDropdown() {
 
@@ -85,10 +85,6 @@ function getCurrentShift() {
     } else if (timeVal >= 13 && timeVal < 17) {
 
         return "13:00 - 17:00";
-
-    } else if (timeVal >= 18 && timeVal < 22) {
-
-        return "18:00 - 22:00";
 
     } else {
 
