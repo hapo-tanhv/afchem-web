@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -292,13 +292,46 @@ namespace LongDucProjectTest.Service
 
                 ws.Cells["B6"].Value = workOrder;
                 ws.Cells["E6"].Value = prodDate;
-                ws.Cells["H6"].Value = "Ca 1"; // Default Shift
+                // Determine shifts dynamically based on runs' StartTime (Option A: 06:00-12:00 -> Ca 1, 12:00-18:00 -> Ca 2)
+                var shifts = new List<string>();
+                foreach (var run in runsList)
+                {
+                    if (run.StartTime.HasValue)
+                    {
+                        var timeOfDay = run.StartTime.Value.TimeOfDay;
+                        if (timeOfDay >= new TimeSpan(6, 0, 0) && timeOfDay < new TimeSpan(12, 0, 0))
+                        {
+                            if (!shifts.Contains("Ca 1")) shifts.Add("Ca 1");
+                        }
+                        else if (timeOfDay >= new TimeSpan(12, 0, 0) && timeOfDay < new TimeSpan(18, 0, 0))
+                        {
+                            if (!shifts.Contains("Ca 2")) shifts.Add("Ca 2");
+                        }
+                    }
+                }
+
+                if (shifts.Count == 0 && dtBatch != null && dtBatch.Rows.Count > 0 && dtBatch.Rows[0]["start_time"] != DBNull.Value)
+                {
+                    var batchStart = Convert.ToDateTime(dtBatch.Rows[0]["start_time"]).TimeOfDay;
+                    if (batchStart >= new TimeSpan(6, 0, 0) && batchStart < new TimeSpan(12, 0, 0))
+                    {
+                        shifts.Add("Ca 1");
+                    }
+                    else if (batchStart >= new TimeSpan(12, 0, 0) && batchStart < new TimeSpan(18, 0, 0))
+                    {
+                        shifts.Add("Ca 2");
+                    }
+                }
+
+                string finalShiftStr = shifts.Count > 0 ? string.Join(", ", shifts) : "Ca 1";
+                ws.Cells["H6"].Value = finalShiftStr;
 
                 ws.Cells["B7"].Value = deviceName;
                 ws.Cells["E7"].Value = packingSpec;
                 ws.Cells["H7"].Value = unitStr;
 
                 ws.Cells["B8"].Value = targetWeight;
+                ws.Cells["B8"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
                 
                 // Calculate actual produced weight based on actual BOM weight minus allowable loss
                 double totalBomWeight = 0;
@@ -359,6 +392,7 @@ namespace LongDucProjectTest.Service
                 if (totalActualProduced < 0) totalActualProduced = 0;
 
                 ws.Cells["E8"].Value = totalActualProduced;
+                ws.Cells["E8"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
                 ws.Cells["H8"].Value = batchStatus;
 
                 ws.Cells["B9"].Value = startTimeStr;
@@ -643,8 +677,8 @@ namespace LongDucProjectTest.Service
 
                             if (stepAlarms.Count > 0)
                             {
-                                var messages = stepAlarms
-                                    .Select(ar => ar["Message"] != DBNull.Value ? ar["Message"].ToString() : "")
+                                 var messages = stepAlarms
+                                     .Select(ar => ar["Message"] != DBNull.Value ? CleanMotorSourceErrorMessage(ar["Message"].ToString()) : "")
                                     .Where(msg => !string.IsNullOrEmpty(msg))
                                     .Distinct()
                                     .ToList();
@@ -653,6 +687,7 @@ namespace LongDucProjectTest.Service
                                 {
                                     ws.Cells[r, 13].Value = string.Join("\n", messages);
                                     ws.Cells[r, 13].Style.WrapText = true;
+                                    AutoFitRowHeight(ws, r, 13, 13);
                                 }
                                 else
                                 {
@@ -723,6 +758,7 @@ namespace LongDucProjectTest.Service
                 {
                     ws.Cells[r, 3].Value = ""; // Đạt / Không đạt
                     ws.Cells[r, 4].Value = ""; // Ghi chú
+                    AutoFitRowHeight(ws, r, 2, 20);
                 }
 
                 // Section 6: SỰ CỐ PHÁT SINH VÀ XỬ LÝ (Populate from realtime_alarms with Severity = ALARM or System pause INFO)
@@ -769,7 +805,7 @@ namespace LongDucProjectTest.Service
                         var row = dtGlobalAlarms.Rows[idx];
                         ws.Cells[r, 1].Value = Convert.ToDateTime(row["DateTime"]).ToString("HH:mm:ss"); // Thời điểm
                         
-                        string message = row["Message"].ToString();
+                        string message = CleanMotorSourceErrorMessage(row["Message"].ToString());
                         string cd = row.Table.Columns.Contains("CongDoan") && row["CongDoan"] != DBNull.Value ? row["CongDoan"].ToString().Trim() : "";
                         if (cd.Equals("T001", StringComparison.OrdinalIgnoreCase)) cd = "Cấp liệu";
                         else if (cd.Equals("T002", StringComparison.OrdinalIgnoreCase)) cd = "Trộn 1";
@@ -813,11 +849,7 @@ namespace LongDucProjectTest.Service
                             cell.Style.Border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.Thin;
                             cell.Style.Font.Name = "Carlito";
                             cell.Style.Font.Size = 11;
-                            if (col == 1)
-                            {
-                                cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
-                            }
-                            else if (col == 2 || col == 3)
+                            if (col == 1 || col == 2 || col == 3)
                             {
                                 cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
                             }
@@ -826,6 +858,7 @@ namespace LongDucProjectTest.Service
                                 cell.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
                             }
                         }
+                        AutoFitRowHeight(ws, r, 2, 20);
                     }
                 }
                 else
@@ -924,16 +957,19 @@ namespace LongDucProjectTest.Service
                 // Apply new styling, borders, and colors
                 int bottomRow = signSectionStart + 5;
 
-                // 1. Clear all borders across cells A1:M[bottomRow]
+                // 1. Clear all borders across cells A1:M[bottomRow] and set vertical alignment to center (middle align)
                 for (int r = 1; r <= bottomRow; r++)
                 {
                     for (int col = 1; col <= 13; col++)
                     {
-                        var border = ws.Cells[r, col].Style.Border;
+                        var cell = ws.Cells[r, col];
+                        var border = cell.Style.Border;
                         border.Top.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
                         border.Bottom.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
                         border.Left.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
                         border.Right.Style = OfficeOpenXml.Style.ExcelBorderStyle.None;
+
+                        cell.Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
                     }
                 }
 
@@ -1489,6 +1525,48 @@ namespace LongDucProjectTest.Service
             public double ActualQuantity { get; set; }
             public string BatchNo { get; set; }
             public string Note { get; set; }
+        }
+
+        private void AutoFitRowHeight(ExcelWorksheet ws, int row, int col, double charactersPerLine)
+        {
+            var cell = ws.Cells[row, col];
+            if (cell.Value == null) return;
+            string text = cell.Value.ToString();
+            if (string.IsNullOrEmpty(text)) return;
+
+            var lines = text.Split('\n');
+            double totalLines = 0;
+            foreach (var line in lines)
+            {
+                double wraps = Math.Ceiling((double)line.Length / charactersPerLine);
+                totalLines += Math.Max(1, wraps);
+            }
+
+            double baseHeight = 17; // Minimum height
+            double calculatedHeight = totalLines * 14.5;
+            if (calculatedHeight > baseHeight)
+            {
+                ws.Row(row).Height = calculatedHeight;
+            }
+        }
+
+        private string CleanMotorSourceErrorMessage(string message)
+        {
+            if (string.IsNullOrEmpty(message)) return "";
+            if (message.IndexOf("lỗi nguồn động cơ", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                message.IndexOf("loi nguon dong co", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                var keywords = new[] { " Giá trị", " Giá tri", " Gia tri", " Gia trị", "Giá trị", "Giá tri", "Gia tri" };
+                foreach (var kw in keywords)
+                {
+                    int idx = message.IndexOf(kw, StringComparison.OrdinalIgnoreCase);
+                    if (idx >= 0)
+                    {
+                        return message.Substring(0, idx).Trim();
+                    }
+                }
+            }
+            return message;
         }
     }
 }

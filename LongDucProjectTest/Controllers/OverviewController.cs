@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using Hino.GetData.Common;
 using OfficeOpenXml;
 using System;
@@ -1150,7 +1150,7 @@ namespace LongDucProject.Controllers
                 {
                     foreach (var def in stepDefs)
                     {
-                        if (def.Code == 3) continue; // Exclude bottom discharge (Xả đáy)
+                        if (def.Code == 3 || def.Code == 4 || def.Code == 8) continue; // Exclude bottom discharge (3), vibration bottom (4), vibration discharge (8)
                         
                         var stepLogRow = logRows.FirstOrDefault(r => {
                             string rowTagNo = r.Table.Columns.Contains("TagNo") && r["TagNo"] != DBNull.Value ? r["TagNo"].ToString().Trim() : "";

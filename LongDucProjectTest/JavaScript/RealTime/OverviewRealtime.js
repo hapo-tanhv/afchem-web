@@ -1,4 +1,4 @@
-﻿var activepower;
+var activepower;
 
 var temperature;
 
@@ -170,6 +170,38 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function updateMotorStatusTag(dataTag, motorType) {
+        if (dataTag) {
+            dataTag.dispatcher.on('valueChanged', (data) => {
+                if (data.e.newValue !== undefined) {
+                    var val = Number(data.e.newValue) || 0;
+                    if (motorType === 'DongCoHut') window.dongCoHut = val;
+                    if (motorType === 'DongCoTron') window.dongCoTron = val;
+                    if (motorType === 'DongCoXa') window.dongCoXa = val;
+                    
+                    updateSvgFlows(
+                        window.currentActiveStepCode, 
+                        window.currentMachineStatus, 
+                        window.currentIsPaused
+                    );
+                }
+            });
+
+            if (dataTag.Value !== undefined) {
+                var val = Number(dataTag.Value) || 0;
+                if (motorType === 'DongCoHut') window.dongCoHut = val;
+                if (motorType === 'DongCoTron') window.dongCoTron = val;
+                if (motorType === 'DongCoXa') window.dongCoXa = val;
+                
+                updateSvgFlows(
+                    window.currentActiveStepCode, 
+                    window.currentMachineStatus, 
+                    window.currentIsPaused
+                );
+            }
+        }
+    }
+
     var stepElementIds = {
         1: 'feedingTime',
         2: 'mix1Time',
@@ -186,7 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (currentSteps && currentSteps.length > 0) {
             currentSteps.forEach(function(step, index) {
                 var stepCode = index + 1;
-                if (stepCode === 3) return; // Exclude bottom discharge (Xả đáy)
+                if (stepCode === 3 || stepCode === 4 || stepCode === 8) return; // Exclude bottom discharge (3), vibration bottom (4), vibration discharge (8)
                 
                 if (step.status === 'completed') {
                     total += parseInt(step.duration) || 0;
@@ -198,7 +230,8 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         } else {
             for (var code in stepElementIds) {
-                if (parseInt(code) === 3) continue; // Exclude bottom discharge (Xả đáy)
+                var c = parseInt(code);
+                if (c === 3 || c === 4 || c === 8) continue; // Exclude bottom discharge (3), vibration bottom (4), vibration discharge (8)
                 
                 var el = document.getElementById(stepElementIds[code]);
                 total += el ? (parseInt(el.innerHTML) || 0) : 0;
@@ -247,7 +280,8 @@ document.addEventListener("DOMContentLoaded", function () {
         var stdTimeEl = document.getElementById("statStandardTime");
         var total = 0;
         for (var code in window.plcStandardTimes) {
-            if (parseInt(code) !== 3) { // Exclude Code 3 (Xả đáy)
+            var c = parseInt(code);
+            if (c !== 3 && c !== 4 && c !== 8) { // Exclude bottom discharge (3), vibration bottom (4), vibration discharge (8)
                 total += window.plcStandardTimes[code];
             }
         }
@@ -648,16 +682,17 @@ document.addEventListener("DOMContentLoaded", function () {
                             if (window.currentSteps && window.currentSteps.length > 0) {
                                 window.currentSteps.forEach(function(step, index) {
                                     var code = index + 1;
-                                    if (code !== 3) { // Exclude Code 3 (Xả đáy)
+                                    if (code !== 3 && code !== 4 && code !== 8) { // Exclude bottom discharge (3), vibration bottom (4), vibration discharge (8)
                                         total += parseInt(step.standard) || 0;
                                     }
                                 });
                             }
-                            return total || 6300;
+                            return total;
                         } else {
                             var total = 0;
                             for (var code in window.plcStandardTimes) {
-                                if (parseInt(code) !== 3) { // Exclude Code 3 (Xả đáy)
+                                var c = parseInt(code);
+                                if (c !== 3 && c !== 4 && c !== 8) { // Exclude bottom discharge (3), vibration bottom (4), vibration discharge (8)
                                     total += window.plcStandardTimes[code];
                                 }
                             }
@@ -1221,7 +1256,10 @@ document.addEventListener("DOMContentLoaded", function () {
         dataCollection.add(`AFChemTX01.ThoiGianCaiDatXaHang`);
         dataCollection.add(`AFChemTX01.ThoiGianCaiDatRungXaHang`);
 
-        // Thêm tag nếu cần (các tag mới sẽ được cập nhật ở phase sau nếu kết nối PLC thật)
+        // Thêm tag mới phản ánh trạng thái động cơ máy trộn
+        dataCollection.add(`AFChemTX01.DongCoHutDangHoatDong`);
+        dataCollection.add(`AFChemTX01.DongCoTronDangHoatDong`);
+        dataCollection.add(`AFChemTX01.DongCoXaDangHoatDong`);
 
         if (!USE_FAKE_DATA) {
             updateTag(dataCollection.get(`AFChemTX01.NhietDoMoiTruong`), document.querySelector('#AmbientTemp'), function(val) {
@@ -1248,6 +1286,11 @@ document.addEventListener("DOMContentLoaded", function () {
             updateTimerTag(dataCollection.get(`AFChemTX01.ThoiGianTron2`), document.querySelector('#mix2Time'), 6, 'ThoiGianTron2');
             updateTimerTag(dataCollection.get(`AFChemTX01.ThoiGianXaHang`), document.querySelector('#clearanceSaleTime'), 7, 'ThoiGianXaHang');
             updateTimerTag(dataCollection.get(`AFChemTX01.ThoiGianRungXaHang`), document.querySelector('#vibrationDischargeTime'), 8, 'ThoiGianRungXaHang');
+
+            // Bind motor status tags for SVG flows animation
+            updateMotorStatusTag(dataCollection.get(`AFChemTX01.DongCoHutDangHoatDong`), 'DongCoHut');
+            updateMotorStatusTag(dataCollection.get(`AFChemTX01.DongCoTronDangHoatDong`), 'DongCoTron');
+            updateMotorStatusTag(dataCollection.get(`AFChemTX01.DongCoXaDangHoatDong`), 'DongCoXa');
 
             // Periodically update charts every 5 seconds (with debounce / performance throttling)
 
@@ -1693,6 +1736,10 @@ function updateChartWithDynamicBands(chartInstance, value, max, config) {
 
 // Function to update timeline step items styling
 function updateTimelineUI(activeStepCode, machineStatus, isPaused) {
+    window.currentActiveStepCode = activeStepCode;
+    window.currentMachineStatus = machineStatus;
+    window.currentIsPaused = isPaused;
+
     // Chuẩn hóa machineStatus từ database (Ví dụ: "Active" -> "RUNNING", "Completed" -> "COMPLETED")
     if (machineStatus) {
         machineStatus = machineStatus.toUpperCase();
@@ -1767,44 +1814,19 @@ function updateSvgFlows(activeStepCode, machineStatus, isPaused) {
     mixingFlow.classList.remove("active");
     dischargeFlow.classList.remove("active");
 
-    // Nếu không có dữ liệu từ realtime (machineStatus !== "RUNNING"), đang ở chế độ xem lịch sử, hoặc máy đang tạm dừng (isPaused === 1)
-    if (window.isHistoricView || machineStatus !== "RUNNING" || isPaused === 1) {
+    // Nếu đang ở chế độ xem lịch sử, không hiển thị animation
+    if (window.isHistoricView) {
         return;
     }
 
-    var showFeeding = (activeStepCode === 1);
-    var showMixing = (activeStepCode === 2 || activeStepCode === 6);
-    var showDischarge = (activeStepCode === 3 || activeStepCode === 4 || activeStepCode === 5 || activeStepCode === 7 || activeStepCode === 8);
-
-    // Kích hoạt đồng thời nếu trong danh sách steps có bất kỳ công đoạn nào đang "in-progress"
-    if (window.currentSteps && window.currentSteps.length > 0) {
-        // Step index 0: Feeding (Code 1)
-        if (window.currentSteps[0] && window.currentSteps[0].status === 'in-progress') {
-            showFeeding = true;
-        }
-        // Step index 1: Mix 1 (Code 2), index 5: Mix 2 (Code 6)
-        if ((window.currentSteps[1] && window.currentSteps[1].status === 'in-progress') || 
-            (window.currentSteps[5] && window.currentSteps[5].status === 'in-progress')) {
-            showMixing = true;
-        }
-        // Step index 2, 3, 4: Bottom discharge steps (Code 3, 4, 5)
-        // Step index 6, 7: Discharge steps (Code 7, 8)
-        if ((window.currentSteps[2] && window.currentSteps[2].status === 'in-progress') ||
-            (window.currentSteps[3] && window.currentSteps[3].status === 'in-progress') ||
-            (window.currentSteps[4] && window.currentSteps[4].status === 'in-progress') ||
-            (window.currentSteps[6] && window.currentSteps[6].status === 'in-progress') ||
-            (window.currentSteps[7] && window.currentSteps[7].status === 'in-progress')) {
-            showDischarge = true;
-        }
-    }
-
-    if (showFeeding) {
+    // Hiển thị animation dựa trên giá trị 1/0 từ 3 thanh ghi động cơ máy trộn
+    if (window.dongCoHut === 1) {
         feedingFlow.classList.add("active");
     }
-    if (showMixing) {
+    if (window.dongCoTron === 1) {
         mixingFlow.classList.add("active");
     }
-    if (showDischarge) {
+    if (window.dongCoXa === 1) {
         dischargeFlow.classList.add("active");
     }
 }
