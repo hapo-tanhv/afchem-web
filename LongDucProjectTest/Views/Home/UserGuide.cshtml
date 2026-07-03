@@ -1,0 +1,156 @@
+﻿@{
+    ViewBag.Title = "SOLAR SCADA SYSTEM - USER GUIDE";
+    ViewBag.ButtonUserGuide = "active";
+    Layout = "~/Views/Shared/_LayoutMain.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/Css/Overview.css?v=5" />
+    <style>
+        .user-guide-container {
+            padding: 20px;
+            background: #0f172a;
+            min-height: 100vh;
+            color: #cbd5e1;
+        }
+        .guide-card {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 20px;
+        }
+        .guide-card-header {
+            background: rgba(30, 41, 59, 0.5);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px 20px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        .guide-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #00e5ff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .guide-card-body {
+            padding: 20px;
+        }
+        .doc-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .doc-item {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            border-radius: 6px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+        .doc-item:hover {
+            border-color: #00e5ff;
+            background: rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
+        }
+        .doc-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .doc-icon {
+            font-size: 2rem;
+            color: #00e5ff;
+        }
+        .doc-title {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #f8fafc;
+            margin-bottom: 4px;
+        }
+        .doc-desc {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        .doc-action-btn {
+            background: linear-gradient(135deg, #0052d4, #4364f7, #6fb1fc);
+            color: white !important;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(67, 100, 247, 0.4);
+            border: none;
+        }
+        .doc-action-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 20px rgba(67, 100, 247, 0.6);
+        }
+    </style>
+}
+
+<div class="user-guide-container">
+    <div class="container-fluid">
+        <!-- BREADCRUMB / HEADER -->
+        <div class="row mb-4">
+            <div class="col-sm-6">
+                <h1 class="m-0 text-white" style="font-size: 1.75rem; font-weight: 600;">HƯỚNG DẪN SỬ DỤNG</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right" style="background: transparent; padding: 0; margin: 0;">
+                    <li class="breadcrumb-item"><a href="~/Home/Overview" style="color: #00e5ff;">Tổng quan</a></li>
+                    <li class="breadcrumb-item active text-white">Hướng dẫn sử dụng</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- MAIN CARD -->
+        <div class="row">
+            <div class="col-12">
+                <div class="guide-card">
+                    <div class="guide-card-header">
+                        <h3 class="guide-card-title">
+                            <i class="fas fa-book-open"></i> DANH SÁCH TÀI LIỆU HƯỚNG DẪN VẬN HÀNH
+                        </h3>
+                    </div>
+                    <div class="guide-card-body">
+                        <ul class="doc-list">
+                            <!-- Document Item -->
+                            <li class="doc-item">
+                                <div class="doc-info">
+                                    <div class="doc-icon">
+                                        <i class="fab fa-google-drive"></i>
+                                    </div>
+                                    <div>
+                                        <div class="doc-title">Tài liệu Hướng dẫn vận hành hệ thống SCADA AFCHEM</div>
+                                        <div class="doc-desc">Google Doc hướng dẫn chi tiết quy trình giám sát mẻ, xuất báo cáo, xem cảnh báo và cài đặt tham số.</div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <a href="https://docs.google.com/document/d/1m4Q-2nUYAadBFtszmIBdBwrnELT6ZE0hsxQZDegPJJA/edit?tab=t.0#heading=h.ddt12oo7j38c" 
+                                       target="_blank" 
+                                       class="doc-action-btn">
+                                        <i class="fas fa-external-link-alt"></i> Xem tài liệu
+                                    </a>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

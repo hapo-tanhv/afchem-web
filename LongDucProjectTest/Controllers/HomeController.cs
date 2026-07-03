@@ -854,6 +854,18 @@ namespace LongDucProject.Controllers
             return View();
         }
 
+        public ActionResult UserGuide()
+        {
+            ViewBag.ButtonUserGuide = "active";
+            if (Session["Role"] is null) return RedirectToAction("Login", "Home");
+
+            if ((int)Session["Role"] == (int)Role.Admin)
+            {
+                ViewBag.DisplayAdmin = "block";
+            }
+            return View();
+        }
+
         private static double TryGetDouble(object value)
         {
             if (value == null || value == DBNull.Value) return 0;
