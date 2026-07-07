@@ -1,0 +1,48 @@
+{
+  "feature_name": "mixing-3d-animation",
+  "created_at": "2026-07-06T08:21:59+07:00",
+  "updated_at": "2026-07-06T13:25:00+07:00",
+  "language": "vi",
+  "phase": "implemented",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "scope_lock": {
+    "source": "Tạo hiệu ứng animation 3D trục trộn xoắn kép (tự xoay và xoay quỹ đạo) bằng Three.js dựng hình bằng code, hiển thị đè lên phạm vi trộn trên sơ đồ bồn trộn 2D của trang Overview.",
+    "in_scope": [
+      "Tích hợp Three.js từ CDN trên trang Overview",
+      "Dựng hình trục xoắn kép và khung gá đỡ bằng mã nguồn (procedural geometry)",
+      "Định vị canvas đè lên khu vực bồn trộn trên sơ đồ 2D dạng absolute overlay",
+      "Điều khiển chạy/dừng animation dựa trên biến dongCoTron thời gian thực"
+    ],
+    "out_of_scope": [
+      "Thay đổi các ảnh nền sodobontron2.jpeg hoặc các dòng chảy cấp liệu/xả đáy khác",
+      "Nhập mô hình GLTF từ bên ngoài",
+      "Thay đổi tốc độ quay động theo RPM thực tế của PLC (chỉ chạy tốc độ cố định)"
+    ],
+    "expansion_policy": "requires-user-approval"
+  },
+  "design_context": {
+    "discovery_mode": "light",
+    "discovery_reason": "Tích hợp thư viện Three.js ở phía client để tạo hoạt ảnh trục trộn đè lên sơ đồ bồn trộn 2D hiện có, dựa trên biến trạng thái thời gian thực có sẵn (window.dongCoTron). Không có thay đổi database hay API backend.",
+    "validation_recommended": false
+  },
+  "validation": {
+    "status": "validated",
+    "session_count": 1,
+    "questions_asked": 4,
+    "last_validated_at": "2026-07-06T08:25:00+07:00"
+  },
+  "ready_for_implementation": true
+}
